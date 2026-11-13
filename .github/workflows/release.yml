@@ -58,6 +58,9 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: android-actions/setup-android@v3
+        with:
+          # 新版 cmdline-tools 里已经没有 "tools" 包，默认值会让 sdkmanager 直接失败
+          packages: platform-tools
       - name: 安装 NDK
         run: sdkmanager --install "ndk;27.3.13750724" "platform-tools" "build-tools;36.0.0" "platforms;android-36"
       - uses: dtolnay/rust-toolchain@stable
