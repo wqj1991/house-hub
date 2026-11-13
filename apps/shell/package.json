@@ -1,0 +1,20 @@
+{
+  "name": "@house/shell",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri",
+    "android:init": "tauri android init",
+    "android:dev": "tauri android dev",
+    "android:build": "tauri android build"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.9.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.9.0"
+  }
+}

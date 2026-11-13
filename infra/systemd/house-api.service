@@ -1,0 +1,30 @@
+[Unit]
+Description=house API (Hono + SQLite)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=house
+Group=house
+WorkingDirectory=/opt/house
+EnvironmentFile=/opt/house/api.env
+ExecStart=/usr/bin/env pnpm --filter @house/api start
+Restart=always
+RestartSec=2
+
+# 只让它写库目录
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/house
+StateDirectory=house
+LimitNOFILE=8192
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=house-api
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=house worker 每 2 分钟领一次活
+
+[Timer]
+OnBootSec=60s
+OnUnitActiveSec=120s
+AccuracySec=15s
+Unit=house-worker.service
+
+[Install]
+WantedBy=timers.target

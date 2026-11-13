@@ -1,0 +1,17 @@
+# 工程可能在 exFAT 盘（不支持符号链接），必须 hoisted；否则 pnpm 会 ERR_PNPM_EISDIR。
+nodeLinker: hoisted
+shamefullyHoist: true
+strictPeerDependencies: false
+
+packages:
+  - apps/*
+  - packages/*
+  - services/*
+
+# esbuild / better-sqlite3 需要跑安装脚本拿原生二进制。
+onlyBuiltDependencies:
+  - esbuild
+  - better-sqlite3
+allowBuilds:
+  esbuild: true
+  better-sqlite3: true

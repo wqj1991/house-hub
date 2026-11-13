@@ -1,0 +1,4159 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>选房决策台 · 液态玻璃响应式跨端系统 (Liquid Glass Unified)</title>
+<style>
+/* =====================================================================
+   1. 核心设计变量与 4 色底膜体系 (Dawn 晨曦暖白为默认)
+   ===================================================================== */
+:root {
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --num: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, sans-serif;
+  --mono: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  /* 默认：晨曦暖白 Dawn */
+  --bg-space: #EEF3F8;
+  --bg-grad: radial-gradient(circle at 15% 15%, #F8FAFC 0%, #EDF3F9 50%, #E2EBF4 100%);
+  --blob1: #FFAE9E;
+  --blob2: #B8D8D8;
+  --blob3: #E2C4FF;
+
+  --glass-bg: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.58) 100%);
+  --glass-card: rgba(255,255,255,0.78);
+  --glass-card-hover: rgba(255,255,255,0.92);
+  --glass-border: rgba(255,255,255,0.92);
+  --glass-border-subtle: rgba(180, 195, 215, 0.35);
+  --glass-highlight: inset 0 1px 1.5px rgba(255,255,255,0.98);
+  --glass-shadow: 0 14px 34px -10px rgba(40,70,110,0.1), inset 0 1px 0 #FFFFFF;
+
+  --text-main: #111E33;
+  --text-sub: rgba(17,30,51,0.72);
+  --text-dim: rgba(17,30,51,0.48);
+
+  --accent-cyan: #0284C7;
+  --accent-amber: #D97706;
+  --accent-coral: #DC2626;
+  --accent-emerald: #059669;
+
+  --card-inset-bg: rgba(255,255,255,0.65);
+  --card-inset-border: rgba(180, 195, 215, 0.4);
+}
+
+/* Tone 1: 极光冰川 Glacier */
+body[data-tone="glacier"] {
+  --bg-space: #030B12;
+  --bg-grad: radial-gradient(circle at 15% 15%, #0B2C3D 0%, #061824 50%, #030B12 100%);
+  --blob1: #12B5A0; --blob2: #227AB5; --blob3: #179282;
+  --glass-bg: linear-gradient(135deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 100%);
+  --glass-card: rgba(18, 28, 44, 0.55);
+  --glass-card-hover: rgba(24, 38, 58, 0.72);
+  --glass-border: rgba(255,255,255,0.24);
+  --glass-border-subtle: rgba(255,255,255,0.08);
+  --glass-highlight: inset 0 1px 1.5px rgba(255,255,255,0.45);
+  --glass-shadow: 0 16px 40px -10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
+  --text-main: #FFFFFF;
+  --text-sub: rgba(255,255,255,0.72);
+  --text-dim: rgba(255,255,255,0.45);
+  --accent-cyan: #18C0A8;
+  --accent-amber: #FFB84D;
+  --accent-coral: #FF5A52;
+  --card-inset-bg: rgba(255,255,255,0.08);
+  --card-inset-border: rgba(255,255,255,0.14);
+}
+
+/* Tone 2: 暮色暗紫 Twilight */
+body[data-tone="twilight"] {
+  --bg-space: #080410;
+  --bg-grad: radial-gradient(circle at 20% 20%, #20133E 0%, #120A24 50%, #080410 100%);
+  --blob1: #8338EC; --blob2: #3A86FF; --blob3: #D81159;
+  --glass-bg: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+  --glass-card: rgba(28, 20, 48, 0.58);
+  --glass-card-hover: rgba(36, 26, 62, 0.75);
+  --glass-border: rgba(255,255,255,0.22);
+  --glass-border-subtle: rgba(255,255,255,0.08);
+  --glass-highlight: inset 0 1px 1.5px rgba(255,255,255,0.45);
+  --glass-shadow: 0 16px 40px -10px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.25);
+  --text-main: #FFFFFF;
+  --text-sub: rgba(255,255,255,0.72);
+  --text-dim: rgba(255,255,255,0.45);
+  --accent-cyan: #C084FC;
+  --accent-amber: #FBBF24;
+  --accent-coral: #FB7185;
+  --card-inset-bg: rgba(255,255,255,0.08);
+  --card-inset-border: rgba(255,255,255,0.14);
+}
+
+/* Tone 3: 黑曜纯深 Obsidian */
+body[data-tone="obsidian"] {
+  --bg-space: #050608;
+  --bg-grad: radial-gradient(circle at 15% 15%, #161C26 0%, #0C0F14 50%, #050608 100%);
+  --blob1: #3D4A62; --blob2: #252D3D; --blob3: #48566E;
+  --glass-bg: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 100%);
+  --glass-card: rgba(18, 22, 28, 0.62);
+  --glass-card-hover: rgba(26, 32, 42, 0.8);
+  --glass-border: rgba(255,255,255,0.18);
+  --glass-border-subtle: rgba(255,255,255,0.06);
+  --glass-highlight: inset 0 1px 1.5px rgba(255,255,255,0.35);
+  --glass-shadow: 0 16px 40px -10px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.2);
+  --text-main: #FFFFFF;
+  --text-sub: rgba(255,255,255,0.72);
+  --text-dim: rgba(255,255,255,0.45);
+  --accent-cyan: #38BDF8;
+  --accent-amber: #FBBF24;
+  --accent-coral: #F87171;
+  --card-inset-bg: rgba(255,255,255,0.06);
+  --card-inset-border: rgba(255,255,255,0.12);
+}
+
+/* Tone 4: 晨曦暖白 Dawn */
+body[data-tone="dawn"] {
+  --bg-space: #EEF3F8;
+  --bg-grad: radial-gradient(circle at 15% 15%, #F8FAFC 0%, #EDF3F9 50%, #E2EBF4 100%);
+  --blob1: #FFAE9E; --blob2: #B8D8D8; --blob3: #E2C4FF;
+  --glass-bg: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.58) 100%);
+  --glass-card: rgba(255,255,255,0.78);
+  --glass-card-hover: rgba(255,255,255,0.92);
+  --glass-border: rgba(255,255,255,0.92);
+  --glass-border-subtle: rgba(180, 195, 215, 0.35);
+  --glass-highlight: inset 0 1px 1.5px rgba(255,255,255,0.98);
+  --glass-shadow: 0 14px 34px -10px rgba(40,70,110,0.1), inset 0 1px 0 #FFFFFF;
+  --text-main: #111E33;
+  --text-sub: rgba(17,30,51,0.72);
+  --text-dim: rgba(17,30,51,0.48);
+  --accent-cyan: #0284C7;
+  --accent-amber: #D97706;
+  --accent-coral: #DC2626;
+  --card-inset-bg: rgba(255,255,255,0.65);
+  --card-inset-border: rgba(180, 195, 215, 0.4);
+}
+
+/* =====================================================================
+   2. 基础重置与液态玻璃材质引擎
+   ===================================================================== */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{
+  width:100%;min-height:100vh;
+  font-family:var(--sans);
+  background:var(--bg-space);
+  color:var(--text-main);
+  background-image:var(--bg-grad);
+  background-attachment:fixed;
+  overflow-x:hidden;
+  transition:background 0.35s ease, color 0.3s ease;
+}
+
+/* 背景光斑 */
+.aura{
+  position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;
+}
+.blob{
+  position:absolute;border-radius:50%;filter:blur(80px);opacity:0.38;
+  animation:drift 24s infinite alternate ease-in-out;
+  transition:background 0.5s ease;
+}
+.b1{width:520px;height:520px;background:var(--blob1);top:-120px;left:-100px}
+.b2{width:580px;height:580px;background:var(--blob2);bottom:-150px;right:-120px;animation-duration:30s}
+.b3{width:400px;height:400px;background:var(--blob3);top:40%;left:50%;transform:translate(-50%,-50%);animation-duration:20s;opacity:0.22}
+@keyframes drift{
+  0%{transform:translate(0,0) scale(1)}
+  50%{transform:translate(60px,40px) scale(1.08)}
+  100%{transform:translate(-40px,70px) scale(0.94)}
+}
+
+/* 玻璃基类 */
+.glass{
+  background:var(--glass-bg);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  border:1px solid var(--glass-border);
+  box-shadow:var(--glass-highlight), var(--glass-shadow);
+  transition:all 0.25s cubic-bezier(0.16,1,0.3,1);
+}
+.card-inset{
+  background:var(--card-inset-bg);
+  border:1px solid var(--card-inset-border);
+  border-radius:20px;
+  padding:14px 16px;
+  transition:background 0.25s ease;
+}
+
+/* 通用辅助类 */
+.n{font-family:var(--num);font-variant-numeric:tabular-nums}
+.cyan{color:var(--accent-cyan)}
+.amber{color:var(--accent-amber)}
+.coral{color:var(--accent-coral)}
+.emerald{color:var(--accent-emerald)}
+.lb{font-size:11px;letter-spacing:0.08em;color:var(--text-dim);text-transform:uppercase}
+
+/* 顶栏控制条 (常驻最顶端，含色膜切换与分辨率提示) */
+.global-header{
+  position:sticky;top:0;z-index:90;
+  height:58px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;
+  background:var(--glass-bg);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  border-bottom:1px solid var(--glass-border);
+  box-shadow:0 4px 20px rgba(0,0,0,0.06);
+}
+.header-brand{
+  display:flex;align-items:center;gap:12px;
+}
+.header-logo{
+  width:34px;height:34px;border-radius:11px;
+  background:linear-gradient(135deg, var(--accent-cyan) 0%, #1072B8 100%);
+  display:grid;place-items:center;
+  color:#fff;font-weight:800;font-size:16px;
+  box-shadow:0 4px 12px rgba(2,132,199,0.35);
+}
+.header-title strong{font-size:15px;font-weight:700;display:block;line-height:1.2}
+.header-title span{font-size:11px;color:var(--text-dim);display:block}
+
+.header-right{
+  display:flex;align-items:center;gap:12px;
+}
+.viewport-badge{
+  font-size:11px;font-family:var(--mono);padding:4px 10px;border-radius:12px;
+  background:rgba(255,255,255,0.12);border:1px solid var(--glass-border);
+  color:var(--text-sub);display:flex;align-items:center;gap:6px;
+}
+body[data-tone="dawn"] .viewport-badge{background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.08)}
+
+/* 4 色底膜胶囊 */
+.tone-bar{
+  display:flex;align-items:center;gap:4px;
+  background:rgba(255,255,255,0.1);
+  border:1px solid var(--glass-border);
+  padding:3px;border-radius:24px;
+}
+body[data-tone="dawn"] .tone-bar{background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.08)}
+.tone-btn{
+  background:none;border:0;
+  font-family:var(--sans);font-size:11px;font-weight:600;
+  color:var(--text-sub);padding:5px 10px;border-radius:16px;
+  cursor:pointer;display:flex;align-items:center;gap:5px;transition:all 0.18s ease;
+}
+.tone-btn i{display:inline-block;width:8px;height:8px;border-radius:50%}
+.tone-btn.is-active{
+  background:rgba(255,255,255,0.3);color:var(--text-main);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,0.5), 0 2px 6px rgba(0,0,0,0.12);
+}
+body[data-tone="dawn"] .tone-btn.is-active{background:#fff;color:#111E33;box-shadow:0 2px 6px rgba(0,0,0,0.08)}
+
+/* =====================================================================
+   3. 桌面端三栏工作台布局 (>= 1024px 时生效)
+   ===================================================================== */
+.desktop-shell{
+  display:grid;
+  grid-template-columns:250px 1fr 322px;
+  gap:18px;
+  max-width:1440px;
+  height:100vh;
+  margin:0 auto;
+  padding:18px 24px;
+  position:relative;z-index:2;
+}
+
+/* 侧边栏 (250px) */
+.desktop-sidebar{
+  border-radius:28px;
+  padding:20px 16px;
+  display:flex;flex-direction:column;
+  overflow-y:auto;gap:12px;
+}
+.desktop-sidebar::-webkit-scrollbar{width:4px}
+.desktop-sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:99px}
+
+.d-nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 14px;border-radius:18px;
+  font-size:13px;font-weight:600;
+  color:var(--text-sub);cursor:pointer;
+  transition:all 0.18s ease;
+  border:1px solid transparent;
+}
+.d-nav-item:hover{
+  background:rgba(255,255,255,0.1);color:var(--text-main);
+}
+body[data-tone="dawn"] .d-nav-item:hover{background:rgba(255,255,255,0.6)}
+.d-nav-item.is-active{
+  background:rgba(255,255,255,0.24);
+  border-color:var(--glass-border);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,0.45);
+  color:var(--text-main);
+}
+body[data-tone="dawn"] .d-nav-item.is-active{
+  background:#fff;color:#111E33;box-shadow:0 4px 14px rgba(40,70,110,0.08);
+}
+.d-nav-badge{
+  margin-left:auto;font-size:11px;padding:2px 7px;border-radius:10px;
+  background:rgba(255,255,255,0.14);font-family:var(--num);
+}
+body[data-tone="dawn"] .d-nav-badge{background:rgba(0,0,0,0.05)}
+
+/* 主区 (1fr) */
+.desktop-main{
+  border-radius:28px;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.desktop-topbar{
+  padding:18px 24px;
+  border-bottom:1px solid var(--glass-border-subtle);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.desktop-topbar h1{font-size:20px;font-weight:700}
+.desktop-topbar p{font-size:12px;color:var(--text-dim);margin-top:4px}
+
+.desktop-content{
+  flex:1;overflow-y:auto;padding:20px 24px;
+  display:flex;flex-direction:column;gap:18px;
+}
+.desktop-content::-webkit-scrollbar{width:6px}
+.desktop-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.2);border-radius:99px}
+
+/* 右侧 Rail (322px) */
+.desktop-rail{
+  border-radius:28px;
+  padding:20px 18px;
+  display:flex;flex-direction:column;
+  overflow-y:auto;gap:16px;
+}
+.desktop-rail::-webkit-scrollbar{width:4px}
+.desktop-rail::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:99px}
+
+.rail-search{
+  background:var(--card-inset-bg);
+  border:1px solid var(--card-inset-border);
+  border-radius:16px;
+  padding:9px 14px;
+  display:flex;align-items:center;gap:10px;
+}
+.rail-search input{
+  background:none;border:0;outline:none;
+  color:var(--text-main);font-family:var(--sans);font-size:13px;width:100%;
+}
+.rail-search input::placeholder{color:var(--text-dim)}
+
+/* KPI 胶囊 */
+.kpi-row{
+  display:grid;grid-template-columns:repeat(3, 1fr);gap:14px;
+}
+.board-split{
+  display:grid;grid-template-columns:1.4fr 1fr;gap:16px;
+}
+
+/* 表格体系 */
+.table-header{
+  display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 70px;
+  padding:10px 8px;font-size:11px;color:var(--text-dim);letter-spacing:0.04em;
+  border-bottom:1px solid var(--glass-border-subtle);
+}
+.table-row{
+  display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 70px;
+  padding:12px 8px;font-size:13px;align-items:center;
+  border-bottom:1px solid var(--glass-border-subtle);
+  border-radius:12px;transition:background 0.15s ease;
+}
+.table-row:hover{background:rgba(255,255,255,0.12)}
+body[data-tone="dawn"] .table-row:hover{background:rgba(255,255,255,0.65)}
+
+.tag-pill{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;
+}
+
+/* =====================================================================
+   4. 移动端布局体系 (屏幕 < 1024px 时生效)
+   ===================================================================== */
+.mobile-shell{
+  display:none; /* 默认在桌面隐藏 */
+  width:100%;max-width:540px;margin:0 auto;
+  min-height:100vh;
+  position:relative;z-index:2;
+  padding:12px 16px 90px; /* 留出底部药丸胶囊空间 */
+  flex-direction:column;
+}
+
+/* 原生手机状态栏 (参照用户截图 13:06 / 灵动岛 / 5G / 电量) */
+.m-status-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 8px 10px;
+  font-size:14px;font-weight:700;letter-spacing:-0.02em;
+  color:var(--text-main);
+  user-select:none;
+}
+.m-status-time{
+  font-family:var(--num);font-weight:700;font-size:15px;letter-spacing:-0.03em;
+}
+.m-island-pill{
+  width:104px;height:26px;border-radius:14px;
+  background:#000000;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.1), 0 3px 10px rgba(0,0,0,0.4);
+  display:flex;align-items:center;justify-content:space-between;padding:0 9px;
+  position:relative;
+}
+.m-island-dot{
+  width:8px;height:8px;border-radius:50%;background:#1E293B;
+}
+.m-island-cam{
+  width:10px;height:10px;border-radius:50%;background:#0F172A;border:1.5px solid #1E293B;
+}
+.m-status-icons{
+  display:flex;align-items:center;gap:6px;
+  font-family:var(--num);font-size:12px;font-weight:700;
+}
+.m-status-icons svg{
+  width:16px;height:16px;fill:currentColor;stroke:none;
+}
+.m-battery-box{
+  display:flex;align-items:center;gap:2px;
+}
+.m-battery-pill{
+  width:22px;height:11px;border-radius:3px;border:1.5px solid currentColor;
+  padding:1px;position:relative;display:flex;align-items:center;
+}
+.m-battery-pill::after{
+  content:'';position:absolute;right:-3.5px;top:2px;width:1.5px;height:4px;
+  background:currentColor;border-radius:0 1px 1px 0;
+}
+.m-battery-fill{
+  width:65%;height:100%;background:currentColor;border-radius:1px;
+}
+
+/* 移动端原生大标题与右侧圆钮 (参照截图大标题与右上角操作区) */
+.m-nav-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:4px 2px 12px;
+}
+.m-nav-title{
+  font-size:28px;font-weight:800;color:var(--text-main);letter-spacing:-0.03em;line-height:1.15;
+}
+.m-nav-actions{
+  display:flex;align-items:center;gap:10px;
+}
+.m-nav-circle-btn{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--glass-bg);border:1px solid var(--glass-border);
+  display:grid;place-items:center;cursor:pointer;
+  box-shadow:var(--glass-highlight), 0 2px 8px rgba(0,0,0,0.04);
+  transition:all 0.18s ease;
+  color:var(--text-main);
+}
+.m-nav-circle-btn:active{transform:scale(0.92)}
+body[data-tone="dawn"] .m-nav-circle-btn{background:rgba(255,255,255,0.85);box-shadow:0 2px 10px rgba(0,0,0,0.06)}
+
+/* 顶置悬浮搜索胶囊 (全宽圆角搜索框) */
+.m-search-bar{
+  margin:0 0 14px;
+  height:42px;
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  border-radius:21px;
+  padding:0 14px;
+  display:flex;align-items:center;gap:10px;
+  cursor:pointer;
+  box-shadow:var(--glass-highlight), 0 4px 14px rgba(0,0,0,0.06);
+  position:relative;z-index:15;
+}
+.m-search-bar svg{
+  width:16px;height:16px;stroke:var(--accent-cyan);fill:none;stroke-width:2.2;flex-shrink:0;
+}
+.m-search-text{
+  font-size:13px;color:var(--text-sub);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.m-search-k{
+  font-size:10px;font-weight:600;font-family:var(--num);padding:2px 7px;border-radius:6px;
+  background:rgba(255,255,255,0.15);border:1px solid var(--glass-border);color:var(--text-sub);
+}
+body[data-tone="dawn"] .m-search-k{background:#fff;border-color:rgba(0,0,0,0.1);color:#111E33}
+
+/* 移动端 6 屏视口容器 */
+.m-viewport{
+  position:relative;flex:1;
+}
+.m-screen{
+  display:none;flex-direction:column;gap:12px;
+  animation:fadeIn 0.2s cubic-bezier(0.16,1,0.3,1);
+}
+.m-screen.is-active{
+  display:flex;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* 移动端卡片通用样式 */
+.m-card{
+  border-radius:24px;padding:16px 18px;
+}
+
+/* 底部悬浮药丸胶囊 TabBar */
+.m-tabbar-wrap{
+  position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+  width:calc(100% - 32px);max-width:480px;z-index:80;
+}
+.m-tabbar{
+  height:58px;border-radius:29px;
+  display:flex;align-items:center;justify-content:space-around;
+  padding:0 6px;
+  background:var(--glass-bg);
+  backdrop-filter:blur(30px) saturate(210%);
+  -webkit-backdrop-filter:blur(30px) saturate(210%);
+  border:1px solid var(--glass-border);
+  box-shadow:var(--glass-highlight), 0 14px 34px rgba(0,0,0,0.18);
+}
+.m-tab-btn{
+  background:none;border:0;
+  color:var(--text-sub);font-family:var(--sans);font-size:12px;font-weight:600;
+  padding:8px 12px;border-radius:20px;cursor:pointer;transition:all 0.18s ease;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.m-tab-btn.is-active{
+  color:var(--text-main);
+  background:rgba(255,255,255,0.28);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,0.65), 0 4px 12px rgba(0,0,0,0.1);
+}
+body[data-tone="dawn"] .m-tab-btn.is-active{
+  background:#fff;color:#111E33;box-shadow:0 2px 8px rgba(40,70,110,0.12);
+}
+
+/* 全屏高斯模糊 Spotlight 检索浮层 (跨端共用/移动端自适应) */
+.spotlight-modal{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(5,12,24,0.72);
+  backdrop-filter:blur(28px) saturate(200%);
+  -webkit-backdrop-filter:blur(28px) saturate(200%);
+  padding:64px 20px 24px;
+  display:none;flex-direction:column;gap:12px;
+  animation:spotlightIn 0.22s cubic-bezier(0.16,1,0.3,1);
+}
+body[data-tone="dawn"] .spotlight-modal{
+  background:rgba(235,240,246,0.85);
+}
+.spotlight-modal.is-open{display:flex}
+@keyframes spotlightIn{from{opacity:0;transform:scale(0.98)}to{opacity:1;transform:scale(1)}}
+
+.spotlight-input-box{
+  display:flex;align-items:center;gap:10px;
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  border-radius:22px;padding:0 16px;height:46px;
+  box-shadow:var(--glass-highlight), 0 8px 24px rgba(0,0,0,0.12);
+  max-width:640px;margin:0 auto;width:100%;
+}
+.spotlight-input-box svg{width:18px;height:18px;stroke:var(--accent-cyan);fill:none;stroke-width:2.2}
+.spotlight-input-box input{
+  flex:1;background:none;border:0;outline:none;
+  font-family:var(--sans);font-size:14px;font-weight:600;color:var(--text-main);
+}
+.spotlight-cancel{
+  font-size:13px;font-weight:700;color:var(--accent-cyan);cursor:pointer;padding:4px 8px;border-radius:8px;
+}
+
+.spotlight-chips{
+  display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;
+  max-width:640px;margin:0 auto;width:100%;padding:4px 0;
+}
+.spotlight-chip{
+  font-size:12px;padding:5px 12px;border-radius:14px;cursor:pointer;white-space:nowrap;
+  background:rgba(255,255,255,0.12);border:1px solid var(--glass-border-subtle);color:var(--text-sub);
+}
+body[data-tone="dawn"] .spotlight-chip{background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.08)}
+.spotlight-chip.is-active{
+  background:var(--accent-cyan);color:#fff;border-color:var(--accent-cyan);font-weight:700;
+}
+
+.spotlight-list{
+  flex:1;overflow-y:auto;max-width:640px;margin:0 auto;width:100%;
+  display:flex;flex-direction:column;gap:8px;padding-bottom:24px;
+}
+.spotlight-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-radius:18px;background:var(--glass-bg);
+  border:1px solid var(--glass-border);cursor:pointer;transition:all 0.15s ease;
+}
+.spotlight-item:hover{
+  background:rgba(255,255,255,0.25);transform:translateX(4px);
+}
+body[data-tone="dawn"] .spotlight-item:hover{background:#fff}
+
+/* =====================================================================
+   5. 响应式切换核心断点 (@media 分辨率实现)
+   ===================================================================== */
+@media (min-width: 1024px) {
+  /* 桌面端大屏：显示三栏工作台，隐藏移动端 */
+  .desktop-shell { display: grid !important; }
+  .mobile-shell { display: none !important; }
+  .viewport-badge .vp-text::after { content: "桌面端工作台 (1440×900)"; }
+}
+
+@media (max-width: 1023px) {
+  /* 移动端/平板小屏：隐藏桌面端三栏，显示移动端流式与悬浮胶囊 */
+  .desktop-shell { display: none !important; }
+  .mobile-shell { display: flex !important; }
+  .viewport-badge .vp-text::after { content: "移动端全景 (< 1024px)"; }
+}
+
+/* =====================================================================
+   买房避坑指南体系化精读（响应式双端适配：桌面 1440p / 移动 390p）
+   ===================================================================== */
+.guide-card{
+  background:var(--card-inset-bg);
+  border:1px solid var(--card-inset-border);
+  border-radius:24px;
+  padding:20px 22px;
+  margin-bottom:14px;
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  box-shadow:var(--glass-highlight), 0 8px 24px rgba(0,8,28,0.06);
+  transition:all 0.25s ease;
+}
+.guide-card.hero-card{
+  background:linear-gradient(135deg, rgba(24,192,168,0.12) 0%, rgba(131,56,236,0.08) 100%);
+  border-color:rgba(24,192,168,0.3);
+}
+.guide-title{
+  font-size:16px;
+  font-weight:700;
+  color:var(--text-main);
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.guide-title::before{
+  content:'';
+  width:4px;
+  height:16px;
+  background:var(--accent-cyan);
+  border-radius:2px;
+  flex-shrink:0;
+}
+.guide-title.coral::before{
+  background:var(--accent-coral);
+}
+.guide-p{
+  font-size:13px;
+  line-height:1.8;
+  color:var(--text-sub);
+}
+.guide-p strong{color:var(--text-main);font-weight:600}
+
+/* 红线网格 */
+.guide-redline-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+  gap:12px;
+  margin:12px 0 6px;
+}
+.guide-redline-item{
+  background:rgba(255,90,82,0.08);
+  border:1px solid rgba(255,90,82,0.22);
+  border-radius:16px;
+  padding:12px 14px;
+}
+.guide-redline-item b{
+  display:block;
+  color:#FF5A52;
+  font-size:13px;
+  font-weight:700;
+  margin-bottom:4px;
+}
+.guide-redline-item p{
+  font-size:12px;
+  color:var(--text-sub);
+  line-height:1.55;
+  margin:0;
+}
+
+/* 思维对开网格 (总价 vs 总成本) */
+.guide-vs-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+  gap:12px;
+  margin:12px 0 6px;
+}
+.guide-vs-box{
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--glass-border-subtle);
+  border-radius:18px;
+  padding:14px 16px;
+}
+.guide-vs-box.trap{
+  border-color:rgba(255,90,82,0.3);
+  background:rgba(255,90,82,0.05);
+}
+.guide-vs-box.rule{
+  border-color:rgba(24,192,168,0.3);
+  background:rgba(24,192,168,0.05);
+}
+.guide-vs-box h4{
+  font-size:13px;
+  font-weight:700;
+  margin-bottom:8px;
+}
+.guide-vs-box.trap h4{color:#FF5A52}
+.guide-vs-box.rule h4{color:var(--accent-cyan)}
+.guide-vs-box ul{
+  list-style:none;
+  padding:0;
+  margin:0;
+  font-size:12px;
+  line-height:1.75;
+  color:var(--text-sub);
+}
+
+/* 现场勘验可折叠手风琴 */
+.guide-accordion{
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--glass-border-subtle);
+  border-radius:14px;
+  margin:8px 0;
+  overflow:hidden;
+}
+.guide-accordion summary{
+  padding:11px 14px;
+  font-weight:600;
+  font-size:13px;
+  color:var(--text-main);
+  cursor:pointer;
+  user-select:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.guide-accordion-body{
+  padding:10px 14px 14px;
+  border-top:1px solid var(--glass-border-subtle);
+  font-size:12px;
+  line-height:1.7;
+  color:var(--text-sub);
+}
+
+/* 谈判三要诀与防线网格 */
+.guide-tactics-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+  gap:10px;
+  margin:10px 0;
+}
+.guide-tactic-card{
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--glass-border-subtle);
+  border-radius:14px;
+  padding:12px;
+}
+.guide-tactic-card b{
+  font-size:12.5px;
+  font-weight:700;
+  color:var(--text-main);
+  display:block;
+  margin-bottom:4px;
+}
+.guide-tactic-card p{
+  font-size:11.5px;
+  color:var(--text-dim);
+  line-height:1.55;
+  margin:0;
+}
+
+@media (max-width: 1023px) {
+  .guide-card{padding:16px 14px;border-radius:20px;margin-bottom:10px}
+  .guide-title{font-size:14.5px}
+  .guide-p{font-size:12px;line-height:1.7}
+  .guide-redline-grid{grid-template-columns:1fr;gap:8px}
+  .guide-vs-grid{grid-template-columns:1fr;gap:8px}
+  .guide-tactics-grid{grid-template-columns:1fr;gap:8px}
+}
+
+/* =====================================================================
+   我的页面 参照高品质 iOS/原生卡片式重构
+   ===================================================================== */
+.me-top-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 4px 18px;
+}
+.me-top-title{
+  font-size:26px;font-weight:800;color:var(--text-main);letter-spacing:-0.02em;line-height:1.1;
+}
+.me-top-actions{
+  display:flex;align-items:center;gap:12px;
+}
+.me-circle-btn{
+  width:40px;height:40px;border-radius:50%;
+  background:var(--glass-bg);border:1px solid var(--glass-border);
+  display:grid;place-items:center;cursor:pointer;
+  box-shadow:var(--glass-highlight), 0 2px 8px rgba(0,0,0,0.04);
+  transition:all 0.18s ease;
+}
+.me-circle-btn:active{transform:scale(0.92)}
+body[data-tone="dawn"] .me-circle-btn{background:rgba(255,255,255,0.85);box-shadow:0 2px 10px rgba(0,0,0,0.06)}
+
+/* 用户信息卡片 */
+.me-user-card{
+  background:var(--glass-bg);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  border:1px solid var(--glass-border);
+  border-radius:24px;
+  padding:18px 20px;
+  display:flex;align-items:center;gap:16px;
+  box-shadow:var(--glass-highlight), 0 8px 24px rgba(0,0,0,0.04);
+  margin-bottom:14px;
+}
+body[data-tone="dawn"] .me-user-card{
+  background:#FFFFFF;border-color:rgba(226,232,240,0.8);
+  box-shadow:0 8px 24px rgba(100,116,139,0.08);
+}
+.me-avatar-wrap{
+  position:relative;width:56px;height:56px;flex-shrink:0;
+}
+.me-avatar-img{
+  width:56px;height:56px;border-radius:50%;object-fit:cover;
+  background:linear-gradient(135deg, #FFDEE9 0%, #B5FFFC 100%);
+  display:grid;place-items:center;font-size:24px;
+  border:2px solid #FFFFFF;box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+.me-avatar-badge{
+  position:absolute;bottom:-1px;right:-1px;
+  width:18px;height:18px;border-radius:50%;
+  background:#2563EB;color:#fff;display:grid;place-items:center;
+  font-size:10px;font-weight:700;border:2px solid #fff;
+}
+.me-user-meta{
+  display:flex;flex-direction:column;gap:4px;
+}
+.me-username{
+  font-size:19px;font-weight:800;color:var(--text-main);line-height:1.2;
+}
+.me-vip-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:12px;font-weight:600;color:var(--text-sub);
+  background:rgba(0,0,0,0.04);padding:2px 8px;border-radius:10px;
+  width:fit-content;margin-top:2px;
+}
+body[data-tone="dawn"] .me-vip-tag{background:#F1F5F9;color:#475569}
+
+/* 菜单分组卡片 */
+.me-group-card{
+  background:var(--glass-bg);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  border:1px solid var(--glass-border);
+  border-radius:24px;
+  padding:4px 0;
+  box-shadow:var(--glass-highlight), 0 8px 24px rgba(0,0,0,0.04);
+  margin-bottom:14px;
+  overflow:hidden;
+}
+body[data-tone="dawn"] .me-group-card{
+  background:#FFFFFF;border-color:rgba(226,232,240,0.8);
+  box-shadow:0 8px 24px rgba(100,116,139,0.08);
+}
+.me-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:15px 20px;cursor:pointer;transition:background 0.15s ease;
+  position:relative;
+}
+.me-row:not(:last-child)::after{
+  content:'';position:absolute;bottom:0;left:56px;right:20px;height:1px;
+  background:rgba(0,0,0,0.05);
+}
+body[data-tone="dawn"] .me-row:not(:last-child)::after{background:#F1F5F9}
+.me-row:active{background:rgba(0,0,0,0.03)}
+.me-row-left{
+  display:flex;align-items:center;gap:14px;
+}
+.me-row-icon{
+  width:22px;height:22px;display:grid;place-items:center;
+  color:var(--text-main);stroke-width:1.8;
+}
+.me-row-title{
+  font-size:15px;font-weight:600;color:var(--text-main);
+}
+.me-row-right{
+  display:flex;align-items:center;gap:6px;color:var(--text-dim);
+}
+.me-row-right svg{width:16px;height:16px;stroke:currentColor;stroke-width:2.2;fill:none}
+.me-row-desc{font-size:12px;color:var(--text-dim)}
+
+/* 参照截图 m00989 的设置项与分组规范 */
+.me-section-title{
+  font-size:13px;font-weight:700;color:var(--text-dim);
+  padding:14px 20px 6px;letter-spacing:0.04em;
+}
+.me-setting-pill{
+  display:inline-flex;align-items:center;gap:4px;
+  background:rgba(0,0,0,0.06);color:var(--text-main);
+  padding:4px 10px;border-radius:12px;font-size:13px;font-weight:600;
+  cursor:pointer;
+}
+body[data-tone="dawn"] .me-setting-pill{background:#F1F5F9;color:#334155}
+.me-setting-pill svg{width:12px;height:12px;fill:currentColor}
+.me-toggle{
+  position:relative;width:44px;height:24px;border-radius:12px;
+  background:#CBD5E1;cursor:pointer;transition:background 0.2s ease;
+}
+.me-toggle.is-on{background:#0284C7}
+.me-toggle::after{
+  content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;
+  border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,0.2);
+  transition:transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.me-toggle.is-on::after{transform:translateX(20px)}
+
+/* 视觉主题底膜选择器卡片 */
+.theme-selector-grid{
+  display:grid;grid-template-columns:1fr;gap:10px;
+}
+.theme-card{
+  background:rgba(255,255,255,0.1);
+  border:1px solid var(--glass-border);
+  border-radius:18px;padding:12px 14px;cursor:pointer;
+  transition:all 0.18s ease;
+}
+body[data-tone="dawn"] .theme-card{background:#F8FAFC;border-color:#E2E8F0}
+.theme-card.is-active{
+  border-color:var(--accent-cyan);
+  background:rgba(2,132,199,0.08);
+  box-shadow:0 0 0 2px var(--accent-cyan);
+}
+body[data-tone="dawn"] .theme-card.is-active{background:#F0F9FF}
+.theme-info strong{font-size:14px;display:block;color:var(--text-main)}
+.theme-info span{font-size:11px;color:var(--text-dim);margin-top:2px;display:block}
+.theme-preview-dots{display:flex;gap:4px}
+.theme-dot{width:14px;height:14px;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+
+
+/* === COMPONENT LIBRARY INTEGRATION STYLES === */
+.comp-wrapper{
+  --cyan: var(--accent-cyan, #0F8B7B);
+  --amber: var(--accent-amber, #D97706);
+  --coral: var(--accent-coral, #DC2626);
+  --glass-inner-hl: var(--glass-highlight, inset 0 1px 1.5px rgba(255,255,255,0.45));
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.comp-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+@media (max-width: 768px){
+  .comp-grid{ grid-template-columns: 1fr; }
+}
+
+.section-box{
+  background:var(--glass-bg);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  border:1px solid var(--glass-border);
+  box-shadow:var(--glass-inner-hl), var(--glass-shadow);
+  border-radius:24px;
+  padding:22px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  transition:all 0.3s ease;
+}
+.sec-title{
+  font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:space-between;
+}
+.sec-sub{font-size:12px;color:var(--text-dim);font-weight:400}
+
+/* ================= 1. BUTTONS & CLICK EFFECTS ================= */
+.btn-group{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+
+.g-btn{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:10px 20px;
+  border-radius:20px;
+  font-family:var(--sans);
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  outline:none;
+  border:1px solid rgba(255,255,255,0.3);
+  background:linear-gradient(135deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.1) 100%);
+  color:var(--text-main);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,0.6), 0 4px 14px rgba(0,0,0,0.1);
+  transition:transform 0.15s cubic-bezier(0.16,1,0.3,1), box-shadow 0.15s ease, background 0.15s ease;
+  user-select:none;
+  overflow:hidden;
+}
+.g-btn:hover{
+  transform:translateY(-1px);
+  box-shadow:inset 0 1px 1.5px rgba(255,255,255,0.8), 0 8px 20px rgba(0,0,0,0.16);
+  background:linear-gradient(135deg, rgba(255,255,255,0.36) 0%, rgba(255,255,255,0.14) 100%);
+}
+.g-btn:active{
+  transform:scale(0.96);
+  box-shadow:inset 0 1.5px 3px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Primary Cyan */
+.g-btn-primary{
+  background:linear-gradient(135deg, rgba(24,192,168,0.85) 0%, rgba(15,139,123,0.92) 100%);
+  color:#fff;border-color:rgba(255,255,255,0.4);
+  box-shadow:inset 0 1px 1.5px rgba(255,255,255,0.7), 0 8px 20px rgba(24,192,168,0.3);
+}
+.g-btn-primary:hover{
+  background:linear-gradient(135deg, rgba(24,192,168,0.95) 0%, rgba(15,139,123,1) 100%);
+  box-shadow:inset 0 1px 1.5px rgba(255,255,255,0.8), 0 12px 26px rgba(24,192,168,0.4);
+}
+
+/* Danger Coral / 一票否决按钮规范 */
+.g-btn.g-btn-danger{
+  background:linear-gradient(135deg, rgba(239,68,68,0.92) 0%, rgba(220,38,38,0.96) 100%) !important;
+  color:#FFFFFF !important;
+  border:1px solid rgba(255,255,255,0.45) !important;
+  box-shadow:inset 0 1px 1.5px rgba(255,255,255,0.7), 0 4px 14px rgba(220,38,38,0.3) !important;
+  text-shadow:0 1px 2px rgba(0,0,0,0.25);
+}
+.g-btn.g-btn-danger:hover{
+  background:linear-gradient(135deg, rgba(248,113,113,0.98) 0%, rgba(220,38,38,1) 100%) !important;
+  color:#FFFFFF !important;
+  border-color:rgba(255,255,255,0.7) !important;
+  box-shadow:inset 0 1px 1.5px #FFFFFF, 0 8px 24px rgba(220,38,38,0.45) !important;
+  transform:translateY(-1.5px);
+}
+.g-btn.g-btn-danger:active{
+  transform:scale(0.96);
+  background:linear-gradient(135deg, #DC2626 0%, #B91C1C 100%) !important;
+  box-shadow:inset 0 1.5px 3px rgba(0,0,0,0.3), 0 2px 6px rgba(220,38,38,0.2) !important;
+}
+
+/* 晨曦暖白（浅色底膜）下的危险态强化 */
+body[data-tone="dawn"] .g-btn.g-btn-danger{
+  background:linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
+  color:#FFFFFF !important;
+  border:1px solid rgba(255,255,255,0.6) !important;
+  box-shadow:inset 0 1px 1.5px rgba(255,255,255,0.8), 0 6px 16px rgba(220,38,38,0.28) !important;
+  text-shadow:0 1px 2px rgba(185,28,28,0.4);
+}
+body[data-tone="dawn"] .g-btn.g-btn-danger:hover{
+  background:linear-gradient(135deg, #F87171 0%, #DC2626 100%) !important;
+  color:#FFFFFF !important;
+  border-color:#FFFFFF !important;
+  box-shadow:inset 0 1px 2px #FFFFFF, 0 10px 24px rgba(220,38,38,0.38) !important;
+  transform:translateY(-1.5px);
+}
+body[data-tone="dawn"] .g-btn.g-btn-danger:active{
+  transform:scale(0.96);
+  background:linear-gradient(135deg, #DC2626 0%, #B91C1C 100%) !important;
+  box-shadow:inset 0 1.5px 3px rgba(0,0,0,0.3), 0 2px 6px rgba(220,38,38,0.25) !important;
+}
+
+/* Ripple click effect */
+.ripple{
+  position:absolute;border-radius:50%;
+  transform:scale(0);
+  animation:ripple-anim 0.5s linear;
+  background:rgba(255,255,255,0.4);
+  pointer-events:none;
+}
+@keyframes ripple-anim{
+  to{transform:scale(4);opacity:0}
+}
+
+/* ================= 2. NOTIFICATIONS / TOASTS ================= */
+.toast-stack{display:flex;flex-direction:column;gap:10px}
+.g-toast{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 18px;border-radius:18px;
+  background:var(--glass-card);
+  border:1px solid var(--glass-border);
+  box-shadow:var(--glass-inner-hl), 0 8px 22px rgba(0,0,0,0.15);
+  font-size:13px;
+  backdrop-filter:blur(20px);
+}
+.toast-icon{
+  width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
+  font-size:13px;flex-shrink:0;
+}
+.toast-content{flex:1}
+.toast-title{font-weight:700;font-size:13px}
+.toast-desc{font-size:11px;color:var(--text-sub);margin-top:2px}
+.toast-close{
+  background:none;border:0;color:var(--text-dim);font-size:16px;cursor:pointer;padding:2px 6px;border-radius:8px;
+}
+.toast-close:hover{color:var(--text-main);background:rgba(255,255,255,0.1)}
+
+/* ================= 3. SCROLLBAR SPEC ================= */
+.scroll-demo-box{
+  height:140px;overflow-y:auto;padding:12px 14px;
+  background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);border-radius:16px;
+  font-size:12px;line-height:1.7;color:var(--text-sub);
+}
+/* Liquid Glass Custom Scrollbar */
+.scroll-demo-box::-webkit-scrollbar{
+  width:6px;
+}
+.scroll-demo-box::-webkit-scrollbar-track{
+  background:transparent;
+}
+.scroll-demo-box::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,0.22);
+  border-radius:99px;
+  backdrop-filter:blur(8px);
+}
+.scroll-demo-box::-webkit-scrollbar-thumb:hover{
+  background:rgba(255,255,255,0.45);
+}
+body[data-tone="dawn"] .scroll-demo-box::-webkit-scrollbar-thumb{
+  background:rgba(0,0,0,0.18);
+}
+body[data-tone="dawn"] .scroll-demo-box::-webkit-scrollbar-thumb:hover{
+  background:rgba(0,0,0,0.32);
+}
+
+/* ================= 4. COMMON INPUTS ================= */
+.input-stack{display:flex;flex-direction:column;gap:12px}
+.input-field{display:flex;flex-direction:column;gap:5px}
+.input-label{font-size:12px;font-weight:600;color:var(--text-sub);display:flex;justify-content:space-between}
+
+.g-input-wrap{
+  position:relative;display:flex;align-items:center;
+}
+.g-input{
+  width:100%;
+  padding:10px 14px 10px 38px;
+  border-radius:16px;
+  border:1px solid var(--glass-border);
+  background:rgba(255,255,255,0.08);
+  font-family:var(--sans);
+  font-size:13px;
+  color:var(--text-main);
+  outline:none;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.1);
+  transition:all 0.2s ease;
+  backdrop-filter:blur(16px);
+}
+body[data-tone="dawn"] .g-input{background:rgba(255,255,255,0.65)}
+.g-input:focus{
+  border-color:var(--cyan);
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.08), 0 0 0 3px rgba(24,192,168,0.25);
+  background:rgba(255,255,255,0.14);
+}
+body[data-tone="dawn"] .g-input:focus{background:#fff}
+.input-icon{
+  position:absolute;left:12px;font-size:14px;color:var(--text-dim);pointer-events:none;
+}
+
+/* ================= CUSTOM GLASS DROPDOWN & TIME PICKER ================= */
+.custom-select{position:relative;width:100%;user-select:none}
+.custom-select-trigger{
+  width:100%;padding:10px 14px;border-radius:16px;
+  border:1px solid var(--glass-border);
+  background:rgba(255,255,255,0.08);
+  color:var(--text-main);
+  font-family:var(--sans);font-size:13px;font-weight:500;
+  display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,0.3), 0 4px 12px rgba(0,0,0,0.06);
+  transition:all 0.18s ease;
+}
+body[data-tone="dawn"] .custom-select-trigger{
+  background:rgba(255,255,255,0.72);
+  border-color:rgba(255,255,255,0.95);
+  box-shadow:inset 0 1px 1.5px #fff, 0 4px 12px rgba(20,40,70,0.05);
+}
+.custom-select-trigger:hover, .custom-select.is-open .custom-select-trigger{
+  border-color:var(--cyan);
+  box-shadow:inset 0 1px 1.5px rgba(255,255,255,0.5), 0 0 0 3px rgba(24,192,168,0.22);
+}
+.custom-select-arrow{
+  font-size:11px;color:var(--text-dim);
+  transition:transform 0.22s cubic-bezier(0.16,1,0.3,1);
+}
+.custom-select.is-open .custom-select-arrow{
+  transform:rotate(180deg);
+  color:var(--cyan);
+}
+
+/* Glass Dropdown Panel (Desktop Floating & Mobile Bottom Sheet) */
+.glass-dropdown-menu{
+  position:absolute;top:calc(100% + 6px);left:0;right:0;
+  background:linear-gradient(135deg, rgba(25,35,55,0.88) 0%, rgba(15,22,38,0.92) 100%);
+  backdrop-filter:blur(28px) saturate(190%);-webkit-backdrop-filter:blur(28px) saturate(190%);
+  border:1px solid rgba(255,255,255,0.28);
+  border-radius:18px;padding:6px;
+  box-shadow:inset 0 1px 1px rgba(255,255,255,0.4), 0 16px 36px rgba(0,0,0,0.38);
+  z-index:100;
+  display:none;flex-direction:column;gap:3px;
+  animation:drop-fade 0.18s cubic-bezier(0.16,1,0.3,1);
+}
+body[data-tone="dawn"] .glass-dropdown-menu{
+  background:linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(245,248,252,0.95) 100%);
+  border-color:rgba(255,255,255,0.98);
+  box-shadow:inset 0 1px 1.5px #fff, 0 16px 36px rgba(20,40,70,0.12);
+}
+.custom-select.is-open .glass-dropdown-menu{display:flex}
+@keyframes drop-fade{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+.dropdown-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 12px;border-radius:12px;
+  font-size:12.5px;color:var(--text-sub);cursor:pointer;
+  transition:all 0.15s ease;
+}
+.dropdown-item:hover{
+  background:rgba(255,255,255,0.12);color:var(--text-main);
+}
+body[data-tone="dawn"] .dropdown-item:hover{
+  background:rgba(24,192,168,0.1);color:#0F8B7B;
+}
+.dropdown-item.is-selected{
+  background:rgba(24,192,168,0.2);color:var(--cyan);font-weight:600;
+}
+.dropdown-check{font-size:12px;opacity:0}
+.dropdown-item.is-selected .dropdown-check{opacity:1}
+
+/* Glass Time Picker Component */
+.time-picker-panel{
+  display:flex;flex-direction:column;gap:12px;
+  padding:12px 14px;
+}
+.time-wheel-group{
+  display:flex;gap:8px;align-items:center;justify-content:center;
+}
+.time-col-wrap{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+}
+.time-col-label{font-size:11px;color:var(--text-dim)}
+.time-scroll-col{
+  height:120px;width:68px;overflow-y:auto;
+  border-radius:14px;background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);
+  display:flex;flex-direction:column;align-items:center;padding:4px 0;
+  scrollbar-width:none;scroll-snap-type:y mandatory;
+}
+body[data-tone="dawn"] .time-scroll-col{
+  background:rgba(255,255,255,0.7);border-color:rgba(0,0,0,0.08);
+}
+.time-scroll-col::-webkit-scrollbar{display:none}
+.time-opt{
+  height:30px;line-height:30px;width:100%;text-align:center;
+  font-family:var(--mono);font-size:13px;color:var(--text-sub);
+  cursor:pointer;scroll-snap-align:center;flex-shrink:0;
+  border-radius:8px;transition:all 0.12s ease;
+}
+.time-opt:hover{color:var(--text-main);background:rgba(255,255,255,0.12)}
+.time-opt.is-active{
+  color:var(--cyan);font-weight:700;background:rgba(24,192,168,0.22);
+}
+.time-sep{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--text-dim);margin-top:16px}
+.time-quick-pills{
+  display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;
+}
+.time-pill{
+  font-family:var(--mono);font-size:11px;padding:4px 9px;border-radius:12px;
+  background:rgba(255,255,255,0.08);color:var(--text-sub);cursor:pointer;
+  border:1px solid rgba(255,255,255,0.12);transition:all 0.15s ease;
+}
+body[data-tone="dawn"] .time-pill{background:rgba(255,255,255,0.65);border-color:rgba(0,0,0,0.08)}
+.time-pill:hover{
+  background:rgba(24,192,168,0.18);color:var(--cyan);border-color:rgba(24,192,168,0.35);
+}
+
+
+/* Glass Date Picker Component */
+.date-picker-panel{
+  display:flex;flex-direction:column;gap:10px;
+  padding:12px 14px;min-width:280px;
+}
+.date-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.date-month-title{
+  font-family:var(--num);font-size:13.5px;font-weight:700;color:var(--text-main);
+  letter-spacing:-0.01em;
+}
+.date-nav-btn{
+  width:26px;height:26px;border-radius:50%;
+  border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);
+  color:var(--text-sub);display:grid;place-items:center;cursor:pointer;
+  font-size:12px;transition:all 0.15s ease;
+}
+body[data-tone="dawn"] .date-nav-btn{background:rgba(255,255,255,0.8);border-color:rgba(0,0,0,0.1)}
+.date-nav-btn:hover{background:rgba(24,192,168,0.2);color:var(--cyan);border-color:rgba(24,192,168,0.4)}
+
+.date-weekdays{
+  display:grid;grid-template-columns:repeat(7, 1fr);
+  text-align:center;font-size:11px;font-weight:600;color:var(--text-dim);
+  padding:4px 0;
+}
+.date-grid{
+  display:grid;grid-template-columns:repeat(7, 1fr);gap:4px;
+}
+.date-cell{
+  height:32px;display:grid;place-items:center;
+  font-family:var(--num);font-size:12.5px;color:var(--text-sub);
+  border-radius:10px;cursor:pointer;transition:all 0.14s ease;
+  position:relative;
+}
+.date-cell:hover{
+  background:rgba(255,255,255,0.12);color:var(--text-main);
+}
+body[data-tone="dawn"] .date-cell:hover{
+  background:rgba(24,192,168,0.15);color:#0F8B7B;
+}
+.date-cell.is-muted{
+  opacity:0.3;cursor:default;
+}
+.date-cell.is-selected{
+  background:linear-gradient(135deg, var(--cyan) 0%, #108A7C 100%) !important;
+  color:#fff !important;font-weight:700;
+  box-shadow:0 4px 12px rgba(24,192,168,0.35);
+}
+.date-cell.has-dot::after{
+  content:"";position:absolute;bottom:3px;left:50%;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:var(--amber);
+}
+.date-quick-pills{
+  display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;
+}
+.date-pill{
+  font-size:11px;padding:4px 9px;border-radius:12px;
+  background:rgba(255,255,255,0.08);color:var(--text-sub);cursor:pointer;
+  border:1px solid rgba(255,255,255,0.12);transition:all 0.15s ease;
+}
+body[data-tone="dawn"] .date-pill{background:rgba(255,255,255,0.65);border-color:rgba(0,0,0,0.08)}
+.date-pill:hover{
+  background:rgba(24,192,168,0.18);color:var(--cyan);border-color:rgba(24,192,168,0.35);
+}
+
+/* Mobile Bottom Sheet Mode for Dropdowns & Pickers */
+@media(max-width: 640px){
+  .custom-select.is-open .glass-dropdown-menu{
+    position:fixed;top:auto;bottom:16px;left:16px;right:16px;
+    border-radius:28px;padding:14px;
+    box-shadow:0 -10px 40px rgba(0,0,0,0.4), inset 0 1px 1.5px rgba(255,255,255,0.6);
+    animation:sheet-slide 0.25s cubic-bezier(0.16,1,0.3,1);
+  }
+  @keyframes sheet-slide{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .dropdown-item{padding:12px 14px;font-size:14px}
+  .time-scroll-col{height:140px;width:80px}
+  .time-opt{height:35px;line-height:35px;font-size:15px}
+}
+
+/* Switch Toggle */
+.switch-row{display:flex;justify-content:space-between;align-items:center;font-size:13px}
+.g-switch{
+  width:46px;height:26px;border-radius:20px;
+  background:rgba(255,255,255,0.15);
+  border:1px solid var(--glass-border);
+  position:relative;cursor:pointer;
+  transition:background 0.2s ease;
+}
+.g-switch.is-on{background:var(--cyan);border-color:var(--cyan)}
+.g-switch::after{
+  content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;
+  border-radius:50%;background:#fff;
+  box-shadow:0 2px 4px rgba(0,0,0,0.2);
+  transition:transform 0.2s cubic-bezier(0.16,1,0.3,1);
+}
+.g-switch.is-on::after{transform:translateX(20px)}
+
+/* ================= 5. MODAL (弹窗/抽屉) ================= */
+.modal-preview-box{
+  position:relative;min-height:220px;
+  border-radius:20px;border:1px solid var(--glass-border);
+  background:rgba(0,0,0,0.15);overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+}
+body[data-tone="dawn"] .modal-preview-box{background:rgba(0,0,0,0.04)}
+
+.g-modal{
+  width:100%;max-width:380px;
+  border-radius:24px;
+  background:linear-gradient(135deg, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0.08) 100%);
+  backdrop-filter:blur(30px) saturate(200%);
+  -webkit-backdrop-filter:blur(30px) saturate(200%);
+  border:1px solid rgba(255,255,255,0.36);
+  box-shadow:inset 0 1px 1.5px rgba(255,255,255,0.6), 0 20px 48px rgba(0,0,0,0.35);
+  padding:20px 22px;
+  display:flex;flex-direction:column;gap:12px;
+}
+body[data-tone="dawn"] .g-modal{
+  background:linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.65) 100%);
+  border-color:rgba(255,255,255,0.95);
+  box-shadow:0 20px 48px rgba(20,40,70,0.12);
+}
+.modal-head{display:flex;justify-content:space-between;align-items:center}
+.modal-head h4{font-size:15px;font-weight:700}
+.modal-body{font-size:12px;color:var(--text-sub);line-height:1.6}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
+
+/* ================= 6. LOADING SPINNERS & SKELETON ================= */
+.loading-row{display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+
+/* Glass Spinner */
+.g-spinner{
+  width:32px;height:32px;border-radius:50%;
+  border:3px solid rgba(255,255,255,0.2);
+  border-top-color:var(--cyan);
+  animation:spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+body[data-tone="dawn"] .g-spinner{border-color:rgba(0,0,0,0.1);border-top-color:var(--cyan)}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Dots Pulse */
+.dots-pulse{display:flex;gap:6px;align-items:center}
+.dots-pulse span{
+  width:8px;height:8px;border-radius:50%;background:var(--cyan);
+  animation:pulse 1.2s ease-in-out infinite;
+}
+.dots-pulse span:nth-child(2){animation-delay:0.2s}
+.dots-pulse span:nth-child(3){animation-delay:0.4s}
+@keyframes pulse{
+  0%,100%{transform:scale(0.6);opacity:0.4}
+  50%{transform:scale(1.2);opacity:1}
+}
+
+/* Glass Skeleton Shimmer */
+.skeleton-box{display:flex;flex-direction:column;gap:8px;flex:1;min-width:180px}
+.skeleton-line{
+  height:12px;border-radius:8px;
+  background:linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.06) 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.5s infinite;
+}
+body[data-tone="dawn"] .skeleton-line{
+  background:linear-gradient(90deg, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.04) 75%);
+  background-size:200% 100%;
+}
+@keyframes shimmer{0%{background-position:200% 0} 100%{background-position:-200% 0}}
+
+
+/* ===================================================================
+   移动端「组件」屏 (cp) · 液态玻璃点击组件 (底部 sheet 弹层)
+   说明：本屏容器不使用 backdrop-filter —— 该属性会成为 position:fixed
+   后代的包含块，导致 640px 以下的底部弹层被锁进卡片内部而显示错位。
+   =================================================================== */
+.m-screen[data-mscr="cp"]{
+  --cyan: var(--accent-cyan, #0F8B7B);
+  --amber: var(--accent-amber, #D97706);
+  --coral: var(--accent-coral, #DC2626);
+  --glass-inner-hl: var(--glass-highlight, inset 0 1px 1.5px rgba(255,255,255,0.45));
+}
+.m-comp-card{
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  border-radius:24px;padding:16px;
+  box-shadow:var(--glass-highlight), var(--glass-shadow);
+  display:flex;flex-direction:column;gap:12px;
+}
+.m-comp-card .sec-title{font-size:15px}
+.m-comp-card .btn-group{gap:8px}
+.m-comp-card .btn-group .g-btn{padding:9px 14px;font-size:12.5px}
+.m-comp-note{font-size:11.5px;line-height:1.65;color:var(--text-dim)}
+.m-screen[data-mscr="cp"] .modal-preview-box{padding:0;background:none;border:0}
+.m-screen[data-mscr="cp"] .g-modal{animation:none}
+
+/* 移动端 Toast 宿主：贴在胶囊 TabBar 上方 */
+#mToastStack{
+  position:fixed;left:16px;right:16px;bottom:86px;z-index:120;
+  display:flex;flex-direction:column;gap:8px;
+  pointer-events:none;
+}
+#mToastStack .g-toast{
+  pointer-events:auto;
+  transition:opacity 0.24s ease, transform 0.24s ease;
+  animation:toast-in 0.24s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes toast-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@media (min-width:1024px){ #mToastStack{display:none} }
+
+@media (max-width:430px){
+  .m-tabbar{padding:0 4px}
+  .m-tab-btn{padding:8px 7px;font-size:11.5px}
+}
+</style>
+</head>
+<body data-tone="dawn">
+
+<!-- 背景呼吸光斑 -->
+<div class="aura">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+</div>
+
+<!-- 顶栏已按要求彻底移除，主题切换统一由「我的」页面承载 -->
+
+<!-- =====================================================================
+     A. 桌面端 1440×900 三栏工作台 (在 >= 1024px 时由 CSS 自动呈现)
+     ===================================================================== -->
+<div class="desktop-shell" id="desktopShell">
+  <!-- 左侧导轨 (250px) -->
+  <aside class="desktop-sidebar glass">
+    <div class="lb" style="margin-bottom:4px">决策功能区</div>
+    <nav style="display:flex;flex-direction:column;gap:6px">
+      <div class="d-nav-item" data-dview="guide">
+        <span>📖</span>买房指南
+      </div>
+      <div class="d-nav-item is-active" data-dview="commute">
+        <span>🚇</span>通勤选房
+        <span class="d-nav-badge">7片区</span>
+      </div>
+      <div class="d-nav-item" data-dview="shortlist">
+        <span>⭐</span>待选池
+        <span class="d-nav-badge">3</span>
+      </div>
+      <div class="d-nav-item" data-dview="money">
+        <span>🧮</span>算钱计算器
+      </div>
+      <div class="d-nav-item" data-dview="quality">
+        <span>⚖️</span>品质打分
+        <span class="d-nav-badge">25项</span>
+      </div>
+      <div class="d-nav-item" data-dview="compare">
+        <span>📊</span>小区三维对比
+      </div>
+      <div class="d-nav-item" data-dview="components">
+        <span>🧩</span>组件库规范
+        <span class="d-nav-badge">6模块</span>
+      </div>
+      <div class="d-nav-item" data-dview="profile">
+        <span>⚙️</span>我的与主题
+      </div>
+    </nav>
+
+    <div class="card-inset" style="margin-top:auto;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;color:var(--accent-amber);margin-bottom:4px">积分前置平坦声明</div>
+      <p style="font-size:11px;line-height:1.55;color:var(--text-sub)">城六区外积分平坦无级差，仅作前置资格核验；排序全权交由通勤与品质硬指标。</p>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 6px">
+      <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.2);display:grid;place-items:center;font-weight:700;font-size:12px">YG</div>
+      <div>
+        <div style="font-size:12px;font-weight:700">本地 SQLite 工作台</div>
+        <div style="font-size:11px;color:var(--text-dim)">数据不上传云端</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 中央主决策区 (1fr) -->
+  <main class="desktop-main glass">
+    <div class="desktop-topbar">
+      <div>
+        <h1 id="dPageTitle">通勤选房工作台</h1>
+        <p>单程硬筛 ≤ 90 min · 80′~90′ 标黄预警 · 双人独立正交轴</p>
+      </div>
+      <div style="font-size:12px;color:var(--text-dim);font-family:var(--num)">
+        宽屏决策模式
+      </div>
+    </div>
+
+    <div class="desktop-content">
+      <!-- 视图 1: 指南 (完整对齐 docs/ 避坑知识体系) -->
+      <div id="dViewGuide" style="display:none;flex-direction:column;gap:14px">
+        <!-- 引导横幅 -->
+        <div class="guide-card hero-card">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:var(--accent-cyan);text-transform:uppercase;margin-bottom:6px">DOCS 权威知识库精编 · 纯知识精读学习平台</div>
+          <div style="font-size:22px;font-weight:800;color:var(--text-main);margin-bottom:8px">买房的核心：不是挑选美好，而是排除隐患</div>
+          <p class="guide-p">
+            买房是多数家庭一生中最大的一笔高杠杆决策。中介与售楼处依靠绝对的信息不对称引导冲动决策。本指南沉淀自真实避坑实战经验：建立<strong>底层财务安全边界</strong>、执行<strong>现场勘验静默动作</strong>、拆解<strong>签约谈判车轮战心理</strong>，将模糊直觉转化为确定性防线。
+          </p>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--glass-border-subtle)">
+            <div>
+              <span style="font-size:11px;color:var(--accent-cyan);font-weight:700">财务铁律</span>
+              <div style="font-size:14px;font-weight:600;color:var(--text-main);margin-top:2px">月供 ≤ 家庭税后月入 40%</div>
+            </div>
+            <div>
+              <span style="font-size:11px;color:var(--accent-cyan);font-weight:700">应急冗余</span>
+              <div style="font-size:14px;font-weight:600;color:var(--text-main);margin-top:2px">强行冻结 12 个月月供备用金</div>
+            </div>
+            <div>
+              <span style="font-size:11px;color:var(--accent-cyan);font-weight:700">博弈防线</span>
+              <div style="font-size:14px;font-weight:600;color:var(--text-main);margin-top:2px">签约谈判中场一分不加</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- §00 一票否决红线库 -->
+        <div class="guide-card" style="border-left:4px solid var(--accent-coral)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div class="guide-title coral" style="margin-bottom:0">§00 一票否决红线库：触碰任意一条即刻终止</div>
+            <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(255,90,82,0.18);color:#FF5A52;font-weight:600">触碰即终止</span>
+          </div>
+          <p class="guide-p">红线不是用来压价的筹码，因为一旦踩雷损失的是全部本金。下列不可触碰之线触发任意一项，立即退出交易：</p>
+          <div class="guide-redline-grid">
+            <div class="guide-redline-item">
+              <b>01. 查封 / 抵押权人拒配合解押</b>
+              <p>房屋司法查封，或民间二抵抵押权人拒绝配合出具注销解押声明，首付款直接面临被抵债吞没风险。</p>
+            </div>
+            <div class="guide-redline-item">
+              <b>02. 拒资金监管 / 首付要求进私户</b>
+              <p>卖方或中介要求首付绕过住建委监管专户打入私人账户，随时面临资金挪用甚至卷款跑路风险。</p>
+            </div>
+            <div class="guide-redline-item">
+              <b>03. 设有《民法典》不可撤销居住权</b>
+              <p>房屋已在不动产中心设立居住权且签前未注销，买方即便过户拿到产证也无法进入居住或出租。</p>
+            </div>
+            <div class="guide-redline-item">
+              <b>04. 承重结构严重破坏 / D级危房</b>
+              <p>承重墙大面积违规拆除无法恢复原状，或房屋被评定为危房不合格，存在坍塌安全与清退风险。</p>
+            </div>
+            <div class="guide-redline-item">
+              <b>05. 红线规划垃圾焚烧 / 特高压</b>
+              <p>红线周边规划批建垃圾中转站、高压变电站或污水处理厂，严重损害身体健康且二级市场流动性归零。</p>
+            </div>
+            <div class="guide-redline-item">
+              <b>06. 学位占用拒约定全额解约赔偿</b>
+              <p>对口学校实行六年一学位且原业主子女在读，卖方拒绝在合同中约定全额无条件退款赔偿与解约权。</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- §01 真实购买力精算 -->
+        <div class="guide-card">
+          <div class="guide-title">§01 真实购买力：总价思维 vs 总成本思维</div>
+          <p class="guide-p">
+            可承受月供上限硬公式：<strong>家庭税后月入 × 40% − 现有负债（车贷/分期）</strong>。超过 40% 的月供会让家庭在面临失业、减薪或突发支出时陷入极端被动。
+          </p>
+          <div class="guide-vs-grid">
+            <div class="guide-vs-box trap">
+              <h4>❌ 危险的总价思维</h4>
+              <ul>
+                <li>• “手头有 150 万，三成首付就按 500 万买”</li>
+                <li>• 把最后一分存款凑进首付，账户流动性瞬间归零</li>
+                <li>• 忽视 2%~3% 契税增值税与 2.7% 中介费硬支出</li>
+                <li>• 盲目假设未来收入永远递增，按 60% 负债强行上车</li>
+              </ul>
+            </div>
+            <div class="guide-vs-box rule">
+              <h4>✔ 成熟的总成本思维</h4>
+              <ul>
+                <li>• 纯首付 = 现金 − 12 个月月供备用金 − 10% 交易杂费</li>
+                <li>• 严格按照家庭税后月入 40% 锁定贷款总额上限</li>
+                <li>• 预留至少 15 万元硬装与刚性入住置办备用金</li>
+                <li>• 假定家庭面临 6 个月收入断流，压力测试通过才签</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- §02 挂牌价挤水分与议价 -->
+        <div class="guide-card">
+          <div class="guide-title">§02 挂牌价虚胖：如何挤出真实成交水分</div>
+          <p class="guide-p">
+            挂牌价往往掺杂业主的试探心理与中介的推波助澜，绝非真实估值：
+          </p>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px">
+            <div class="guide-tactic-card">
+              <b>参考 90 天内真实网签</b>
+              <p>过滤近 3 个月同户型同楼层真实网签价，剔除最高一套和最低一套取中位数。</p>
+            </div>
+            <div class="guide-tactic-card">
+              <b>计算真实溢价率区间</b>
+              <p>当前市场下挂牌价通常存在 5%~10% 的挤水空间，急售/置换换房业主议价空间可达 8%~12%。</p>
+            </div>
+            <div class="guide-tactic-card">
+              <b>以带看量与在架天数施压</b>
+              <p>在架超 120 天且近 30 天带看低于 5 次的房源，心理防线极脆弱，切忌盲目追高报价。</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- §03 现场 40 分钟动作清单 -->
+        <div class="guide-card">
+          <div class="guide-title">§03 现场勘验 40 分钟动作清单：避开中介引导</div>
+          <p class="guide-p">中介进门会开全屋暖灯、拉开窗帘分散注意力。进屋必须执行下列四步静默动作：</p>
+          <details class="guide-accordion" open>
+            <summary>动作一：进门第一件事，关掉所有灯，看真实自然采光</summary>
+            <div class="guide-accordion-body">精装房常用高色温大功率射灯遮掩暗厅和低楼层采光死角。关灯观察白天客餐厅与卧室内侧阴影，若正午仍需开灯补光，说明存在遮挡硬伤。</div>
+          </details>
+          <details class="guide-accordion" open>
+            <summary>动作二：静立 30 秒，闭眼测高架路噪与次声波振动</summary>
+            <div class="guide-accordion-body">临近主干道、高架桥的房源，关窗并不代表安静。体会重型货车经过时的低频轰鸣与玻璃共振。低频噪音无法通过双层玻璃消除，极易造成长期失眠。</div>
+          </details>
+          <details class="guide-accordion">
+            <summary>动作三：手摸外墙阴角、窗框四周与厨卫天花板</summary>
+            <div class="guide-accordion-body">排查窗框下沿是否有泛黄水印或重新刷漆掩盖痕迹；卫生间排污管检修口周围是否有水渍滴漏；顶楼天花板四周是否存在修补沥青与空鼓脱落。</div>
+          </details>
+          <details class="guide-accordion">
+            <summary>动作四：同时开水测试水压与下水管反味</summary>
+            <div class="guide-accordion-body">同时打开厨房龙头、淋浴花洒并按马桶冲水，看水压是否骤降；凑近地漏闻是否有刺鼻下水道反味，排查排污主管道是否缺乏存水弯或通气立管缺陷。</div>
+          </details>
+        </div>
+
+        <!-- §05 签约谈判车轮战内幕 -->
+        <div class="guide-card">
+          <div class="guide-title">§05 谈判桌上的真实机制：签约中心的车轮战</div>
+          <p class="guide-p">
+            <strong>中介的分室隔离传话机制：</strong>签约中心把买卖双方安排在两个独立房间，中介两头跑着传话。每谈一轮，中介必定回来说：<em>“差不多到底了，你在原价上加个 3 万行不行？”</em><br>
+            <strong>请记住：这是既定逼单话术，不是市场信号！</strong>你加了 3 万，中介会立刻去诱惑卖方，并在下一轮用同样方式再要一次。
+          </p>
+          <div style="background:rgba(255,255,255,0.04);border-left:3px solid var(--accent-cyan);padding:10px 14px;border-radius:0 12px 12px 0;margin:10px 0;font-size:12.5px;line-height:1.7;color:var(--text-main)">
+            <strong>探卖方真实底牌的经典四问（一次性问出）：</strong><br>
+            “我们看了很多套，觉得和您家房子确实有缘。请问您当时是出于什么考虑买的这套房？现在又是怎么考虑要卖了呢？”<br>
+            <span style="color:var(--text-dim)">↳ 价值剖析：一问四得——弄清转手次数、急售真实动因（置换有节点/离婚分割/资金链）、心理底价空间、是否有潜在纠纷。</span>
+          </div>
+          <div class="guide-tactics-grid">
+            <div class="guide-tactic-card">
+              <b>底价留足 10 万空间</b>
+              <p>报给中介的底价比心理极限再低 10 万，留足后续被动让步空间。</p>
+            </div>
+            <div class="guide-tactic-card">
+              <b>中场一分不加</b>
+              <p>平静合上本子说回去商量，中介担心业绩泡汤会自己回去死压卖方。</p>
+            </div>
+            <div class="guide-tactic-card">
+              <b>约在晚上谈</b>
+              <p>夜间人体力耗尽且急于达成协议收工，卖方心理防线极易松动。</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- §06 合同补充条款 12 条 -->
+        <div class="guide-card">
+          <div class="guide-title">§06 合同与补充协议核心法务防线</div>
+          <p class="guide-p">中介格式合同往往免除自身责任，下列法务防线必须逐字写入补充条款：</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:10px;margin-top:8px">
+            <div class="guide-vs-box rule">
+              <h4>01. 贷款不批无条件全退定金</h4>
+              <p style="font-size:12px;color:var(--text-sub);line-height:1.6">明确写明：因非买方恶意原因导致批贷不足或不予批贷的，买方有权单方解约，卖方 3 日内全额退款。绝不用“协商解决”。</p>
+            </div>
+            <div class="guide-vs-box rule">
+              <h4>02. 权属瑕疵与隐蔽瑕疵担保</h4>
+              <p style="font-size:12px;color:var(--text-sub);line-height:1.6">卖方保证无抵押、查封、租赁及居住权占用，承担不少于 6 个月隐蔽渗漏担保期；若无法过户，卖方双倍返还定金。</p>
+            </div>
+            <div class="guide-vs-box rule">
+              <h4>03. 户口学位迁出与尾款约束</h4>
+              <p style="font-size:12px;color:var(--text-sub);line-height:1.6">约定最晚迁出日及每日万分之五违约金；留存 5~10 万元交房尾款，户口全部迁出且对口学位无占用后再结清。</p>
+            </div>
+            <div class="guide-vs-box rule">
+              <h4>04. 中介费延后至交房结清</h4>
+              <p style="font-size:12px;color:var(--text-sub);line-height:1.6">签约仅付 30%，过户交房且水电气结清后付清余款；若中介隐瞒抵押、查封或重大瑕疵，全额退还中介费。</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- §07 税费与交房终极红线 -->
+        <div class="guide-card">
+          <div class="guide-title">§07 税费精算与交房验房终极红线</div>
+          <p class="guide-p">
+            • <strong>满五唯一省税法门</strong>：契税 1%~1.5%，证满 2 年免增值税（约 5.3%）；<strong>满五唯一完全免征个人所得税（差额 20% 或全额 1%）</strong>，未满五产生数十万高额税费。<br>
+            • <strong>交房终极红线</strong>：<strong>在水电燃气未结清、房屋隐蔽渗漏整改单未签署前，坚决不签《物业交接单》，不给付交房尾款！</strong>一旦签字放款，遗留漏水与欠费全部由买方承担。
+          </p>
+        </div>
+      </div>
+
+      <!-- 视图 2: 通勤选房主台 -->
+      <div id="dViewCommute" style="display:flex;flex-direction:column;gap:16px">
+        <!-- 顶部 3 张 KPI 胶囊 -->
+        <div class="kpi-row">
+          <div class="card-inset">
+            <div class="lb">老公 · 施耐德 (大兴凉水河)</div>
+            <div style="display:flex;align-items:baseline;gap:8px;margin-top:6px">
+              <span class="n" style="font-size:32px;font-weight:700">62</span>
+              <span class="cyan" style="font-size:13px;font-weight:600">班车直达 (08:00到岗)</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:4px">发车 06:58 · 德茂站上车 · 耗时 51′+接驳 11′</div>
+          </div>
+
+          <div class="card-inset">
+            <div class="lb">老婆 · 环贸 D 座 (北三环东路)</div>
+            <div style="display:flex;align-items:baseline;gap:8px;margin-top:6px">
+              <span class="n amber" style="font-size:32px;font-weight:700">88</span>
+              <span class="amber" style="font-size:13px;font-weight:600">余 2′ 进黄标</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:4px">8号线接驳 · 门到门实测 · 严格不合并平均</div>
+          </div>
+
+          <div class="card-inset" style="background:rgba(220,38,38,0.1);border-color:rgba(220,38,38,0.25)">
+            <div class="lb" style="color:var(--accent-coral)">购房资格核验 · 通州双限</div>
+            <div style="display:flex;align-items:baseline;gap:8px;margin-top:6px">
+              <span class="coral" style="font-size:24px;font-weight:700">一票否决</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-sub);margin-top:4px">通州候选小区打红标，未核实资格严禁入场</div>
+          </div>
+        </div>
+
+        <!-- 主榜表格与焦点小区透视 -->
+        <div class="board-split">
+          <div class="card-inset" style="padding:18px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="font-size:14px;font-weight:700">单程通勤主榜 (按较差一侧排序)</div>
+              <div style="font-size:12px;color:var(--accent-cyan);font-weight:600">硬筛 ≤ 90 min</div>
+            </div>
+
+            <div class="table-header">
+              <span>小区名称</span>
+              <span>老公通勤</span>
+              <span>老婆通勤</span>
+              <span>实际成交价</span>
+              <span style="text-align:right">状态</span>
+            </div>
+
+            <div class="table-row" style="background:rgba(255,255,255,0.15)">
+              <div>
+                <strong style="font-size:14px">德茂佳苑</strong>
+                <div style="font-size:11px;color:var(--text-dim)">大兴 · 旧宫 · 2004</div>
+              </div>
+              <div><b class="n cyan">62′</b> <span style="font-size:11px;color:var(--text-dim)">班车</span></div>
+              <div><b class="n amber">88′</b> <span style="font-size:11px" class="amber">余2′</span></div>
+              <div><b class="n">381 万</b> <span style="font-size:11px" class="cyan">−14万</span></div>
+              <div style="text-align:right"><span class="tag-pill" style="background:rgba(217,119,6,0.2);color:var(--accent-amber)">黄标</span></div>
+            </div>
+
+            <div class="table-row">
+              <div>
+                <strong style="font-size:14px">熙悦林语</strong>
+                <div style="font-size:11px;color:var(--text-dim)">大兴 · 亦庄 · 2018</div>
+              </div>
+              <div><b class="n cyan">48′</b> <span style="font-size:11px;color:var(--text-dim)">电车</span></div>
+              <div><b class="n emerald">78′</b> <span style="font-size:11px" class="emerald">优</span></div>
+              <div><b class="n">352 万</b> <span style="font-size:11px" class="cyan">76㎡</span></div>
+              <div style="text-align:right"><span class="tag-pill" style="background:rgba(5,150,105,0.2);color:var(--accent-emerald)">绿标</span></div>
+            </div>
+
+            <div class="table-row" style="opacity:0.55">
+              <div>
+                <strong style="font-size:14px">芳源里</strong>
+                <div style="font-size:11px;color:var(--text-dim)">大兴 · 瀛海 · 2008</div>
+              </div>
+              <div><b class="n">58′</b> <span style="font-size:11px;color:var(--text-dim)">自驾</span></div>
+              <div><b class="n coral">96′</b> <span style="font-size:11px" class="coral">超6′</span></div>
+              <div><b class="n">356 万</b> <span style="font-size:11px">89㎡</span></div>
+              <div style="text-align:right"><span class="tag-pill" style="background:rgba(220,38,38,0.2);color:var(--accent-coral)">超筛</span></div>
+            </div>
+          </div>
+
+          <!-- 右侧透视 -->
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div class="card-inset">
+              <div style="display:flex;justify-content:space-between;font-size:12px">
+                <span style="color:var(--text-dim)">口径双轨对比</span>
+                <span class="amber" style="font-weight:600">口径差 14 分钟</span>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:8px">
+                <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:12px;padding:8px;text-align:center">
+                  <div style="font-size:11px;color:var(--text-dim)">德茂地铁站</div>
+                  <div class="n" style="font-size:18px;font-weight:700;margin-top:2px">74′</div>
+                </div>
+                <div style="flex:1;background:rgba(217,119,6,0.15);border:1px solid rgba(217,119,6,0.3);border-radius:12px;padding:8px;text-align:center">
+                  <div class="amber" style="font-size:11px">东门 (决策基准)</div>
+                  <div class="n coral" style="font-size:18px;font-weight:700;margin-top:2px">88′</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-inset">
+              <div style="display:flex;justify-content:space-between;font-size:12px">
+                <span style="color:var(--text-dim)">真实成交议价 (德茂佳苑)</span>
+                <span class="cyan" style="font-weight:600">4.28 万/㎡</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:6px">
+                <div>
+                  <span style="font-size:11px;color:var(--text-dim)">挂牌 395 万 →</span>
+                  <span class="n" style="font-size:22px;font-weight:700"> 381</span><span style="font-size:12px"> 万</span>
+                </div>
+                <div class="amber n" style="font-size:13px;font-weight:700">议价 −14 万 (3.5%)</div>
+              </div>
+            </div>
+
+            <div class="card-inset">
+              <div style="display:flex;justify-content:space-between;font-size:12px">
+                <span style="color:var(--text-dim)">品质分溯源 (可点查来源)</span>
+                <span class="n" style="font-weight:700">61 / 78</span>
+              </div>
+              <div style="margin-top:8px;display:flex;flex-direction:column;gap:5px;font-size:12px">
+                <div style="display:flex;justify-content:space-between;color:var(--text-sub)">
+                  <span>建成年代: 2004 年</span><span style="color:var(--text-dim)">链家挂牌库</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;color:var(--text-sub)">
+                  <span>物业费: 2.8 元/㎡</span><span style="color:var(--text-dim)">贝壳物业库</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;color:var(--text-sub)">
+                  <span>对口小学: 大兴一小</span><span style="color:var(--text-dim)">教委划片公示</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 视图 3: 我的与偏好设置 (桌面端) -->
+      <div id="dViewProfile" style="display:none;flex-direction:column;gap:16px">
+        <div class="glass" style="padding:18px 22px;border-radius:18px;display:flex;align-items:center;gap:16px">
+          <div class="profile-avatar" style="width:52px;height:52px;font-size:18px">YG</div>
+          <div>
+            <div style="font-size:20px;font-weight:800">YG 决策席 · 个人自用工作台</div>
+            <div style="font-size:13px;color:var(--text-dim);margin-top:4px">本地独立配置 · 预算上限与主题底膜存储于本地设备</div>
+          </div>
+        </div>
+
+        <div class="glass" style="padding:18px 22px;border-radius:18px">
+          <div class="lb" style="margin-bottom:12px">视觉主题底膜 (点击即时生效)</div>
+          <div class="theme-selector-grid" style="grid-template-columns:repeat(2, 1fr);gap:12px">
+            <div class="theme-card is-active" data-tone-pick="dawn">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div class="theme-info">
+                  <strong>晨曦暖白 (Dawn)</strong>
+                  <span>浅色柔光 · 清透折射 (默认)</span>
+                </div>
+                <div class="theme-preview-dots">
+                  <div class="theme-dot" style="background:#EEF3F8"></div>
+                  <div class="theme-dot" style="background:#FFAE9E"></div>
+                  <div class="theme-dot" style="background:#0284C7"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="theme-card" data-tone-pick="glacier">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div class="theme-info">
+                  <strong>极光冰川 (Glacier)</strong>
+                  <span>冷青蓝绿 · 深邃极光</span>
+                </div>
+                <div class="theme-preview-dots">
+                  <div class="theme-dot" style="background:#030B12"></div>
+                  <div class="theme-dot" style="background:#12B5A0"></div>
+                  <div class="theme-dot" style="background:#227AB5"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="theme-card" data-tone-pick="twilight">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div class="theme-info">
+                  <strong>暮色暗紫 (Twilight)</strong>
+                  <span>深空紫蓝 · 霓虹暗色</span>
+                </div>
+                <div class="theme-preview-dots">
+                  <div class="theme-dot" style="background:#080410"></div>
+                  <div class="theme-dot" style="background:#8338EC"></div>
+                  <div class="theme-dot" style="background:#3A86FF"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="theme-card" data-tone-pick="obsidian">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div class="theme-info">
+                  <strong>黑曜纯深 (Obsidian)</strong>
+                  <span>石墨碳黑 · 纯粹克制</span>
+                </div>
+                <div class="theme-preview-dots">
+                  <div class="theme-dot" style="background:#050608"></div>
+                  <div class="theme-dot" style="background:#3D4A62"></div>
+                  <div class="theme-dot" style="background:#E2E8F0"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass" style="padding:18px 22px;border-radius:18px">
+          <div class="lb" style="margin-bottom:12px">财务安全垫参数配置</div>
+          <div class="profile-meta-grid" style="grid-template-columns:repeat(2, 1fr);gap:12px">
+            <div class="profile-meta-item">
+              <div class="lb">家庭税后月入</div>
+              <div class="val cyan" style="font-size:20px;margin-top:4px">35,000 元/月</div>
+            </div>
+            <div class="profile-meta-item">
+              <div class="lb">40% 月供硬上限</div>
+              <div class="val amber" style="font-size:20px;margin-top:4px">14,000 元/月</div>
+            </div>
+            <div class="profile-meta-item">
+              <div class="lb">家庭可用现金储备</div>
+              <div class="val" style="font-size:20px;margin-top:4px">160.0 万元</div>
+            </div>
+            <div class="profile-meta-item">
+              <div class="lb">12 个月极端备用金 (必扣除)</div>
+              <div class="val coral" style="font-size:20px;margin-top:4px">14.1 万元</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+      <!-- ================= 8. COMPONENT LIBRARY VIEW ================= -->
+      <div id="dViewComponents" style="display:none;flex-direction:column;gap:14px">
+        <div class="card-hero" style="padding:18px 22px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:var(--accent-cyan);text-transform:uppercase">DESIGN SYSTEM & SPEC · 统一交互组件库</div>
+            <div style="font-size:20px;font-weight:800;color:var(--text-main);margin-top:2px">液态玻璃 (Liquid Glass) 交互规范与实战组件</div>
+            <div style="font-size:12px;color:var(--text-sub);margin-top:4px">规范包含：微交互按钮 / 全局通知 Toast / 半透模糊滚动条 / 常用输入控件 (日期·时间·下拉) / 模态弹窗 / 质感加载</div>
+          </div>
+          <button class="btn btn-primary" onclick="showToast('组件库就绪', '所有液态玻璃组件规范均支持 4 种底膜实时跟随')">
+            <span>✨ 演示微动效</span>
+          </button>
+        </div>
+
+        <div class="comp-wrapper">
+          <div class="comp-grid">
+            
+    <!-- 1. 按钮与微交互效果 -->
+    <div class="section-box">
+      <div class="sec-title">
+        <span>按钮体系与触控微动效</span>
+        <span class="sec-sub">Hover 位移浮起 + Active 缩放涟漪</span>
+      </div>
+      <div class="btn-group">
+        <button class="g-btn g-btn-primary" onclick="showToast('主操作', '已加入重点决策池')">
+          <span>✨ 确认加入决策</span>
+        </button>
+        <button class="g-btn" onclick="showToast('次要操作', '房源对比数据已刷新')">
+          <span>次要操作</span>
+        </button>
+        <button class="g-btn g-btn-danger" onclick="showToast('一票否决', '该房源已被剔除出池')">
+          <span>一票否决</span>
+        </button>
+        <button class="g-btn" style="border-radius:14px;padding:8px 12px;font-size:12px">
+          <span>小号紧凑键</span>
+        </button>
+      </div>
+      <div style="font-size:11px;color:var(--text-dim);line-height:1.6">
+        动效原则：鼠标悬停触发 1px 浮起及外高光增强；按下时 scale(0.96) 弹性内陷并触发微光水波涟漪；触屏端无 hover 滞留。
+      </div>
+    </div>
+
+    <!-- 2. 全局通知 Toast -->
+    <div class="section-box">
+      <div class="sec-title">
+        <span>全局通知 Toast 消息条</span>
+        <span class="sec-sub">悬浮半透胶囊 · 自动淡入淡出</span>
+      </div>
+      <div class="toast-stack">
+        <div class="g-toast">
+          <div class="toast-icon" style="background:rgba(24,192,168,0.25);color:var(--cyan)">✓</div>
+          <div class="toast-content">
+            <div class="toast-title">房源实测完成</div>
+            <div class="toast-desc">望京西园三区噪音实测 42 dB，已归档至避坑报告</div>
+          </div>
+          <button class="toast-close">×</button>
+        </div>
+        <div class="g-toast">
+          <div class="toast-icon" style="background:rgba(255,184,77,0.25);color:var(--amber)">⚠</div>
+          <div class="toast-content">
+            <div class="toast-title">通勤标黄警示</div>
+            <div class="toast-desc">老婆晚高峰单程耗时 58 分钟，接近 60′ 黄金圈上限</div>
+          </div>
+          <button class="toast-close">×</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 滚动条定制规范 -->
+    <div class="section-box">
+      <div class="sec-title">
+        <span>玻璃化滚动条 (Scrollbar)</span>
+        <span class="sec-sub">极细 6px · 隐形轨道 · 胶囊滑块</span>
+      </div>
+      <div class="scroll-demo-box">
+        <p><b>[滚动条体验测试区]</b> 现代玻璃态滚动条严禁使用操作系统原生的粗硬滑块。采用 6px 隐形导轨，滑块为圆头半透白胶囊（深色模式 rgba(255,255,255,0.22)，浅色模式 rgba(0,0,0,0.18)）。</p>
+        <p style="margin-top:6px">鼠标 Hover 或拖动滑块时，白晶胶囊高光提升至 0.45，不阻挡文字可读性，在不产生视觉杂乱的同时保留平滑滚动的空间位置感知。</p>
+        <p style="margin-top:6px">移动端 WebView 默认隐藏滚动轨道（scrollbar-width: none），手势滑动时由 iOS 弹性边界动效承接。</p>
+      </div>
+    </div>
+
+    <!-- 4. 常用输入控件 (Input / Select / Switch) -->
+    <div class="section-box">
+      <div class="sec-title">
+        <span>常用表单输入组件</span>
+        <span class="sec-sub">内嵌半透玻璃底 · Focus 柔光聚焦环</span>
+      </div>
+      <div class="input-stack">
+        <div class="input-field">
+          <div class="input-label"><span>搜索房源或商圈</span><span style="font-size:11px;color:var(--cyan)">实时过滤</span></div>
+          <div class="g-input-wrap">
+            <span class="input-icon">🔍</span>
+            <input class="g-input" placeholder="输入小区名（如：望京西园）..." value="望京西园三区" />
+          </div>
+        </div>
+
+        <!-- 下拉选择与时间选择组合 -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <!-- 自定义玻璃态下拉框 (户型结构) -->
+          <div class="input-field">
+            <div class="input-label">
+              <span>户型结构要求 (下拉选择)</span>
+              <span style="font-size:11px;color:var(--cyan)">支持跨端</span>
+            </div>
+            <div class="custom-select" id="selectHouseType">
+              <div class="custom-select-trigger" onclick="toggleDropdown('selectHouseType')">
+                <span class="selected-text" id="selectedHouseTypeText">南北通透 · 2室1厅</span>
+                <span class="custom-select-arrow">▼</span>
+              </div>
+              <div class="glass-dropdown-menu">
+                <div class="dropdown-item is-selected" onclick="chooseSelectOption('selectHouseType', '南北通透 · 2室1厅', this)">
+                  <span>南北通透 · 2室1厅</span><span class="dropdown-check">✓</span>
+                </div>
+                <div class="dropdown-item" onclick="chooseSelectOption('selectHouseType', '全南向两居 · 采光优先', this)">
+                  <span>全南向两居 · 采光优先</span><span class="dropdown-check">✓</span>
+                </div>
+                <div class="dropdown-item" onclick="chooseSelectOption('selectHouseType', '全明三居 · 双卫格局', this)">
+                  <span>全明三居 · 双卫格局</span><span class="dropdown-check">✓</span>
+                </div>
+                <div class="dropdown-item" onclick="chooseSelectOption('selectHouseType', '一层带花园 / 顶层复式', this)">
+                  <span>一层带花园 / 顶层复式</span><span class="dropdown-check">✓</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 自定义玻璃态时间选择器 (到岗班车时刻) -->
+          <div class="input-field">
+            <div class="input-label">
+              <span>到岗 / 班车时刻选择 (时间选择)</span>
+              <span style="font-size:11px;color:var(--amber)" id="timeDisplayBadge">08:00 到岗</span>
+            </div>
+            <div class="custom-select" id="selectTimePicker">
+              <div class="custom-select-trigger" onclick="toggleDropdown('selectTimePicker')">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:14px">⏱️</span>
+                  <span class="selected-text" id="selectedTimeText" style="font-family:var(--mono);font-weight:700">08 : 00</span>
+                </div>
+                <span class="custom-select-arrow">▼</span>
+              </div>
+              <div class="glass-dropdown-menu">
+                <div class="time-picker-panel">
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:11.5px;font-weight:700;color:var(--text-sub)">时分选择 (时 / 分)</span>
+                    <span style="font-size:11px;color:var(--cyan)">班车时刻倒推</span>
+                  </div>
+                  <div class="time-wheel-group">
+                    <div class="time-col-wrap">
+                      <div class="time-col-label">时 (HH)</div>
+                      <div class="time-scroll-col" id="colHours">
+                        <div class="time-opt" onclick="setTimePart('hour', '06', this)">06</div>
+                        <div class="time-opt" onclick="setTimePart('hour', '07', this)">07</div>
+                        <div class="time-opt is-active" onclick="setTimePart('hour', '08', this)">08</div>
+                        <div class="time-opt" onclick="setTimePart('hour', '09', this)">09</div>
+                        <div class="time-opt" onclick="setTimePart('hour', '10', this)">10</div>
+                      </div>
+                    </div>
+                    <div class="time-sep">:</div>
+                    <div class="time-col-wrap">
+                      <div class="time-col-label">分 (MM)</div>
+                      <div class="time-scroll-col" id="colMinutes">
+                        <div class="time-opt is-active" onclick="setTimePart('min', '00', this)">00</div>
+                        <div class="time-opt" onclick="setTimePart('min', '15', this)">15</div>
+                        <div class="time-opt" onclick="setTimePart('min', '30', this)">30</div>
+                        <div class="time-opt" onclick="setTimePart('min', '45', this)">45</div>
+                        <div class="time-opt" onclick="setTimePart('min', '52', this)">52</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="time-quick-pills">
+                    <span class="time-pill" onclick="setQuickTime('06:52', '快专3路班车')">06:52 班车发车</span>
+                    <span class="time-pill" onclick="setQuickTime('08:00', '老公施耐德')">08:00 施耐德到岗</span>
+                    <span class="time-pill" onclick="setQuickTime('09:00', '老婆环贸D座')">09:00 环贸到岗</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <!-- 自定义玻璃态日期选择器 (实地看房 / 资格起算) -->
+          <div class="input-field">
+            <div class="input-label">
+              <span>实地看房 / 积分起算日 (日期选择)</span>
+              <span style="font-size:11px;color:var(--cyan)" id="dateDisplayBadge">周六实测</span>
+            </div>
+            <div class="custom-select" id="selectDatePicker">
+              <div class="custom-select-trigger" onclick="toggleDropdown('selectDatePicker')">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:14px">📅</span>
+                  <span class="selected-text" id="selectedDateText" style="font-family:var(--mono);font-weight:700">2026-11-15</span>
+                </div>
+                <span class="custom-select-arrow">▼</span>
+              </div>
+              <div class="glass-dropdown-menu" style="min-width:300px">
+                <div class="date-picker-panel">
+                  <div class="date-header">
+                    <button class="date-nav-btn" onclick="changeMonth(-1, event)">‹</button>
+                    <div class="date-month-title" id="currentMonthYearText">2026 年 11 月</div>
+                    <button class="date-nav-btn" onclick="changeMonth(1, event)">›</button>
+                  </div>
+                  <div class="date-weekdays">
+                    <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+                  </div>
+                  <div class="date-grid" id="calendarDaysGrid">
+                    <!-- Populated dynamically via JS -->
+                  </div>
+                  <div class="date-quick-pills">
+                    <span class="date-pill" onclick="setQuickDate('2026-11-15', '本周六·德茂看房')">本周六实地看房</span>
+                    <span class="date-pill" onclick="setQuickDate('2026-12-31', '落户积分核算截点')">2026-12-31 年限截点</span>
+                    <span class="date-pill" onclick="setQuickDate('2027-01-01', '积分兑现申报')">2027 元旦申报</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 预算上限设定 -->
+          <div class="input-field">
+            <div class="input-label"><span>预算上限设定</span></div>
+            <div class="g-input-wrap">
+              <span class="input-icon">￥</span>
+              <input class="g-input" value="420 万元" />
+            </div>
+          </div>
+        </div>
+
+        <div class="switch-row">
+          <div>
+            <div style="font-weight:600">严格开启一票否决</div>
+            <div style="font-size:11px;color:var(--text-dim)">命中临铁临高架等 4 条硬伤房直接隐藏</div>
+          </div>
+          <div class="g-switch is-on" onclick="this.classList.toggle('is-on')"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. 模态弹窗 / 确认面板 (Modal) -->
+    <div class="section-box">
+      <div class="sec-title">
+        <span>模态弹窗组件 (Modal)</span>
+        <span class="sec-sub">高透玻璃悬浮卡 · 30px 高斯深度虚化</span>
+      </div>
+      <div class="modal-preview-box">
+        <div class="g-modal">
+          <div class="modal-head">
+            <h4>确认核定此房源成交目标价？</h4>
+            <span style="font-size:11px;color:var(--cyan)">望京西园三区</span>
+          </div>
+          <div class="modal-body">
+            锁定目标价为 <b>392 万元</b>（挂牌砍价空间估算 −18 万）。系统将同步重新核算首付 117.6 万与现金清盘沙盘。
+          </div>
+          <div class="modal-foot">
+            <button class="g-btn" style="padding:6px 14px;font-size:12px">取消</button>
+            <button class="g-btn g-btn-primary" style="padding:6px 14px;font-size:12px">确认锁定</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. 加载状态 Loading (Spinner / Shimmer / Pulse) -->
+    <div class="section-box">
+      <div class="sec-title">
+        <span>加载与骨架屏组件 (Loading)</span>
+        <span class="sec-sub">液态微光转圈 · 骨架流光 · 呼吸点</span>
+      </div>
+      <div class="loading-row">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="g-spinner"></div>
+          <span style="font-size:12px;color:var(--text-sub)">正在同步周边成交真实底价...</span>
+        </div>
+
+        <div class="dots-pulse">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+
+      <div style="font-size:12px;color:var(--text-sub);margin-top:6px">数据加载骨架屏 (Skeleton Shimmer):</div>
+      <div class="skeleton-box">
+        <div class="skeleton-line" style="width:40%"></div>
+        <div class="skeleton-line" style="width:85%"></div>
+        <div class="skeleton-line" style="width:65%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Tone switcher
+document.querySelectorAll('[data-tone-val]').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var t = btn.dataset.toneVal;
+    document.body.setAttribute('data-tone', t);
+    document.querySelectorAll('[data-tone-val]').forEach(function(b){
+      b.classList.toggle('is-active', b === btn);
+    });
+  });
+});
+
+
+// ================= GLASS CALENDAR DATE PICKER ENGINE =================
+var currentDateState = {
+  viewYear: 2026,
+  viewMonth: 10, // 0-indexed, 10 = November
+  selectedDate: '2026-11-15'
+};
+
+function renderCalendar(){
+  var year = currentDateState.viewYear;
+  var month = currentDateState.viewMonth;
+  var titleEl = document.getElementById('currentMonthYearText');
+  if(titleEl) titleEl.textContent = year + ' 年 ' + (month + 1) + ' 月';
+
+  var grid = document.getElementById('calendarDaysGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+
+  var firstDayIndex = new Date(year, month, 1).getDay();
+  var totalDays = new Date(year, month + 1, 0).getDate();
+  var prevMonthDays = new Date(year, month, 0).getDate();
+
+  // Previous month padding days
+  for(var i = firstDayIndex - 1; i >= 0; i--){
+    var cell = document.createElement('div');
+    cell.className = 'date-cell is-muted';
+    cell.textContent = prevMonthDays - i;
+    grid.appendChild(cell);
+  }
+
+  // Current month active days
+  for(var d = 1; d <= totalDays; d++){
+    var dayStr = (d < 10 ? '0' : '') + d;
+    var monthStr = (month + 1 < 10 ? '0' : '') + (month + 1);
+    var fullIso = year + '-' + monthStr + '-' + dayStr;
+
+    var cell = document.createElement('div');
+    cell.className = 'date-cell';
+    cell.textContent = d;
+    if(fullIso === currentDateState.selectedDate){
+      cell.classList.add('is-selected');
+    }
+    // High-priority dates for house decisions (e.g. Nov 15th viewing, Dec 31 cutoff)
+    if(fullIso === '2026-11-15' || fullIso === '2026-12-31'){
+      cell.classList.add('has-dot');
+    }
+
+    (function(iso, dayNum){
+      cell.onclick = function(e){
+        e.stopPropagation();
+        chooseCalendarDate(iso, dayNum);
+      };
+    })(fullIso, d);
+
+    grid.appendChild(cell);
+  }
+}
+
+function changeMonth(delta, e){
+  if(e) e.stopPropagation();
+  currentDateState.viewMonth += delta;
+  if(currentDateState.viewMonth < 0){
+    currentDateState.viewMonth = 11;
+    currentDateState.viewYear--;
+  } else if(currentDateState.viewMonth > 11){
+    currentDateState.viewMonth = 0;
+    currentDateState.viewYear++;
+  }
+  renderCalendar();
+}
+
+function chooseCalendarDate(isoStr, dayNum){
+  currentDateState.selectedDate = isoStr;
+  renderCalendar();
+  document.getElementById('selectedDateText').textContent = isoStr;
+  document.getElementById('dateDisplayBadge').textContent = '已定 ' + (currentDateState.viewMonth + 1) + '月' + dayNum + '日';
+  document.getElementById('selectDatePicker').classList.remove('is-open');
+  showToast('选房日程已更新', isoStr);
+}
+
+function setQuickDate(isoStr, label){
+  currentDateState.selectedDate = isoStr;
+  var parts = isoStr.split('-');
+  currentDateState.viewYear = parseInt(parts[0], 10);
+  currentDateState.viewMonth = parseInt(parts[1], 10) - 1;
+  renderCalendar();
+  document.getElementById('selectedDateText').textContent = isoStr;
+  document.getElementById('dateDisplayBadge').textContent = label;
+  document.getElementById('selectDatePicker').classList.remove('is-open');
+  showToast('锚定日程节点', isoStr + ' (' + label + ')');
+}
+
+// Initial calendar render
+document.addEventListener('DOMContentLoaded', renderCalendar);
+setTimeout(renderCalendar, 100);
+
+// Dropdown and Time Picker Handlers
+function toggleDropdown(id){
+  var el = document.getElementById(id);
+  var isOpen = el.classList.contains('is-open');
+  document.querySelectorAll('.custom-select').forEach(function(s){ s.classList.remove('is-open'); });
+  if(!isOpen) el.classList.add('is-open');
+}
+
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.custom-select')){
+    document.querySelectorAll('.custom-select').forEach(function(s){ s.classList.remove('is-open'); });
+  }
+});
+
+function chooseSelectOption(selectId, val, itemEl){
+  var el = document.getElementById(selectId);
+  el.querySelector('.selected-text').textContent = val;
+  el.querySelectorAll('.dropdown-item').forEach(function(item){ item.classList.remove('is-selected'); });
+  itemEl.classList.add('is-selected');
+  el.classList.remove('is-open');
+  showToast('户型偏好已更新', val);
+}
+
+var currentTimeState = { hour: '08', min: '00' };
+
+function setTimePart(type, val, optEl){
+  currentTimeState[type] = val;
+  optEl.parentElement.querySelectorAll('.time-opt').forEach(function(o){ o.classList.remove('is-active'); });
+  optEl.classList.add('is-active');
+  updateTimePickerDisplay();
+}
+
+function setQuickTime(timeStr, label){
+  var parts = timeStr.split(':');
+  currentTimeState.hour = parts[0];
+  currentTimeState.min = parts[1];
+  
+  // Highlight wheels
+  document.querySelectorAll('#colHours .time-opt').forEach(function(o){
+    o.classList.toggle('is-active', o.textContent.trim() === parts[0]);
+  });
+  document.querySelectorAll('#colMinutes .time-opt').forEach(function(o){
+    o.classList.toggle('is-active', o.textContent.trim() === parts[1]);
+  });
+  updateTimePickerDisplay(label);
+  document.getElementById('selectTimePicker').classList.remove('is-open');
+}
+
+function updateTimePickerDisplay(customBadge){
+  var t = currentTimeState.hour + ' : ' + currentTimeState.min;
+  document.getElementById('selectedTimeText').textContent = t;
+  document.getElementById('timeDisplayBadge').textContent = customBadge || (currentTimeState.hour + ':' + currentTimeState.min + ' 设定时刻');
+  showToast('时钟锚点已更新', t + (customBadge ? ' (' + customBadge + ')' : ''));
+}
+
+// Toast notification helper
+function showToast(title, desc){
+  var stack = document.querySelector('.toast-stack');
+  var toast = document.createElement('div');
+  toast.className = 'g-toast';
+  toast.innerHTML = '<div class="toast-icon" style="background:rgba(24,192,168,0.25);color:var(--cyan)">✨</div>'+
+    '<div class="toast-content"><div class="toast-title">'+title+'</div><div class="toast-desc">'+desc+'</div></div>'+
+    '<button class="toast-close" onclick="this.parentElement.remove()">×</button>';
+  stack.prepend(toast);
+  setTimeout(function(){ toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s ease'; setTimeout(function(){ toast.remove(); }, 300); }, 3000);
+}
+
+// Button ripple on click
+document.querySelectorAll('.g-btn').forEach(function(btn){
+  btn.addEventListener('click', function(e){
+    var rect = btn.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    var y = e.clientY - rect.top;
+    var rip = document.createElement('span');
+    rip.className = 'ripple';
+    rip.style.left = x + 'px';
+    rip.style.top = y + 'px';
+    btn.appendChild(rip);
+    setTimeout(function(){ rip.remove(); }, 500);
+  });
+});
+
+// Universal tone sync handler (supports direct call, postMessage, localStorage, and URL parameter)
+function setTone(tone){
+  if(!tone) return;
+  document.body.setAttribute('data-tone', tone);
+  document.querySelectorAll('[data-set-tone]').forEach(function(b){
+    b.classList.toggle('is-active', b.dataset.setTone === tone);
+  });
+  var chip = document.getElementById('chipTone');
+  var toneDesc = {
+    glacier: '<i style="background:#12B5A0"></i>极光冰川 · 冷青蓝绿',
+    twilight: '<i style="background:#8338EC"></i>暮色暗紫 · 深空紫蓝',
+    obsidian: '<i style="background:#4A5568"></i>黑曜纯深 · 碳黑石墨',
+    dawn: '<i style="background:#FFAE9E"></i>晨曦暖白 · 浅色柔光'
+  };
+  if(chip && toneDesc[tone]) chip.innerHTML = toneDesc[tone];
+  try { localStorage.setItem('ds_liquid_tone', tone); } catch(e){}
+}
+
+window.addEventListener('message', function(e){
+  if(e.data && e.data.type === 'SET_TONE'){
+    setTone(e.data.tone);
+  }
+});
+
+// Check url or localStorage on initial load
+(function(){
+  try {
+    var m = location.search.match(/[?&]tone=([a-z]+)/) || location.hash.match(/[#&]tone=([a-z]+)/);
+    var saved = m ? m[1] : localStorage.getItem('ds_liquid_tone');
+    if(saved) setTone(saved);
+  } catch(e){}
+})();
+
+// ================= GLASS CALENDAR DATE PICKER ENGINE =================
+var currentDateState = {
+  viewYear: 2026,
+  viewMonth: 10, // 0-indexed, 10 = November
+  selectedDate: '2026-11-15'
+};
+
+function renderCalendar(){
+  var year = currentDateState.viewYear;
+  var month = currentDateState.viewMonth;
+  var titleEl = document.getElementById('currentMonthYearText');
+  if(titleEl) titleEl.textContent = year + ' 年 ' + (month + 1) + ' 月';
+
+  var grid = document.getElementById('calendarDaysGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+
+  var firstDayIndex = new Date(year, month, 1).getDay();
+  var totalDays = new Date(year, month + 1, 0).getDate();
+  var prevMonthDays = new Date(year, month, 0).getDate();
+
+  // Previous month padding days
+  for(var i = firstDayIndex - 1; i >= 0; i--){
+    var cell = document.createElement('div');
+    cell.className = 'date-cell is-muted';
+    cell.textContent = prevMonthDays - i;
+    grid.appendChild(cell);
+  }
+
+  // Current month active days
+  for(var d = 1; d <= totalDays; d++){
+    var dayStr = (d < 10 ? '0' : '') + d;
+    var monthStr = (month + 1 < 10 ? '0' : '') + (month + 1);
+    var fullIso = year + '-' + monthStr + '-' + dayStr;
+
+    var cell = document.createElement('div');
+    cell.className = 'date-cell';
+    cell.textContent = d;
+    if(fullIso === currentDateState.selectedDate){
+      cell.classList.add('is-selected');
+    }
+    // High-priority dates for house decisions (e.g. Nov 15th viewing, Dec 31 cutoff)
+    if(fullIso === '2026-11-15' || fullIso === '2026-12-31'){
+      cell.classList.add('has-dot');
+    }
+
+    (function(iso, dayNum){
+      cell.onclick = function(e){
+        e.stopPropagation();
+        chooseCalendarDate(iso, dayNum);
+      };
+    })(fullIso, d);
+
+    grid.appendChild(cell);
+  }
+}
+
+function changeMonth(delta, e){
+  if(e) e.stopPropagation();
+  currentDateState.viewMonth += delta;
+  if(currentDateState.viewMonth < 0){
+    currentDateState.viewMonth = 11;
+    currentDateState.viewYear--;
+  } else if(currentDateState.viewMonth > 11){
+    currentDateState.viewMonth = 0;
+    currentDateState.viewYear++;
+  }
+  renderCalendar();
+}
+
+function chooseCalendarDate(isoStr, dayNum){
+  currentDateState.selectedDate = isoStr;
+  renderCalendar();
+  document.getElementById('selectedDateText').textContent = isoStr;
+  document.getElementById('dateDisplayBadge').textContent = '已定 ' + (currentDateState.viewMonth + 1) + '月' + dayNum + '日';
+  document.getElementById('selectDatePicker').classList.remove('is-open');
+  showToast('选房日程已更新', isoStr);
+}
+
+function setQuickDate(isoStr, label){
+  currentDateState.selectedDate = isoStr;
+  var parts = isoStr.split('-');
+  currentDateState.viewYear = parseInt(parts[0], 10);
+  currentDateState.viewMonth = parseInt(parts[1], 10) - 1;
+  renderCalendar();
+  document.getElementById('selectedDateText').textContent = isoStr;
+  document.getElementById('dateDisplayBadge').textContent = label;
+  document.getElementById('selectDatePicker').classList.remove('is-open');
+  showToast('锚定日程节点', isoStr + ' (' + label + ')');
+}
+
+// Initial calendar render
+document.addEventListener('DOMContentLoaded', renderCalendar);
+setTimeout(renderCalendar, 100);
+
+// Dropdown and Time Picker Handlers
+function toggleDropdown(id){
+  var el = document.getElementById(id);
+  var isOpen = el.classList.contains('is-open');
+  document.querySelectorAll('.custom-select').forEach(function(s){ s.classList.remove('is-open'); });
+  if(!isOpen) el.classList.add('is-open');
+}
+
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.custom-select')){
+    document.querySelectorAll('.custom-select').forEach(function(s){ s.classList.remove('is-open'); });
+  }
+});
+
+function chooseSelectOption(selectId, val, itemEl){
+  var el = document.getElementById(selectId);
+  el.querySelector('.selected-text').textContent = val;
+  el.querySelectorAll('.dropdown-item').forEach(function(item){ item.classList.remove('is-selected'); });
+  itemEl.classList.add('is-selected');
+  el.classList.remove('is-open');
+  showToast('户型偏好已更新', val);
+}
+
+var currentTimeState = { hour: '08', min: '00' };
+
+function setTimePart(type, val, optEl){
+  currentTimeState[type] = val;
+  optEl.parentElement.querySelectorAll('.time-opt').forEach(function(o){ o.classList.remove('is-active'); });
+  optEl.classList.add('is-active');
+  updateTimePickerDisplay();
+}
+
+function setQuickTime(timeStr, label){
+  var parts = timeStr.split(':');
+  currentTimeState.hour = parts[0];
+  currentTimeState.min = parts[1];
+  
+  // Highlight wheels
+  document.querySelectorAll('#colHours .time-opt').forEach(function(o){
+    o.classList.toggle('is-active', o.textContent.trim() === parts[0]);
+  });
+  document.querySelectorAll('#colMinutes .time-opt').forEach(function(o){
+    o.classList.toggle('is-active', o.textContent.trim() === parts[1]);
+  });
+  updateTimePickerDisplay(label);
+  document.getElementById('selectTimePicker').classList.remove('is-open');
+}
+
+function updateTimePickerDisplay(customBadge){
+  var t = currentTimeState.hour + ' : ' + currentTimeState.min;
+  document.getElementById('selectedTimeText').textContent = t;
+  document.getElementById('timeDisplayBadge').textContent = customBadge || (currentTimeState.hour + ':' + currentTimeState.min + ' 设定时刻');
+  showToast('时钟锚点已更新', t + (customBadge ? ' (' + customBadge + ')' : ''));
+}
+
+// Toast notification helper
+function showToast(title, desc){
+  var stack = document.querySelector('.toast-stack');
+  var toast = document.createElement('div');
+  toast.className = 'g-toast';
+  toast.innerHTML = '<div class="toast-icon" style="background:rgba(24,192,168,0.25);color:var(--cyan)">✨</div>'+
+    '<div class="toast-content"><div class="toast-title">'+title+'</div><div class="toast-desc">'+desc+'</div></div>'+
+    '<button class="toast-close" onclick="this.parentElement.remove()">×</button>';
+  stack.prepend(toast);
+  setTimeout(function(){ toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s ease'; setTimeout(function(){ toast.remove(); }, 300); }, 3000);
+}
+
+// Button ripple on click
+document.querySelectorAll('.g-btn').forEach(function(btn){
+  btn.addEventListener('click', function(e){
+    var rect = btn.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    var y = e.clientY - rect.top;
+    var rip = document.createElement('span');
+    rip.className = 'ripple';
+    rip.style.left = x + 'px';
+    rip.style.top = y + 'px';
+    btn.appendChild(rip);
+    setTimeout(function(){ rip.remove(); }, 500);
+  });
+});
+</script>
+    </div>
+</main>
+
+  <!-- 右侧 Rail 全局面板 (322px) -->
+  <aside class="desktop-rail glass">
+    <div class="rail-search" id="dRailSearchBtn" style="cursor:pointer">
+      <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--accent-cyan);fill:none;stroke-width:2.2;flex-shrink:0"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input readonly placeholder="全局搜索小区 / 班车站 / 规则 (⌘K)..." style="cursor:pointer" />
+      <span class="m-search-k" style="font-size:10px;padding:2px 6px">⌘K</span>
+    </div>
+
+    <!-- 卡片 1: 硬筛口径规则 -->
+    <div class="card-inset">
+      <div style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span>📏</span> 硬筛口径规则 (一票否决)
+      </div>
+      <p style="font-size:11px;color:var(--text-dim);margin-bottom:8px">先过硬筛门槛，再进正交打分</p>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-sub)">单程上限硬筛</span><b class="n" style="color:var(--accent-coral)">≤ 90 min</b></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-sub)">标黄预警线</span><b class="n" style="color:var(--accent-amber)">80 - 90 min</b></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-sub)">候选区收敛</span><b>通州 / 大兴 / 昌平</b></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-sub)">城外直达班车</span><b class="n cyan">22 个直达点</b></div>
+      </div>
+    </div>
+
+    <!-- 卡片 2: 双人独立积分核验 (平坦不进排序) -->
+    <div class="card-inset">
+      <div style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span>🎯</span> 积分落户核验 (前置校验)
+      </div>
+      <p style="font-size:11px;color:var(--text-dim);margin-bottom:8px">城六区外积分平坦，不进房源排序</p>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-sub)">老公申报 (3分/年)</span><b class="n" style="color:var(--accent-cyan)">Cap 12 分</b></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-sub)">老婆申报 (2分/年)</span><b class="n" style="color:var(--accent-emerald)">Cap 6 分</b></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-sub)">自有住所加分</span><b class="n">+0.5 分/年</b></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-sub)">资格前置门槛</span><span class="tag-pill" style="background:rgba(220,38,38,0.2);color:var(--accent-coral)">通州双限红标</span></div>
+      </div>
+    </div>
+
+    <!-- 卡片 3: 资金盘核算 (381万真实成交) -->
+    <div class="card-inset">
+      <div style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span>💰</span> 资金盘核算 (真实成交基准)
+      </div>
+      <p style="font-size:11px;color:var(--text-dim);margin-bottom:8px">挂牌 ≠ 成交 · 德茂佳苑 381 万标定</p>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-sub)">首付现款 (35%)</span><b class="n">133.4 万</b></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-sub)">组合贷月供 (40%线内)</span><b class="n cyan">11,799 元</b></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-sub)">上车刚需金 (含税费)</span><b class="n amber">147.5 万</b></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-sub)">12个月月供缓冲池</span><b class="n" style="color:var(--accent-emerald)">14.2 万</b></div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- =====================================================================
+     B. 移动端流式页面体系 (在 < 1024px 时由 CSS 自动呈现)
+     ===================================================================== -->
+<div class="mobile-shell" id="mobileShell">
+  <!-- 原生手机状态栏 (13:06 / 灵动岛 / 5G / 电量) -->
+  <div class="m-status-bar">
+    <div class="m-status-time">13:06</div>
+    <div class="m-island-pill">
+      <div class="m-island-dot"></div>
+      <div class="m-island-cam"></div>
+    </div>
+    <div class="m-status-icons">
+      <span>5G</span>
+      <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 18.5 12 21l7.65-2.5-.62-.89C20.26 16.07 21 14.12 21 12c0-4.97-4.03-9-9-9z"></path></svg>
+      <div class="m-battery-box">
+        <span style="font-size:11px">63%</span>
+        <div class="m-battery-pill"><div class="m-battery-fill"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6 屏视口容器 -->
+  <div class="m-viewport">
+    <!-- 屏 0: 买房指南 (完整对齐 docs/ 体系与桌面端) -->
+    <div class="m-screen" data-mscr="gd">
+      <div class="m-nav-header">
+        <h1 class="m-nav-title">指南</h1>
+        <div class="m-nav-actions">
+          <div class="m-nav-circle-btn" title="红线说明">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- 篇首引导卡 -->
+      <div class="guide-card hero-card">
+        <div class="lb" style="color:var(--accent-cyan)">DOCS 权威知识库精编 · 纯知识精读</div>
+        <div style="font-size:18px;font-weight:800;margin-top:2px;color:var(--text-main)">买房避坑指南体系</div>
+        <div class="guide-p" style="margin-top:6px">核心原则：不是挑选美好，而是排除隐患。建立<strong>底层财务安全边界</strong>、执行<strong>现场 40 分钟静默勘验</strong>、拆解<strong>签约车轮战心理防线</strong>。</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--glass-border-subtle)">
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:var(--accent-cyan);font-weight:700">财务铁律</span><span style="font-size:11.5px;font-weight:600;color:var(--text-main)">月供 ≤ 家庭税后月入 40%</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:var(--accent-cyan);font-weight:700">应急冗余</span><span style="font-size:11.5px;font-weight:600;color:var(--text-main)">强行冻结 12 个月月供备用金</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:var(--accent-cyan);font-weight:700">博弈防线</span><span style="font-size:11.5px;font-weight:600;color:var(--text-main)">签约谈判中场一分不加</span></div>
+        </div>
+      </div>
+
+      <!-- §00 一票否决红线库 -->
+      <div class="guide-card" style="border-left:3px solid var(--accent-coral)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div class="guide-title coral" style="margin-bottom:0">§00 一票否决红线库</div>
+          <span style="font-size:10px;padding:2px 6px;border-radius:6px;background:rgba(255,90,82,0.2);color:#FF5A52">触碰即终止</span>
+        </div>
+        <p class="guide-p" style="margin-bottom:8px">红线不是用来压价的筹码，踩雷损失的是全部本金：</p>
+        <div class="guide-redline-grid">
+          <div class="guide-redline-item">
+            <b>01. 查封 / 抵押权人拒配合解押</b>
+            <p>房屋司法查封，或民间二抵抵押权人拒绝配合注销解押，首付直接面临被抵债风险。</p>
+          </div>
+          <div class="guide-redline-item">
+            <b>02. 拒资金监管 / 首付进私户</b>
+            <p>卖方或中介要求首付绕过政府监管专户打入私人账户，随时面临资金卷款跑路风险。</p>
+          </div>
+          <div class="guide-redline-item">
+            <b>03. 设有民法典不可撤销居住权</b>
+            <p>已在不动产中心设立居住权且签前未注销，买方即便过户也无法进入居住。</p>
+          </div>
+          <div class="guide-redline-item">
+            <b>04. 承重结构严重破坏 / 危房</b>
+            <p>承重墙大面积拆除无法恢复，或房屋被评定为危房不合格，存在坍塌安全隐患。</p>
+          </div>
+          <div class="guide-redline-item">
+            <b>05. 规划垃圾焚烧 / 特高压</b>
+            <p>红线内批建垃圾中转站、高压变电站或污水厂，严重损害居住健康且流动性归零。</p>
+          </div>
+          <div class="guide-redline-item">
+            <b>06. 学位占用拒约定全额解约</b>
+            <p>对口学校实行六年一学位且原业主子女在读，卖方拒绝在合同约定全额赔偿或解约权。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- §01 真实购买力精算 -->
+      <div class="guide-card">
+        <div class="guide-title">§01 真实购买力：总价 vs 总成本</div>
+        <p class="guide-p">月供上限：<strong>家庭税后月入 × 40% − 现有负债</strong>。超过 40% 极易断供：</p>
+        <div class="guide-vs-grid">
+          <div class="guide-vs-box trap">
+            <h4>❌ 危险的总价思维</h4>
+            <ul>
+              <li>• “手头有 150 万，三成首付就按 500 万买”</li>
+              <li>• 把最后一分存款凑进首付，账户流动性归零</li>
+              <li>• 忽视 2%~3% 契税增值税与 2% 中介费硬支出</li>
+              <li>• 认为收入永远递增，按 60% 负债月供强行上车</li>
+            </ul>
+          </div>
+          <div class="guide-vs-box rule">
+            <h4>✔ 成熟的总成本思维</h4>
+            <ul>
+              <li>• 纯首付 = 现金 − 12 个月月供备用金 − 10% 交易杂费</li>
+              <li>• 严格按照家庭税后月入 40% 锁定贷款上限</li>
+              <li>• 预留至少 15 万元硬装与刚性入住置办金</li>
+              <li>• 假定家庭面临 6 个月收入断流，压力测试通过才签</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- §02 挂牌价挤水分 -->
+      <div class="guide-card">
+        <div class="guide-title">§02 挂牌价虚胖：如何挤出成交水分</div>
+        <p class="guide-p">挂牌价非真实估值，通常有 5%~10% 的试探溢价：</p>
+        <div class="guide-tactics-grid">
+          <div class="guide-tactic-card">
+            <b>参考 90 天内真实网签</b>
+            <p>看近 3 个月同户型同楼层真实网签价中位数，不听口头宣传。</p>
+          </div>
+          <div class="guide-tactic-card">
+            <b>结合在架天数试探</b>
+            <p>挂牌超 120 天且带看稀少的房源，房东心理防线脆弱，可果断压价。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- §03 现场 40 分钟动作清单 -->
+      <div class="guide-card">
+        <div class="guide-title">§03 现场勘验 40 分钟静默动作</div>
+        <p class="guide-p">中介进门会开全屋暖灯分散注意力。进屋必须执行下列四步静默动作：</p>
+        <details class="guide-accordion" open>
+          <summary>动作一：进门先关灯，看真实自然采光</summary>
+          <div class="guide-accordion-body">精装房常用高色温射灯遮掩暗厅死角。关灯观察白天客餐厅阴影，若正午仍需开灯，说明有遮挡硬伤。</div>
+        </details>
+        <details class="guide-accordion" open>
+          <summary>动作二：静立 30 秒，闭眼测高架路噪与振动</summary>
+          <div class="guide-accordion-body">关窗不代表安静。体会重型货车经过时的低频轰鸣与玻璃共振。低频噪音无法通过双层玻璃消除，易致长期失眠。</div>
+        </details>
+        <details class="guide-accordion">
+          <summary>动作三：手摸外墙阴角、窗框与厨卫天花板</summary>
+          <div class="guide-accordion-body">排查窗框下沿是否有泛黄水印或重新刷漆掩盖痕迹；卫生间排污管检修口是否有水渍；顶楼四周是否有修补沥青。</div>
+        </details>
+        <details class="guide-accordion">
+          <summary>动作四：同时开水测试水压与下水管反味</summary>
+          <div class="guide-accordion-body">同时打开厨房龙头、花洒并冲马桶，看水压是否骤降；凑近地漏闻是否有刺鼻下水道反味，排查存水弯缺陷。</div>
+        </details>
+      </div>
+
+      <!-- §05 签约谈判车轮战内幕 -->
+      <div class="guide-card">
+        <div class="guide-title">§05 谈判桌上的真实机制：车轮战</div>
+        <div class="guide-p">
+          <strong>中介分室隔离传话：</strong>签约中心把买卖双方安排在两个独立房间，中介两头跑着传话。每谈一轮，中介必定回来说：<em>“差不多到底了，你在原价上加个 3 万行不行？”</em><br>
+          <strong>记住：这是既定逼单话术，不是市场信号！</strong>你加了 3 万，中介会立刻去诱惑卖方，并在下一轮用同样方式再要一次。
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border-left:3px solid var(--accent-cyan);padding:8px 12px;border-radius:0 10px 10px 0;margin:8px 0;font-size:11.5px;line-height:1.6;color:var(--text-main)">
+          <strong>探底四问（一次性问出）：</strong><br>
+          “我们看了一圈，觉得和您家房子确实有缘。请问您当时出于什么考虑买的这套房？现在又是怎么考虑要卖了呢？”<br>
+          <span style="color:var(--text-dim)">↳ 一问四得：转手次数、急售动因、心理底价空间、潜在纠纷。</span>
+        </div>
+        <div class="guide-tactics-grid">
+          <div class="guide-tactic-card">
+            <b>底价留足 10 万空间</b>
+            <p>报给中介的底价比心理极限再低 10 万，留足后续被动让步空间。</p>
+          </div>
+          <div class="guide-tactic-card">
+            <b>中场一分不加</b>
+            <p>平静合上本子说回去商量，中介担心业绩泡汤会自己回去死压卖方。</p>
+          </div>
+          <div class="guide-tactic-card">
+            <b>约在晚上谈</b>
+            <p>夜间人体力耗尽且急于达成协议收工，卖方心理防线极易松动。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- §06 合同补充条款 12 条 -->
+      <div class="guide-card">
+        <div class="guide-title">§06 合同补充条款核心防线</div>
+        <p class="guide-p">格式合同往往免除中介自身责任，下列防线必须逐字写入补充协议：</p>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+          <div class="guide-vs-box rule" style="padding:10px 12px">
+            <h4 style="font-size:12px">01. 贷款不批无条件全退定金</h4>
+            <p style="font-size:11.5px;color:var(--text-sub);line-height:1.55">因非买方恶意原因导致批贷不足或不予批贷的，买方有权单方解约，卖方 3 日内全额退款。绝不用“协商解决”。</p>
+          </div>
+          <div class="guide-vs-box rule" style="padding:10px 12px">
+            <h4 style="font-size:12px">02. 权属瑕疵与隐蔽瑕疵担保</h4>
+            <p style="font-size:11.5px;color:var(--text-sub);line-height:1.55">卖方保证无抵押、查封、租赁及居住权占用，承担不少于 6 个月隐蔽渗漏担保期；若无法过户，卖方双倍返还定金。</p>
+          </div>
+          <div class="guide-vs-box rule" style="padding:10px 12px">
+            <h4 style="font-size:12px">03. 户口学位迁出与尾款约束</h4>
+            <p style="font-size:11.5px;color:var(--text-sub);line-height:1.55">约定最晚迁出日及每日万分之五违约金；留存 5~10 万元交房尾款，户口全部迁出且对口学位无占用后再结清。</p>
+          </div>
+          <div class="guide-vs-box rule" style="padding:10px 12px">
+            <h4 style="font-size:12px">04. 中介费延后至交房结清</h4>
+            <p style="font-size:11.5px;color:var(--text-sub);line-height:1.55">签约仅付 30%，过户交房且水电气结清后付清余款；若中介隐瞒抵押、查封或重大瑕疵，全额退还中介费。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- §07 税费与交房终极红线 -->
+      <div class="guide-card">
+        <div class="guide-title">§07 税费精算与交房验房终极红线</div>
+        <div class="guide-p">
+          • <strong>满五唯一省税法门</strong>：契税 1%~1.5%，证满 2 年免增值税（约 5.3%）；<strong>满五唯一完全免征个人所得税（差额 20% 或全额 1%）</strong>，未满五产生数十万高额税费。<br>
+          • <strong>交房终极红线</strong>：<strong>在水电燃气未结清、房屋隐蔽渗漏整改单未签署前，坚决不签《物业交接单》，不给付交房尾款！</strong>一旦签字放款，遗留漏水与欠费全部由买方承担。
+        </div>
+      </div>
+
+      <div class="sm" style="margin:14px 0 10px;font-size:11px;color:var(--text-dim);text-align:center">DOCS 权威知识库精编 · 响应式双端 1:1 对齐</div>
+    </div>
+
+    <!-- 屏 1: 概览 -->
+    <div class="m-screen is-active" data-mscr="ov">
+      <div class="m-nav-header">
+        <h1 class="m-nav-title">首页</h1>
+        <div class="m-nav-actions">
+          <!-- AI 智能分析圆钮 (渐变彩标) -->
+          <div class="m-nav-circle-btn" title="AI 决策建议">
+            <svg viewBox="0 0 24 24" style="width:20px;height:20px"><defs><linearGradient id="mAiGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#38BDF8"/><stop offset="50%" stop-color="#A855F7"/><stop offset="100%" stop-color="#EC4899"/></linearGradient></defs><circle cx="12" cy="12" r="8" fill="none" stroke="url(#mAiGrad)" stroke-width="2.2" stroke-dasharray="3 2"></circle><circle cx="12" cy="12" r="2.8" fill="url(#mAiGrad)"></circle></svg>
+          </div>
+          <!-- 铃铛/通知圆钮 -->
+          <div class="m-nav-circle-btn" title="消息通知">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- 首页专属全局搜索胶囊 (参照截图首页搜索条) -->
+      <div class="m-search-bar" id="mSearchBar">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <div class="m-search-text">搜小区 / 班车站 / 品质分 / 预算...</div>
+        <div class="m-search-k">⌘K</div>
+      </div>
+
+      <div class="m-card glass">
+        <div class="lb">城六区外选房 · 候选片区</div>
+        <div style="display:flex;align-items:baseline;gap:8px;margin-top:6px">
+          <span class="n" style="font-size:44px;font-weight:800;line-height:1">7</span>
+          <span style="font-size:14px;color:var(--text-sub)">个候选片区入池</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px">通州 / 大兴 / 昌平 · 22 个班车站直达点</div>
+      </div>
+
+      <div class="m-card glass">
+        <div class="lb">双人通勤时间分布 (门到门)</div>
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px">
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:12px">
+              <span>老公 · 施耐德 (大兴凉水河)</span>
+              <span class="n cyan" style="font-weight:700">62′ (班车)</span>
+            </div>
+            <div style="height:6px;background:rgba(255,255,255,0.15);border-radius:3px;margin-top:4px;overflow:hidden">
+              <div style="width:68%;height:100%;background:var(--accent-cyan);border-radius:3px"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:12px">
+              <span>老婆 · 环贸 D 座 (北三环东路)</span>
+              <span class="n amber" style="font-weight:700">88′ (地铁)</span>
+            </div>
+            <div style="height:6px;background:rgba(255,255,255,0.15);border-radius:3px;margin-top:4px;overflow:hidden">
+              <div style="width:97%;height:100%;background:var(--accent-amber);border-radius:3px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="m-card glass">
+        <div class="lb">积分前置平坦声明</div>
+        <div style="font-size:12px;color:var(--text-sub);line-height:1.6;margin-top:6px">
+          城六区外积分平坦，不进排序；两数并列校验：老公 12 分 / 老婆 6 分。
+        </div>
+      </div>
+    </div>
+
+    <!-- 屏 2: 通勤选房 -->
+    <div class="m-screen" data-mscr="cm">
+      <div class="m-nav-header">
+        <h1 class="m-nav-title">通勤</h1>
+        <div class="m-nav-actions">
+          <div class="m-nav-circle-btn" title="班车站筛选">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+          </div>
+        </div>
+      </div>
+      <div class="m-card glass">
+        <div class="lb">单程通勤主榜 · 严格硬筛 ≤ 90′</div>
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+          <div style="padding:10px;background:rgba(255,255,255,0.1);border-radius:14px;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:14px;font-weight:700">德茂佳苑</div>
+              <div style="font-size:11px;color:var(--text-dim)">大兴 旧宫 · 381万</div>
+            </div>
+            <div style="text-align:right">
+              <div class="n amber" style="font-size:14px;font-weight:700">88′</div>
+              <div style="font-size:10px;color:var(--accent-amber)">余 2′ 黄标</div>
+            </div>
+          </div>
+
+          <div style="padding:10px;background:rgba(255,255,255,0.1);border-radius:14px;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:14px;font-weight:700">熙悦林语</div>
+              <div style="font-size:11px;color:var(--text-dim)">大兴 亦庄 · 352万</div>
+            </div>
+            <div style="text-align:right">
+              <div class="n emerald" style="font-size:14px;font-weight:700">78′</div>
+              <div style="font-size:10px;color:var(--accent-emerald)">两人均在80′内</div>
+            </div>
+          </div>
+
+          <div style="padding:10px;background:rgba(255,255,255,0.05);border-radius:14px;display:flex;justify-content:space-between;align-items:center;opacity:0.6">
+            <div>
+              <div style="font-size:14px;font-weight:700">芳源里 (超筛出榜)</div>
+              <div style="font-size:11px;color:var(--text-dim)">大兴 瀛海 · 356万</div>
+            </div>
+            <div style="text-align:right">
+              <div class="n coral" style="font-size:14px;font-weight:700">96′</div>
+              <div style="font-size:10px;color:var(--accent-coral)">超硬筛 6′</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 屏 3: 小区详情 -->
+    <div class="m-screen" data-mscr="det">
+      <div class="m-nav-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="m-nav-circle-btn" style="width:34px;height:34px;font-size:18px;font-weight:700" title="返回" onclick="document.querySelector('.m-tab-btn[data-mtab=\'cm\']').click()">‹</div>
+          <h1 class="m-nav-title" style="font-size:24px">小区详情</h1>
+        </div>
+        <div class="m-nav-actions">
+          <div class="m-nav-circle-btn" title="加入待选">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+          </div>
+        </div>
+      </div>
+      <div class="m-card glass">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span class="lb">焦点小区透视</span>
+          <span class="tag-pill" style="background:rgba(217,119,6,0.2);color:var(--accent-amber)">榜首黄标</span>
+        </div>
+        <div style="font-size:22px;font-weight:800;margin-top:2px">德茂佳苑</div>
+        <div style="font-size:12px;color:var(--text-dim)">大兴区 旧宫镇 · 2004 年 · 89㎡ 两室</div>
+      </div>
+
+      <div class="m-card glass">
+        <div class="lb">口径差切换检验</div>
+        <div style="display:flex;gap:10px;margin-top:8px">
+          <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:12px;padding:10px;text-align:center">
+            <div style="font-size:11px;color:var(--text-dim)">德茂地铁站</div>
+            <div class="n" style="font-size:20px;font-weight:700;margin-top:2px">74′</div>
+            <div style="font-size:10px;color:var(--text-dim);margin-top:2px">站到站口径</div>
+          </div>
+          <div style="flex:1;background:rgba(217,119,6,0.15);border:1px solid rgba(217,119,6,0.3);border-radius:12px;padding:10px;text-align:center">
+            <div class="amber" style="font-size:11px">东门 (决策基准)</div>
+            <div class="n coral" style="font-size:20px;font-weight:700;margin-top:2px">88′</div>
+            <div style="font-size:10px;color:var(--accent-amber);margin-top:2px">真实门到门</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="m-card glass">
+        <div class="lb">议价空间与成交总价</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:8px">
+          <div>
+            <div style="font-size:11px;color:var(--text-dim)">挂牌 395 万 → 成交</div>
+            <div class="n" style="font-size:26px;font-weight:700">381<span style="font-size:14px"> 万</span></div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;color:var(--text-dim)">实际议价空间</div>
+            <div class="n amber" style="font-size:18px;font-weight:700">−14 万 (3.5%)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 屏 4: 待选池 -->
+    <div class="m-screen" data-mscr="sl">
+      <div class="m-nav-header">
+        <h1 class="m-nav-title">待选池</h1>
+        <div class="m-nav-actions">
+          <div class="m-nav-circle-btn" title="批量导出">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          </div>
+        </div>
+      </div>
+      <div class="m-card glass">
+        <div class="lb">待选池状态</div>
+        <div style="font-size:18px;font-weight:700;margin-top:2px">留一 · 看一 · 弃一</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="m-card glass" style="border-left:4px solid var(--accent-cyan)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:15px;font-weight:700">德茂佳苑</div>
+            <span class="tag-pill" style="background:rgba(2,132,199,0.2);color:var(--accent-cyan)">留</span>
+          </div>
+          <p style="font-size:12px;color:var(--text-sub);margin-top:4px">老婆 88′ 未越 90′ 硬筛，议价 −14 万，品质 61 分。</p>
+        </div>
+
+        <div class="m-card glass" style="border-left:4px solid var(--accent-amber)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:15px;font-weight:700">熙悦林语</div>
+            <span class="tag-pill" style="background:rgba(217,119,6,0.2);color:var(--accent-amber)">看</span>
+          </div>
+          <p style="font-size:12px;color:var(--text-sub);margin-top:4px">两人通勤均在 80′ 黄金圈内，面积略小需现场看采光。</p>
+        </div>
+
+        <div class="m-card glass" style="border-left:4px solid rgba(120,120,120,0.4);opacity:0.65">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:15px;font-weight:700">芳源里</div>
+            <span class="tag-pill" style="background:rgba(120,120,120,0.2);color:var(--text-dim)">弃</span>
+          </div>
+          <p style="font-size:12px;color:var(--text-sub);margin-top:4px">老婆单程 96′ 突破 90′ 硬筛红线，单价低也坚决弃用。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 屏 5: 算钱 -->
+    <div class="m-screen" data-mscr="my">
+      <div class="m-nav-header">
+        <h1 class="m-nav-title">算钱</h1>
+        <div class="m-nav-actions">
+          <div class="m-nav-circle-btn" title="利率配置">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          </div>
+        </div>
+      </div>
+      <div class="m-card glass">
+        <div class="lb">预算核算 · 锁定真实成交 381 万</div>
+        <div style="display:flex;align-items:baseline;gap:8px;margin-top:6px">
+          <span class="n" style="font-size:42px;font-weight:800;line-height:1">133.4</span>
+          <span style="font-size:14px;color:var(--text-sub)">万首付款 (35%)</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px">组合贷款 247.6 万 · 25 年等额本息</div>
+      </div>
+
+      <div class="m-card glass">
+        <div class="lb">月供与上车总现金</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;margin-top:8px">
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--text-sub)">公积金贷 (60万 @ 2.85%)</span>
+            <span class="n">2,842 元/月</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--text-sub)">商业贷款 (187.6万 @ 3.10%)</span>
+            <span class="n">8,957 元/月</span>
+          </div>
+          <div style="height:1px;background:var(--glass-border-subtle);margin:4px 0"></div>
+          <div style="display:flex;justify-content:space-between;font-weight:700">
+            <span>月供合计</span>
+            <span class="n cyan" style="font-size:16px">11,799 元/月</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-weight:700">
+            <span>所需现金合计 (含税费中介费)</span>
+            <span class="n amber" style="font-size:16px">147.5 万</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 屏 6: 我的 (严格参照用户截图高品质卡片重构) -->
+    <div class="m-screen" data-mscr="me">
+      <!-- 顶栏区域：大标题「我的」 + 右侧 AI彩标 + 扫码圆钮 (我的页面无搜索条与搜索按钮) -->
+      <div class="m-nav-header" style="padding-bottom:14px">
+        <h1 class="m-nav-title">我的</h1>
+        <div class="m-nav-actions">
+          <!-- AI 彩色发光圆钮 -->
+          <div class="m-nav-circle-btn" title="AI 智能助手">
+            <svg viewBox="0 0 24 24" style="width:22px;height:22px"><defs><linearGradient id="aiGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#38BDF8"/><stop offset="50%" stop-color="#A855F7"/><stop offset="100%" stop-color="#EC4899"/></linearGradient></defs><circle cx="12" cy="12" r="8" fill="none" stroke="url(#aiGrad)" stroke-width="2.5" stroke-dasharray="3 2"></circle><circle cx="12" cy="12" r="3" fill="url(#aiGrad)"></circle><circle cx="6" cy="6" r="1.5" fill="#38BDF8"></circle><circle cx="18" cy="18" r="1.5" fill="#EC4899"></circle></svg>
+          </div>
+          <!-- 扫码 / 跨设备对齐圆钮 -->
+          <div class="me-circle-btn" title="扫码对齐">
+            <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:var(--text-main);stroke-width:2"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M4 16v3a1 1 0 0 0 1 1h3M16 20h3a1 1 0 0 0 1-1v-3"></path><line x1="8" y1="12" x2="16" y2="12" stroke-linecap="round"></line></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- 用户信息卡片 (自用决策工作台定位) -->
+      <div class="me-user-card">
+        <div class="me-avatar-wrap">
+          <div class="me-avatar-img">
+            <svg viewBox="0 0 64 64" style="width:44px;height:44px"><circle cx="32" cy="32" r="30" fill="#E2E8F0"></circle><path d="M18 22 C18 14, 46 14, 46 22 C48 30, 42 40, 32 40 C22 40, 16 30, 18 22 Z" fill="#64748B"></path><circle cx="32" cy="30" r="14" fill="#FDE68A"></circle><path d="M22 24 C26 18, 38 18, 42 24 C40 28, 38 29, 32 29 C26 29, 24 28, 22 24 Z" fill="#475569"></path><circle cx="28" cy="28" r="2.2" fill="#1E293B"></circle><circle cx="36" cy="28" r="2.2" fill="#1E293B"></circle><path d="M20 54 C22 44, 42 44, 44 54 Z" fill="#3B82F6"></path></svg>
+          </div>
+          <div class="me-avatar-badge">✓</div>
+        </div>
+        <div class="me-user-meta">
+          <div class="me-username">allen</div>
+          <div class="me-vip-tag">
+            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#0284C7"></span>
+            家庭决策席 · 本地私有
+          </div>
+        </div>
+      </div>
+
+      <!-- 分组 2: 视觉主题底膜 (可即时切换 4 色底膜) -->
+      <div class="me-group-card" style="padding:14px 18px">
+        <div style="font-size:13px;font-weight:700;color:var(--text-dim);margin-bottom:12px;letter-spacing:0.04em">视觉主题底膜 (点击即时生效)</div>
+        <div class="theme-selector-grid">
+          <div class="theme-card is-active" data-tone-pick="dawn">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div class="theme-info">
+                <strong>晨曦暖白 (Dawn)</strong>
+                <span>浅色柔光 · 清透折射 (默认)</span>
+              </div>
+              <div class="theme-preview-dots">
+                <div class="theme-dot" style="background:#EEF3F8"></div>
+                <div class="theme-dot" style="background:#FFAE9E"></div>
+                <div class="theme-dot" style="background:#0284C7"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="theme-card" data-tone-pick="glacier">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div class="theme-info">
+                <strong>极光冰川 (Glacier)</strong>
+                <span>冷青蓝绿 · 深邃极光</span>
+              </div>
+              <div class="theme-preview-dots">
+                <div class="theme-dot" style="background:#030B12"></div>
+                <div class="theme-dot" style="background:#12B5A0"></div>
+                <div class="theme-dot" style="background:#227AB5"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="theme-card" data-tone-pick="twilight">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div class="theme-info">
+                <strong>暮色暗紫 (Twilight)</strong>
+                <span>深空紫蓝 · 霓虹暗色</span>
+              </div>
+              <div class="theme-preview-dots">
+                <div class="theme-dot" style="background:#080410"></div>
+                <div class="theme-dot" style="background:#8338EC"></div>
+                <div class="theme-dot" style="background:#3A86FF"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="theme-card" data-tone-pick="obsidian">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div class="theme-info">
+                <strong>黑曜纯深 (Obsidian)</strong>
+                <span>石墨碳黑 · 纯粹克制</span>
+              </div>
+              <div class="theme-preview-dots">
+                <div class="theme-dot" style="background:#050608"></div>
+                <div class="theme-dot" style="background:#3D4A62"></div>
+                <div class="theme-dot" style="background:#E2E8F0"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 参照截图 m00989 规范：家庭资金与收入设定 (自用决策核心锚点) -->
+      <div class="me-section-title">财务与买房盘子设定</div>
+      <div class="me-group-card">
+        <!-- 家庭月收入入口 -->
+        <div class="me-row" id="rowFamilyIncome">
+          <div class="me-row-left">
+            <div class="me-row-icon" style="color:#0284C7">
+              <svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+            </div>
+            <div>
+              <div class="me-row-title">家庭税后月入</div>
+              <div class="me-row-desc">夫妻双方合算 · 锁定月供安全上限</div>
+            </div>
+          </div>
+          <div class="me-row-right">
+            <div class="me-setting-pill">
+              <span>32,000 元/月</span>
+              <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"></path></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- 刚需备用金留存 -->
+        <div class="me-row">
+          <div class="me-row-left">
+            <div class="me-row-icon" style="color:#10B981">
+              <svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            </div>
+            <div>
+              <div class="me-row-title">备用金留存</div>
+              <div class="me-row-desc">不可动用的6个月生活保障垫</div>
+            </div>
+          </div>
+          <div class="me-row-right">
+            <div class="me-setting-pill">
+              <span>20.0 万元</span>
+              <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"></path></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- 负债警戒线占比 -->
+        <div class="me-row">
+          <div class="me-row-left">
+            <div class="me-row-icon" style="color:#F59E0B">
+              <svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            </div>
+            <div>
+              <div class="me-row-title">负债月供上限率</div>
+              <div class="me-row-desc">月供 / 月入，默认严格控制在40%内</div>
+            </div>
+          </div>
+          <div class="me-row-right">
+            <div class="me-setting-pill">
+              <span>40% (安全)</span>
+              <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"></path></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- 公积金组合贷模式开关 -->
+        <div class="me-row">
+          <div class="me-row-left">
+            <div class="me-row-icon" style="color:#6366F1">
+              <svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"></path></svg>
+            </div>
+            <div>
+              <div class="me-row-title">双人公积金冲还贷</div>
+              <div class="me-row-desc">北京国管/市管满额 120万/人</div>
+            </div>
+          </div>
+          <div class="me-row-right">
+            <div class="me-toggle is-on" title="切换公积金冲抵"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 参照截图 m00989 规范：决策偏好与计算参数 -->
+      <div class="me-section-title">决策口径与隐私</div>
+      <div class="me-group-card">
+        <div class="me-row">
+          <div class="me-row-left">
+            <div class="me-row-icon">
+              <svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </div>
+            <div class="me-row-title">通勤时长口径</div>
+          </div>
+          <div class="me-row-right">
+            <div class="me-setting-pill">
+              <span>小区门到工位门 ▼</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="me-row">
+          <div class="me-row-left">
+            <div class="me-row-icon">
+              <svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            </div>
+            <div class="me-row-title">默认选房范围</div>
+          </div>
+          <div class="me-row-right">
+            <div class="me-setting-pill">
+              <span>城六区外 3区 ▼</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="me-row">
+          <div class="me-row-left">
+            <div class="me-row-icon">
+              <svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </div>
+            <div>
+              <div class="me-row-title">全本地离线存储</div>
+              <div class="me-row-desc">敏感薪资与资产不出手机</div>
+            </div>
+          </div>
+          <div class="me-row-right">
+            <span style="font-size:12px;color:var(--text-dim)">已启用</span>
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--text-dim);stroke-width:2;fill:none"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- 屏 7: 组件库 (移动端 · 液态玻璃点击组件) -->
+    <section class="m-screen" data-mscr="cp">
+      <div class="m-nav-header">
+        <h1 class="m-nav-title">组件</h1>
+        <div class="m-nav-actions">
+          <div class="m-nav-circle-btn" id="mCompToastBtn" title="演示通知 Toast">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1. 按钮与微动效 -->
+      <div class="m-comp-card">
+        <div class="sec-title"><span>按钮与触控微动效</span><span class="sec-sub">按下内陷 · 微光涟漪</span></div>
+        <div class="btn-group">
+          <button class="g-btn g-btn-primary" onclick="showToast('主操作','已加入重点决策池')"><span>✨ 确认加入决策</span></button>
+          <button class="g-btn" onclick="showToast('次要操作','房源对比数据已刷新')"><span>次要操作</span></button>
+          <button class="g-btn g-btn-danger" onclick="showToast('一票否决','该房源已被剔除出池')"><span>一票否决</span></button>
+        </div>
+        <div class="m-comp-note">触屏端无 hover 滞留：按下时 scale(0.96) 弹性内陷并触发微光水波涟漪，抬手立即回到静息态。</div>
+      </div>
+
+      <!-- 2. Toast 说明 -->
+      <div class="m-comp-card">
+        <div class="sec-title"><span>全局通知 Toast</span><span class="sec-sub">底部浮出 · 3s 自动淡出</span></div>
+        <div class="m-comp-note">点击上方按钮或右上角圆钮，消息条从胶囊 TabBar 上方浮出；点 × 可立即关闭，切换主题底膜时配色跟随。</div>
+      </div>
+
+      <!-- 3. 表单输入组件 (下拉 / 时间 / 日期均以底部 sheet 弹出) -->
+      <div class="m-comp-card">
+        <div class="sec-title"><span>表单输入组件</span><span class="sec-sub">玻璃底膜 · 聚焦柔光</span></div>
+        <div class="input-stack">
+          <div class="input-field">
+            <div class="input-label"><span>搜索房源或商圈</span><span style="font-size:11px;color:var(--cyan)">实时过滤</span></div>
+            <div class="g-input-wrap">
+              <span class="input-icon">🔍</span>
+              <input class="g-input" placeholder="输入小区名（如：望京西园）..." value="望京西园三区" />
+            </div>
+          </div>
+
+          <!-- 下拉选择 -->
+          <div class="input-field">
+            <div class="input-label"><span>户型结构要求 (下拉选择)</span><span style="font-size:11px;color:var(--cyan)">底部弹出</span></div>
+            <div class="custom-select" id="mSelectHouseType">
+              <div class="custom-select-trigger" onclick="toggleDropdown('mSelectHouseType')">
+                <span class="selected-text">南北通透 · 2室1厅</span>
+                <span class="custom-select-arrow">▼</span>
+              </div>
+              <div class="glass-dropdown-menu">
+                <div class="dropdown-item is-selected" onclick="chooseSelectOption('mSelectHouseType','南北通透 · 2室1厅',this)">
+                  <span>南北通透 · 2室1厅</span><span class="dropdown-check">✓</span>
+                </div>
+                <div class="dropdown-item" onclick="chooseSelectOption('mSelectHouseType','全南向两居 · 采光优先',this)">
+                  <span>全南向两居 · 采光优先</span><span class="dropdown-check">✓</span>
+                </div>
+                <div class="dropdown-item" onclick="chooseSelectOption('mSelectHouseType','全明三居 · 双卫格局',this)">
+                  <span>全明三居 · 双卫格局</span><span class="dropdown-check">✓</span>
+                </div>
+                <div class="dropdown-item" onclick="chooseSelectOption('mSelectHouseType','一层带花园 / 顶层复式',this)">
+                  <span>一层带花园 / 顶层复式</span><span class="dropdown-check">✓</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 时间选择 -->
+          <div class="input-field">
+            <div class="input-label"><span>到岗 / 班车时刻 (时间选择)</span><span data-badge="time" style="font-size:11px;color:var(--amber)">08:00 到岗</span></div>
+            <div class="custom-select" id="mSelectTimePicker">
+              <div class="custom-select-trigger" onclick="toggleDropdown('mSelectTimePicker')">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:14px">⏱️</span>
+                  <span class="selected-text" style="font-family:var(--mono);font-weight:700">08 : 00</span>
+                </div>
+                <span class="custom-select-arrow">▼</span>
+              </div>
+              <div class="glass-dropdown-menu">
+                <div class="time-picker-panel" data-hour="08" data-min="00">
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:11.5px;font-weight:700;color:var(--text-sub)">时分选择 (时 / 分)</span>
+                    <span style="font-size:11px;color:var(--cyan)">班车时刻倒推</span>
+                  </div>
+                  <div class="time-wheel-group">
+                    <div class="time-col-wrap">
+                      <div class="time-col-label">时 (HH)</div>
+                      <div class="time-scroll-col" data-part="hour">
+                        <div class="time-opt" onclick="mSetTime('hour','06',this)">06</div>
+                        <div class="time-opt" onclick="mSetTime('hour','07',this)">07</div>
+                        <div class="time-opt is-active" onclick="mSetTime('hour','08',this)">08</div>
+                        <div class="time-opt" onclick="mSetTime('hour','09',this)">09</div>
+                        <div class="time-opt" onclick="mSetTime('hour','10',this)">10</div>
+                      </div>
+                    </div>
+                    <div class="time-sep">:</div>
+                    <div class="time-col-wrap">
+                      <div class="time-col-label">分 (MM)</div>
+                      <div class="time-scroll-col" data-part="min">
+                        <div class="time-opt is-active" onclick="mSetTime('min','00',this)">00</div>
+                        <div class="time-opt" onclick="mSetTime('min','15',this)">15</div>
+                        <div class="time-opt" onclick="mSetTime('min','30',this)">30</div>
+                        <div class="time-opt" onclick="mSetTime('min','45',this)">45</div>
+                        <div class="time-opt" onclick="mSetTime('min','52',this)">52</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="time-quick-pills">
+                    <span class="time-pill" onclick="mSetQuickTime('06:52','快专3路班车',this)">06:52 班车发车</span>
+                    <span class="time-pill" onclick="mSetQuickTime('08:00','施耐德到岗',this)">08:00 施耐德到岗</span>
+                    <span class="time-pill" onclick="mSetQuickTime('09:00','环贸到岗',this)">09:00 环贸到岗</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 日期选择 -->
+          <div class="input-field">
+            <div class="input-label"><span>实地看房 (日期选择)</span><span data-badge="date" style="font-size:11px;color:var(--cyan)">周六实测</span></div>
+            <div class="custom-select" id="mSelectDatePicker">
+              <div class="custom-select-trigger" onclick="toggleDropdown('mSelectDatePicker')">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:14px">📅</span>
+                  <span class="selected-text" style="font-family:var(--mono);font-weight:700">2026-11-15</span>
+                </div>
+                <span class="custom-select-arrow">▼</span>
+              </div>
+              <div class="glass-dropdown-menu">
+                <div class="date-picker-panel" data-year="2026" data-month="10" data-selected="2026-11-15">
+                  <div class="date-header">
+                    <button class="date-nav-btn" onclick="mChangeMonth(-1, this)">‹</button>
+                    <div class="date-month-title">2026 年 11 月</div>
+                    <button class="date-nav-btn" onclick="mChangeMonth(1, this)">›</button>
+                  </div>
+                  <div class="date-weekdays">
+                    <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+                  </div>
+                  <div class="date-grid"></div>
+                  <div class="date-quick-pills">
+                    <span class="date-pill" onclick="mQuickDate('2026-11-15','本周六·德茂看房',this)">本周六实地看房</span>
+                    <span class="date-pill" onclick="mQuickDate('2026-12-31','落户积分核算截点',this)">2026-12-31 年限截点</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="switch-row">
+            <div>
+              <div style="font-weight:600">严格开启一票否决</div>
+              <div style="font-size:11px;color:var(--text-dim)">命中临铁临高架等 4 条硬伤房直接隐藏</div>
+            </div>
+            <div class="g-switch is-on" onclick="this.classList.toggle('is-on')"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. 模态弹窗预览 -->
+      <div class="m-comp-card">
+        <div class="sec-title"><span>模态弹窗 (Modal)</span><span class="sec-sub">高透玻璃 · 深度虚化</span></div>
+        <div class="modal-preview-box">
+          <div class="g-modal">
+            <div class="modal-head">
+              <h4>确认核定此房源成交目标价？</h4>
+              <span style="font-size:11px;color:var(--cyan)">望京西园三区</span>
+            </div>
+            <div class="modal-body">锁定目标价为 <b>392 万元</b>（挂牌砍价空间估算 −18 万），同步重算首付 117.6 万与现金清盘沙盘。</div>
+            <div class="modal-foot">
+              <button class="g-btn" style="padding:6px 14px;font-size:12px" onclick="showToast('已取消','未锁定目标价')">取消</button>
+              <button class="g-btn g-btn-primary" style="padding:6px 14px;font-size:12px" onclick="showToast('已锁定','392 万目标价已写入决策池')">确认锁定</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. 加载态 -->
+      <div class="m-comp-card">
+        <div class="sec-title"><span>加载与骨架屏</span><span class="sec-sub">液态微光 · 呼吸点</span></div>
+        <div class="loading-row">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="g-spinner"></div>
+            <span style="font-size:12px;color:var(--text-sub)">正在同步周边成交真实底价...</span>
+          </div>
+          <div class="dots-pulse"><span></span><span></span><span></span></div>
+        </div>
+        <div class="skeleton-box">
+          <div class="skeleton-line" style="width:40%"></div>
+          <div class="skeleton-line" style="width:85%"></div>
+          <div class="skeleton-line" style="width:65%"></div>
+        </div>
+      </div>
+    </section>
+
+  <!-- 移动端底部悬浮药丸胶囊 TabBar -->
+<div id="mToastStack"></div>
+
+  <div class="m-tabbar-wrap">
+    <nav class="m-tabbar">
+      <button class="m-tab-btn" data-mtab="gd">指南</button>
+      <button class="m-tab-btn is-active" data-mtab="ov">概览</button>
+      <button class="m-tab-btn" data-mtab="cm">通勤</button>
+      <button class="m-tab-btn" data-mtab="det">小区</button>
+      <button class="m-tab-btn" data-mtab="sl">待选</button>
+      <button class="m-tab-btn" data-mtab="my">算钱</button>
+      <button class="m-tab-btn" data-mtab="cp">组件</button>
+      <button class="m-tab-btn" data-mtab="me">我的</button>
+    </nav>
+  </div>
+</div>
+
+<!-- =====================================================================
+     C. 跨端统一 Spotlight 检索中枢浮层 (全屏高斯模糊)
+     ===================================================================== -->
+<div class="spotlight-modal" id="spotlightModal">
+  <div class="spotlight-input-box">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    <input id="spotlightInput" placeholder="输入小区 / 班车站 / 品质指标 / 预算进行穿透检索..." />
+    <span class="spotlight-cancel" id="spotlightCancel">完成</span>
+  </div>
+
+  <div class="spotlight-chips">
+    <span class="spotlight-chip is-active" data-filter="all">全部 (12)</span>
+    <span class="spotlight-chip" data-filter="house">候选房源 (5)</span>
+    <span class="spotlight-chip" data-filter="station">班车站 (3)</span>
+    <span class="spotlight-chip" data-filter="rule">硬筛规则 (2)</span>
+    <span class="spotlight-chip" data-filter="budget">资金盘 (2)</span>
+  </div>
+
+  <div class="spotlight-list">
+    <!-- 房源类 -->
+    <div class="spotlight-item" data-type="house" data-jump="det">
+      <div>
+        <div style="font-size:14px;font-weight:700">德茂佳苑 (大兴 旧宫)</div>
+        <div style="font-size:12px;color:var(--text-dim)">老公 62′ · 老婆 88′ · 成交价 381 万 · 议价 −14 万</div>
+      </div>
+      <span class="tag-pill" style="background:rgba(217,119,6,0.2);color:var(--accent-amber)">榜首黄标</span>
+    </div>
+
+    <div class="spotlight-item" data-type="house" data-jump="cm">
+      <div>
+        <div style="font-size:14px;font-weight:700">熙悦林语 (大兴 亦庄)</div>
+        <div style="font-size:12px;color:var(--text-dim)">老公 48′ · 老婆 78′ · 两人均在 80′ 黄金圈内</div>
+      </div>
+      <span class="tag-pill" style="background:rgba(5,150,105,0.2);color:var(--accent-emerald)">绿标优先</span>
+    </div>
+
+    <div class="spotlight-item" data-type="house" data-jump="cm">
+      <div>
+        <div style="font-size:14px;font-weight:700">融创中心 (通州 梨园)</div>
+        <div style="font-size:12px;color:var(--text-dim)">双人通勤均 ≤75′ · 通州双限资格前置核验</div>
+      </div>
+      <span class="tag-pill" style="background:rgba(220,38,38,0.2);color:var(--accent-coral)">资格待核</span>
+    </div>
+
+    <div class="spotlight-item" data-type="house" data-jump="cm">
+      <div>
+        <div style="font-size:14px;font-weight:700">芳源里 (大兴 瀛海)</div>
+        <div style="font-size:12px;color:var(--text-dim)">老婆 96′ 超出 90′ 硬筛 · 坚决出榜</div>
+      </div>
+      <span class="tag-pill" style="background:rgba(220,38,38,0.2);color:var(--accent-coral)">超筛出榜</span>
+    </div>
+
+    <div class="spotlight-item" data-type="house" data-jump="det">
+      <div>
+        <div style="font-size:14px;font-weight:700">金地中央格林 (昌平 回龙观)</div>
+        <div style="font-size:12px;color:var(--text-dim)">老婆 45′ 直达 · 老公 82′ 班车直达点接驳</div>
+      </div>
+      <span class="tag-pill" style="background:rgba(2,132,199,0.2);color:var(--accent-cyan)">昌平直达</span>
+    </div>
+
+    <!-- 班车站类 -->
+    <div class="spotlight-item" data-type="station" data-jump="cm">
+      <div>
+        <div style="font-size:14px;font-weight:700">施耐德直达班车点 (大兴 凉水河二街2号)</div>
+        <div style="font-size:12px;color:var(--text-dim)">德茂站 06:58 发车 · 08:00 到岗 · 车程 51 分钟</div>
+      </div>
+      <span class="tag-pill" style="background:rgba(2,132,199,0.2);color:var(--accent-cyan)">班车站</span>
+    </div>
+
+    <div class="spotlight-item" data-type="station" data-jump="cm">
+      <div>
+        <div style="font-size:14px;font-weight:700">旧宫地铁站接驳专线</div>
+        <div style="font-size:12px;color:var(--text-dim)">亦庄T1有轨电车接驳 · 07:15 发车 · 07:50 达厂</div>
+      </div>
+      <span class="tag-pill" style="background:rgba(2,132,199,0.2);color:var(--accent-cyan)">接驳专线</span>
+    </div>
+
+    <div class="spotlight-item" data-type="station" data-jump="cm">
+      <div>
+        <div style="font-size:14px;font-weight:700">环贸D座通勤快线 (北三环东路)</div>
+        <div style="font-size:12px;color:var(--text-dim)">地铁 8 号线安德里北街直达 · 09:00 前无缝打卡</div>
+      </div>
+      <span class="tag-pill" style="background:rgba(5,150,105,0.2);color:var(--accent-emerald)">地铁直达</span>
+    </div>
+
+    <!-- 规则类 -->
+    <div class="spotlight-item" data-type="rule" data-jump="gd">
+      <div>
+        <div style="font-size:14px;font-weight:700">通州双限购房资格前置核验</div>
+        <div style="font-size:12px;color:var(--text-dim)">近 3 年纳税/社保未核实前严禁交定金 · 一票否决</div>
+      </div>
+      <span class="tag-pill" style="background:rgba(220,38,38,0.2);color:var(--accent-coral)">一票否决</span>
+    </div>
+
+    <div class="spotlight-item" data-type="rule" data-jump="gd">
+      <div>
+        <div style="font-size:14px;font-weight:700">单程 ≤90min 硬筛与 80min 预警</div>
+        <div style="font-size:12px;color:var(--text-dim)">单程超 90 分钟坚决不出主榜 · 80-90 分钟亮黄标</div>
+      </div>
+      <span class="tag-pill" style="background:rgba(217,119,6,0.2);color:var(--accent-amber)">通勤红线</span>
+    </div>
+
+    <!-- 资金类 -->
+    <div class="spotlight-item" data-type="budget" data-jump="my">
+      <div>
+        <div style="font-size:14px;font-weight:700">40% 月供极限负债沙盘</div>
+        <div style="font-size:12px;color:var(--text-dim)">家庭税后月入 × 40% − 现有负债 · 严防收入断流</div>
+      </div>
+      <span class="tag-pill" style="background:rgba(2,132,199,0.2);color:var(--accent-cyan)">财务红线</span>
+    </div>
+
+    <div class="spotlight-item" data-type="budget" data-jump="my">
+      <div>
+        <div style="font-size:14px;font-weight:700">12 个月月供缓冲安全储备金</div>
+        <div style="font-size:12px;color:var(--text-dim)">按月供 11,799 元储备 14.16 万元强冻结备用金</div>
+      </div>
+      <span class="tag-pill" style="background:rgba(5,150,105,0.2);color:var(--accent-emerald)">安全垫</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// =====================================================================
+// 1. 底膜实时切换逻辑 (Glacier / Twilight / Obsidian / Dawn)
+// =====================================================================
+function setTone(tone){
+  if(!tone) return;
+  document.body.setAttribute('data-tone', tone);
+  // 同步顶栏或按钮状态
+  document.querySelectorAll('[data-tone-val]').forEach(function(b){
+    b.classList.toggle('is-active', b.dataset.toneVal === tone);
+  });
+  // 同步我的页面中卡片的高亮状态
+  document.querySelectorAll('[data-tone-pick]').forEach(function(card){
+    card.classList.toggle('is-active', card.dataset.tonePick === tone);
+  });
+  try { localStorage.setItem('ds_liquid_tone', tone); } catch(e){}
+}
+
+document.querySelectorAll('[data-tone-val]').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    setTone(btn.dataset.toneVal);
+  });
+});
+
+document.querySelectorAll('[data-tone-pick]').forEach(function(card){
+  card.addEventListener('click', function(){
+    setTone(card.dataset.tonePick);
+  });
+});
+
+// =====================================================================
+// 2. 桌面端导轨 Tab 切换
+// =====================================================================
+document.querySelectorAll('.d-nav-item').forEach(function(item){
+  item.addEventListener('click', function(){
+    document.querySelectorAll('.d-nav-item').forEach(function(n){ n.classList.remove('is-active'); });
+    item.classList.add('is-active');
+
+    var v = item.dataset.dview;
+    var g = document.getElementById('dViewGuide');
+    var c = document.getElementById('dViewCommute');
+    var p = document.getElementById('dViewProfile');
+    var cp = document.getElementById('dViewComponents');
+    var t = document.getElementById('dPageTitle');
+
+    if(g) g.style.display = 'none';
+    if(c) c.style.display = 'none';
+    if(p) p.style.display = 'none';
+    if(cp) cp.style.display = 'none';
+
+    if(v === 'components'){
+      var cp = document.getElementById('dViewComponents');
+      if(cp) cp.style.display = 'flex';
+      if(t) t.textContent = '交互组件库规范 · 液态玻璃全景';
+    } else if(v === 'guide'){
+      if(g) g.style.display = 'flex';
+      if(t) t.textContent = '买房避坑知识库 · 体系化精读指南';
+    } else if(v === 'profile'){
+      if(p) p.style.display = 'flex';
+      if(t) t.textContent = '决策者偏好与视觉主题底膜';
+    } else {
+      if(c) c.style.display = 'flex';
+      if(t) t.textContent = '通勤选房工作台';
+    }
+  });
+});
+
+// =====================================================================
+// 3. 移动端 6 屏悬浮药丸胶囊切换
+// =====================================================================
+document.querySelectorAll('.m-tab-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.m-tab-btn').forEach(function(b){ b.classList.remove('is-active'); });
+    btn.classList.add('is-active');
+
+    var targetScr = btn.dataset.mtab;
+    document.querySelectorAll('.m-screen').forEach(function(scr){
+      scr.classList.toggle('is-active', scr.dataset.mscr === targetScr);
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+// =====================================================================
+// 4. Spotlight 全局搜索中枢交互
+// =====================================================================
+var modal = document.getElementById('spotlightModal');
+var input = document.getElementById('spotlightInput');
+var cancel = document.getElementById('spotlightCancel');
+var mSearch = document.getElementById('mSearchBar');
+var dSearch = document.getElementById('dRailSearchBtn');
+
+function openSpotlight(){
+  if(modal) modal.classList.add('is-open');
+  setTimeout(function(){ if(input) input.focus(); }, 60);
+}
+function closeSpotlight(){
+  if(modal) modal.classList.remove('is-open');
+}
+
+if(mSearch) mSearch.addEventListener('click', openSpotlight);
+if(dSearch) dSearch.addEventListener('click', openSpotlight);
+if(cancel) cancel.addEventListener('click', closeSpotlight);
+document.querySelectorAll('.open-spotlight-btn').forEach(function(btn){
+  btn.addEventListener('click', openSpotlight);
+});
+
+// 快捷键 ⌘K / Ctrl+K 支持
+window.addEventListener('keydown', function(e){
+  if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'){
+    e.preventDefault();
+    if(modal.classList.contains('is-open')) closeSpotlight(); else openSpotlight();
+  }
+  if(e.key === 'Escape' && modal.classList.contains('is-open')){
+    closeSpotlight();
+  }
+});
+
+// Spotlight 交互与实时输入检索过滤
+var currentFilter = 'all';
+var spotlightInput = document.getElementById('spotlightInput');
+
+function filterSpotlightItems(){
+  var query = (spotlightInput ? spotlightInput.value : '').trim().toLowerCase();
+  document.querySelectorAll('.spotlight-item').forEach(function(item){
+    var matchesType = (currentFilter === 'all' || item.dataset.type === currentFilter);
+    var text = item.textContent.toLowerCase();
+    var matchesQuery = !query || text.indexOf(query) !== -1;
+    if(matchesType && matchesQuery){
+      item.style.display = 'flex';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+}
+
+if(spotlightInput){
+  spotlightInput.addEventListener('input', filterSpotlightItems);
+}
+
+// Spotlight 分类过滤胶囊
+document.querySelectorAll('.spotlight-chip').forEach(function(chip){
+  chip.addEventListener('click', function(){
+    document.querySelectorAll('.spotlight-chip').forEach(function(c){ c.classList.remove('is-active'); });
+    chip.classList.add('is-active');
+    currentFilter = chip.dataset.filter || 'all';
+    filterSpotlightItems();
+  });
+});
+
+// 点击检索结果穿透直达
+document.querySelectorAll('.spotlight-item[data-jump]').forEach(function(item){
+  item.addEventListener('click', function(){
+    var jump = item.dataset.jump;
+    // 移动端切换
+    var mBtn = document.querySelector('.m-tab-btn[data-mtab="'+jump+'"]');
+    if(mBtn) mBtn.click();
+
+    // 桌面端切换
+    var dBtn = document.querySelector('.d-nav-item[data-dview="'+(jump === 'gd' ? 'guide' : 'commute')+'"]');
+    if(dBtn) dBtn.click();
+
+    closeSpotlight();
+  });
+});
+
+// 支持 URL hash 直达屏
+(function(){
+  var hash = window.location.hash.replace('#','');
+  if(hash){
+    var targetMTab = document.querySelector('.m-tab-btn[data-mtab="'+hash+'"]');
+    if(targetMTab) targetMTab.click();
+    var targetDNav = document.querySelector('.d-nav-item[data-dview="'+hash+'"]');
+    if(targetDNav) targetDNav.click();
+  }
+})();
+
+// 初始化检测主题
+(function(){
+  try {
+    var m = location.search.match(/[?&]tone=([a-z]+)/) || location.hash.match(/[#&]tone=([a-z]+)/);
+    var saved = m ? m[1] : (localStorage.getItem('ds_liquid_tone') || 'dawn');
+    if(saved) setTone(saved);
+  } catch(e){}
+})();
+</script>
+<script>
+/* ================= 移动端组件屏交互 (Toast 路由 / 时间 / 日期 / 涟漪) ================= */
+(function(){
+  'use strict';
+  var desktopShell = document.querySelector('.desktop-shell');
+  function isMobileShell(){
+    return desktopShell ? window.getComputedStyle(desktopShell).display === 'none' : false;
+  }
+  function mPad2(n){ var s = String(n); return s.length < 2 ? '0' + s : s; }
+
+  /* ---- 1. Toast: 移动端写入 #mToastStack，桌面端沿用原实现 ---- */
+  var legacyShowToast = window.showToast;
+  function mRenderToast(title, desc){
+    var stack = document.getElementById('mToastStack');
+    if(!stack){ return typeof legacyShowToast === 'function' ? legacyShowToast(title, desc) : null; }
+    var item = document.createElement('div');
+    item.className = 'g-toast';
+    var icon = document.createElement('div');
+    icon.className = 'toast-icon';
+    icon.textContent = '\u2713';
+    var body = document.createElement('div');
+    body.className = 'toast-body';
+    var ttl = document.createElement('div');
+    ttl.className = 'toast-title';
+    ttl.textContent = title || '';
+    body.appendChild(ttl);
+    if(desc){
+      var d = document.createElement('div');
+      d.className = 'toast-desc';
+      d.textContent = desc;
+      body.appendChild(d);
+    }
+    var cls = document.createElement('span');
+    cls.className = 'toast-close';
+    cls.textContent = '\u00d7';
+    item.appendChild(icon); item.appendChild(body); item.appendChild(cls);
+    stack.appendChild(item);
+    var done = false;
+    var timer = setTimeout(dismiss, 3200);
+    function dismiss(){
+      if(done) return;
+      done = true;
+      clearTimeout(timer);
+      item.classList.add('is-out');
+      setTimeout(function(){ if(item.parentNode) item.parentNode.removeChild(item); }, 320);
+    }
+    cls.addEventListener('click', dismiss);
+    return item;
+  }
+  window.showToast = function(title, desc){
+    if(isMobileShell()) return mRenderToast(title, desc);
+    if(typeof legacyShowToast === 'function') return legacyShowToast(title, desc);
+  };
+
+  /* ---- 2. 时间选择 (面板级状态, 不碰桌面全局 currentTimeState) ---- */
+  function mSyncTimeCol(panel, part, val){
+    var col = panel.querySelector('.time-scroll-col[data-part="' + part + '"]');
+    if(!col) return;
+    var opts = col.querySelectorAll('.time-opt');
+    for(var i = 0; i < opts.length; i++){
+      opts[i].classList.toggle('is-active', opts[i].textContent.trim() === val);
+    }
+  }
+  window.mUpdateTime = function(panel){
+    if(!panel) return;
+    var hh = panel.getAttribute('data-hour') || '08';
+    var mm = panel.getAttribute('data-min') || '00';
+    var wrap = panel.closest('.custom-select');
+    if(wrap){
+      var st = wrap.querySelector('.selected-text');
+      if(st) st.textContent = hh + ' : ' + mm;
+    }
+    var card = panel.closest('.m-comp-card');
+    if(card){
+      var badge = card.querySelector('[data-badge="time"]');
+      if(badge && !badge.getAttribute('data-lock')) badge.textContent = hh + ':' + mm;
+    }
+  };
+  window.mSetTime = function(part, val, el){
+    var panel = el.closest('.time-picker-panel');
+    if(!panel) return;
+    panel.setAttribute(part === 'hour' ? 'data-hour' : 'data-min', val);
+    var siblings = el.parentNode.querySelectorAll('.time-opt');
+    for(var i = 0; i < siblings.length; i++) siblings[i].classList.remove('is-active');
+    el.classList.add('is-active');
+    var card = panel.closest('.m-comp-card');
+    if(card){
+      var pills = card.querySelectorAll('.time-pill');
+      for(var j = 0; j < pills.length; j++) pills[j].classList.remove('is-active');
+      var b0 = card.querySelector('[data-badge="time"]');
+      if(b0) b0.removeAttribute('data-lock');
+    }
+    window.mUpdateTime(panel);
+  };
+  window.mSetQuickTime = function(hhmm, label, el){
+    var panel = el.closest('.time-picker-panel');
+    if(!panel) return;
+    var parts = String(hhmm).split(':');
+    var hh = mPad2(parts[0] || '0');
+    var mm = mPad2(parts[1] || '0');
+    panel.setAttribute('data-hour', hh);
+    panel.setAttribute('data-min', mm);
+    var pills = el.parentNode.querySelectorAll('.time-pill');
+    for(var i = 0; i < pills.length; i++) pills[i].classList.remove('is-active');
+    el.classList.add('is-active');
+    mSyncTimeCol(panel, 'hour', hh);
+    mSyncTimeCol(panel, 'min', mm);
+    window.mUpdateTime(panel);
+    var card = panel.closest('.m-comp-card');
+    if(card){
+      var badge = card.querySelector('[data-badge="time"]');
+      if(badge){ badge.textContent = hh + ':' + mm + ' ' + label; badge.setAttribute('data-lock', '1'); }
+    }
+    var wrap = panel.closest('.custom-select');
+    if(wrap) wrap.classList.remove('is-open');
+    window.showToast('时刻已更新', hh + ':' + mm + ' \u00b7 ' + label);
+  };
+
+  /* ---- 3. 日期选择 (面板级 year/month/selected) ---- */
+  window.mRenderCalendar = function(panel){
+    if(!panel) return;
+    var y = parseInt(panel.getAttribute('data-year'), 10);
+    var m = parseInt(panel.getAttribute('data-month'), 10);
+    if(isNaN(y) || isNaN(m)) return;
+    var sel = panel.getAttribute('data-selected') || '';
+    var title = panel.querySelector('.date-month-title');
+    if(title) title.textContent = y + ' \u5e74 ' + (m + 1) + ' \u6708';
+    var grid = panel.querySelector('.date-grid');
+    if(!grid) return;
+    while(grid.firstChild) grid.removeChild(grid.firstChild);
+    var startDow = new Date(y, m, 1).getDay();
+    var daysInMonth = new Date(y, m + 1, 0).getDate();
+    var prevDays = new Date(y, m, 0).getDate();
+    var total = Math.ceil((startDow + daysInMonth) / 7) * 7;
+    for(var i = 0; i < total; i++){
+      var cell = document.createElement('div');
+      cell.className = 'date-cell';
+      var offs = i - startDow;
+      var dayNum;
+      if(offs < 0){ dayNum = prevDays + offs + 1; cell.classList.add('is-muted'); }
+      else if(offs >= daysInMonth){ dayNum = offs - daysInMonth + 1; cell.classList.add('is-muted'); }
+      else { dayNum = offs + 1; }
+      cell.textContent = dayNum;
+      if(offs >= 0 && offs < daysInMonth){
+        cell.setAttribute('data-date', y + '-' + mPad2(m + 1) + '-' + mPad2(dayNum));
+        if(cell.getAttribute('data-date') === sel) cell.classList.add('is-selected');
+        cell.addEventListener('click', function(){ window.mPickDate(this); });
+      }
+      grid.appendChild(cell);
+    }
+  };
+  window.mChangeMonth = function(delta, btn){
+    var panel = btn.closest('.date-picker-panel');
+    if(!panel) return;
+    var y = parseInt(panel.getAttribute('data-year'), 10);
+    var m = parseInt(panel.getAttribute('data-month'), 10) + delta;
+    y += Math.floor(m / 12);
+    m = ((m % 12) + 12) % 12;
+    panel.setAttribute('data-year', y);
+    panel.setAttribute('data-month', m);
+    window.mRenderCalendar(panel);
+  };
+  function mCommitDate(panel, iso, label){
+    panel.setAttribute('data-selected', iso);
+    var parts = iso.split('-');
+    panel.setAttribute('data-year', parseInt(parts[0], 10));
+    panel.setAttribute('data-month', parseInt(parts[1], 10) - 1);
+    window.mRenderCalendar(panel);
+    var wrap = panel.closest('.custom-select');
+    if(wrap){
+      var st = wrap.querySelector('.selected-text');
+      if(st) st.textContent = iso;
+      wrap.classList.remove('is-open');
+    }
+    var card = panel.closest('.m-comp-card');
+    if(card){
+      var badge = card.querySelector('[data-badge="date"]');
+      if(badge) badge.textContent = label || (iso.slice(5) + ' \u5df2\u9009');
+    }
+    window.showToast('\u770b\u623f\u65e5\u671f\u5df2\u9501\u5b9a', label ? (iso + ' \u00b7 ' + label) : iso);
+  }
+  window.mPickDate = function(cell){
+    var panel = cell.closest('.date-picker-panel');
+    if(!panel) return;
+    var iso = cell.getAttribute('data-date');
+    if(!iso) return;
+    mCommitDate(panel, iso, null);
+  };
+  window.mQuickDate = function(iso, label, el){
+    var panel = el.closest('.date-picker-panel');
+    if(!panel) return;
+    var pills = el.parentNode.querySelectorAll('.date-pill');
+    for(var i = 0; i < pills.length; i++) pills[i].classList.remove('is-active');
+    el.classList.add('is-active');
+    mCommitDate(panel, iso, label);
+  };
+
+  /* ---- 4. 组件屏按钮涟漪 + 通知圆钮 ---- */
+  function bindRipple(btn){
+    if(!btn || btn.getAttribute('data-m-ripple') === '1') return;
+    btn.setAttribute('data-m-ripple', '1');
+    btn.addEventListener('pointerdown', function(ev){
+      var r = btn.getBoundingClientRect();
+      var size = Math.max(r.width, r.height) * 1.2;
+      var span = document.createElement('span');
+      span.className = 'ripple';
+      span.style.width = span.style.height = size + 'px';
+      span.style.left = (ev.clientX - r.left - size / 2) + 'px';
+      span.style.top = (ev.clientY - r.top - size / 2) + 'px';
+      btn.appendChild(span);
+      setTimeout(function(){ if(span.parentNode) span.parentNode.removeChild(span); }, 620);
+    });
+  }
+  function init(){
+    var panel = document.querySelector('.m-screen[data-mscr="cp"] .date-picker-panel');
+    if(panel) window.mRenderCalendar(panel);
+    var cp = document.querySelector('.m-screen[data-mscr="cp"]');
+    if(cp){
+      var btns = cp.querySelectorAll('.g-btn');
+      for(var i = 0; i < btns.length; i++) bindRipple(btns[i]);
+    }
+    var toastBtn = document.getElementById('mCompToastBtn');
+    if(toastBtn && toastBtn.getAttribute('data-bound') !== '1'){
+      toastBtn.setAttribute('data-bound', '1');
+      toastBtn.addEventListener('click', function(){
+        window.showToast('\u5b9e\u65f6\u901a\u77e5', '\u5468\u8fb9 3 \u4e2a\u5c0f\u533a\u6302\u724c\u4ef7\u5df2\u5237\u65b0');
+      });
+    }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+</body>
+</html>

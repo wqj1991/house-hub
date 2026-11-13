@@ -1,0 +1,24 @@
+{
+  "name": "house-hub",
+  "private": true,
+  "version": "0.2.0",
+  "license": "UNLICENSED",
+  "type": "module",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @house/web dev",
+    "build": "pnpm --filter @house/web build",
+    "app:dev": "pnpm --filter @house/shell dev",
+    "app:build": "pnpm --filter @house/shell build",
+    "api:dev": "pnpm --filter @house/api dev",
+    "api:start": "pnpm --filter @house/api start",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "worker:once": "python services/worker/worker.py --once",
+    "version:sync": "node scripts/version.mjs",
+    "version:check": "node scripts/version.mjs --check"
+  }
+}

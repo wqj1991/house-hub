@@ -1,0 +1,35 @@
+@import "./glass.css";
+@import "@house/ui/tokens.css";
+
+/* 设计系统由 glass.css 自带（reset / 四底膜 / 组件库），这里只补壳层细节。 */
+#root {
+  min-height: 100vh;
+}
+
+/* 手机端：多栏布局一律塌成单列，避免右侧来源卡被挤到屏外 */
+@media (max-width: 1023px) {
+  .board-split,
+  .kpi-row,
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .table-header,
+  .table-row {
+    grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr)) !important;
+    font-size: 11px;
+  }
+}
+
+/* 检索浮层默认隐藏，is-open 时显示（v1 用同一套 mark） */
+.spotlight-modal:not(.is-open) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 右侧 Rail 在窄屏收起 */
+@media (max-width: 1279px) {
+  .desktop-rail {
+    display: none;
+  }
+}

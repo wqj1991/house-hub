@@ -1,0 +1,22 @@
+node_modules/
+dist/
+dist-ssr/
+.target/
+target/
+*.tsbuildinfo
+.vite/
+apps/shell/src-tauri/gen/
+*.local
+*.log
+.DS_Store
+
+# 本地环境变量；真实密钥走 /opt/house/api.env（600），不进仓库
+.env
+.env.*
+!.env.example
+
+# 抓数产物与临时文件
+*.tmp
+*.tmpdir/
+tools/**/out/
+coverage/

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "house-hub",
+  "version": "../package.json",
+  "identifier": "com.yg.house",
+  "build": {
+    "beforeDevCommand": "pnpm --filter @house/web dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm --filter @house/web build",
+    "frontendDist": "../web/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "买房",
+        "width": 1180,
+        "height": 820,
+        "decorations": false,
+        "transparent": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": []
+  }
+}

@@ -1,0 +1,10 @@
+[Unit]
+Description=house 每日备份
+
+[Timer]
+OnCalendar=*-*-* 03:20:00
+Persistent=true
+Unit=house-backup.service
+
+[Install]
+WantedBy=timers.target

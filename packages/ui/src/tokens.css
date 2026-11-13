@@ -1,0 +1,17 @@
+/* 「悬浮纸」主题 tokens：三端共用一套，与平台无关（ADR-0003）。 */
+:root {
+  --paper: #f6f2e8;
+  --paper-2: #fffdf7;
+  --paper-edge: #e4dcc8;
+  --ink: #2b2620;
+  --ink-2: #6a6154;
+  --accent: #b4553a;
+  --accent-soft: #f0d9cf;
+  --ok: #4a7c59;
+  --warn: #b8862b;
+  --danger: #a63d3d;
+
+  --radius-sheet: 18px;
+  --shadow-sheet: 0 1px 2px rgb(43 38 32 / 8%), 0 12px 28px -18px rgb(43 38 32 / 45%);
+  --float-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}

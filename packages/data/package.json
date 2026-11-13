@@ -1,0 +1,28 @@
+{
+  "name": "@house/data",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@house/core": "workspace:*",
+    "@house/protocol": "workspace:*"
+  },
+  "peerDependencies": {
+    "@tauri-apps/api": "^2.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@tauri-apps/api": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@tauri-apps/api": "^2.9.0",
+    "typescript": "^5.9.3"
+  }
+}

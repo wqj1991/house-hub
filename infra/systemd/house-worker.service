@@ -1,0 +1,19 @@
+[Unit]
+Description=house worker (job runner)
+After=house-api.service
+Wants=house-api.service
+
+[Service]
+Type=oneshot
+User=house
+Group=house
+WorkingDirectory=/opt/house
+EnvironmentFile=/opt/house/worker.env
+ExecStart=/usr/bin/python3 /opt/house/services/worker/worker.py --once
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=house-worker
