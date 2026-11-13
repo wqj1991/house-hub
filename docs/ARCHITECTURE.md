@@ -256,6 +256,8 @@ async function tick() {
 // 触发：启动、每 60s、窗口聚焦、写操作后 debounce 5s、网络恢复事件
 ~~~
 
+落地状态（2026-11-13，见 ADR 0006）：`applyPage` 已实现——Tauri 走 `apply_sync_page`（lib.rs，单事务 + 墓碑 + `sync_meta.rev`），Web 走 IndexedDB 快照（`packages/data/src/snapshot.ts`）。循环加了防截断守卫 `if (!page.more || page.rev <= since) break;`，`MAX_PAGES = 20`。
+
 ### 6.5 冲突：按表的「字段所有权」定赢家，不写通用 CRDT
 
 单家庭、两个人、几台设备，冲突几乎只有两类：「人改的」vs「服务器抓的」。规则写死一张表：
@@ -477,3 +479,5 @@ P0/P1 收益最高、风险最低，建议先做；P4 可以最后做，因为 s
 | 0002 本地优先 | 部分取代 | 「没有服务端」被取代；「本地优先、离线可用」保留并强化（见 0005） |
 | 0003 UI 用悬浮纸主题包 | 有效 | 主题包零构建，天然跨端 |
 | 0004 补数放服务器、证据入字段 | 有效，被放大 | 从一个 py 文件升级为 worker + job 队列，规则不变 |
+| 0005 多端一后端 | 有效 | 一台同步中枢 + Web 端 RemoteRepo；本地优先不变 |
+| 0006 同步落库与本地 rev 归属 | 有效 | rev 存 `sync_meta` 不同步；`apply_sync_page` 单事务；Web 落 IndexedDB 快照 |

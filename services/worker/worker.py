@@ -26,25 +26,38 @@ def log(msg):
     sys.stderr.flush()
 
 
-def call(path, payload=None, timeout=30):
-    """返回 (status, body)；204 的 body 是 None。"""
+def _json_or_text(raw):
+    """服务器不一定回 JSON（404/502 是 HTML），解析失败就当纯文本。"""
+    if not raw:
+        return None
+    try:
+        return json.loads(raw)
+    except ValueError:
+        return raw[:500]
+
+
+def call(path, payload=None, timeout=30, method=None):
+    """返回 (status, body)；204 的 body 是 None。
+
+    method 必须能显式指定：claim 是 POST 但没 body，按 payload 猜会猜成 GET，
+    线上表现是 404（这条走过一次弯路，别再按 payload 推断）。
+    """
     data = None if payload is None else json.dumps(payload).encode("utf-8")
-    req = Request(API + path, data=data, method="POST" if data is not None else "GET")
+    verb = method or ("POST" if data is not None else "GET")
+    req = Request(API + path, data=data, method=verb)
     req.add_header("x-internal-token", TOKEN)
     req.add_header("accept", "application/json")
     if data is not None:
         req.add_header("content-type", "application/json")
     try:
         with urlopen(req, timeout=timeout) as res:
-            raw = res.read().decode("utf-8")
-            return res.status, (json.loads(raw) if raw else None)
+            return res.status, _json_or_text(res.read().decode("utf-8"))
     except HTTPError as err:
-        raw = err.read().decode("utf-8", "replace")
-        return err.code, (json.loads(raw) if raw else None)
+        return err.code, _json_or_text(err.read().decode("utf-8", "replace"))
 
 
 def claim():
-    status, body = call("/internal/jobs/claim")
+    status, body = call("/internal/jobs/claim", method="POST")
     if status == 204:
         return None
     if status != 200:

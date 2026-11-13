@@ -1,11 +1,23 @@
 export function SpotlightModal({ open }: { open: boolean }) {
   return (
     <>
-<div className={`spotlight-modal${open ? " is-open" : ""}`} id="spotlightModal">
+<div
+  className={`spotlight-modal${open ? " is-open" : ""}`}
+  id="spotlightModal"
+  role="dialog"
+  aria-modal="true"
+  aria-label="穿透检索"
+  aria-hidden={!open}
+>
   <div className="spotlight-input-box">
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-    <input id="spotlightInput" placeholder="输入小区 / 班车站 / 品质指标 / 预算进行穿透检索..." />
-    <span className="spotlight-cancel" id="spotlightCancel">完成</span>
+    <input
+      id="spotlightInput"
+      type="search"
+      aria-label="检索小区、班车站、规则或预算"
+      placeholder="输入小区 / 班车站 / 品质指标 / 预算进行穿透检索..."
+    />
+    <button className="spotlight-cancel" id="spotlightCancel" type="button">完成</button>
   </div>
   <div className="spotlight-chips">
     <span className="spotlight-chip is-active" data-filter="all">全部 (12)</span>

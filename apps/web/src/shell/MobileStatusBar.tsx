@@ -1,3 +1,5 @@
+import { DataStatus } from "./DataStatus";
+
 export function MobileStatusBar() {
   return (
     <>
@@ -8,6 +10,7 @@ export function MobileStatusBar() {
       <div className="m-island-cam"></div>
     </div>
     <div className="m-status-icons">
+      <DataStatus compact />
       <span>5G</span>
       <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 18.5 12 21l7.65-2.5-.62-.89C20.26 16.07 21 14.12 21 12c0-4.97-4.03-9-9-9z" /></svg>
       <div className="m-battery-box">

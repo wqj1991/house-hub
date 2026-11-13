@@ -1,11 +1,12 @@
 [Unit]
 Description=house 备份 house.db
+After=house-api.service
 
 [Service]
 Type=oneshot
 User=house
 Group=house
-ExecStart=/opt/house/infra/backup.sh
+ExecStart=/opt/house/current/infra/backup.sh
 ReadWritePaths=/var/lib/house /var/backups/house
 StandardOutput=journal
 SyslogIdentifier=house-backup

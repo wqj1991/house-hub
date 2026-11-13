@@ -35,8 +35,9 @@ export function MobileShell({ active, onSelect, screens }: Props) {
           {MOBILE_TABS.map((tab) => (
             <button
               key={tab.key}
-              className={"m-tab-btn" + (tab.screen === active && tab.key === activeTabKey(active) ? " is-active" : "")}
+              className={"m-tab-btn" + (tab.screen === active ? " is-active" : "")}
               data-mtab={tab.key}
+              aria-current={tab.screen === active ? "page" : undefined}
               onClick={() => onSelect(tab.screen)}
             >
               {tab.label}
@@ -46,10 +47,4 @@ export function MobileShell({ active, onSelect, screens }: Props) {
       </div>
     </div>
   );
-}
-
-/** 高亮“我的”时同时对应 me / cp 两个入口，取第一个匹配项。 */
-function activeTabKey(screen: string): string {
-  const hit = MOBILE_TABS.find((tab) => tab.screen === screen);
-  return hit ? hit.key : screen;
 }

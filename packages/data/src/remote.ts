@@ -10,10 +10,11 @@ import type {
   ShuttleLine,
   SyncReport,
 } from "@house/core";
-import { API_PREFIX, ApiRoutes, ErrorCodes } from "@house/protocol";
+import { API_PREFIX, ApiRoutes, ErrorCodes, SYNC_TABLES } from "@house/protocol";
 import type { PullResponse, PushRequest, PushResponse } from "@house/protocol";
 import type { HouseRepo } from "./repo";
 import { outbox } from "./outbox";
+import { snapshot } from "./snapshot";
 
 export interface ApiClientOptions {
   /** 同源部署时留空，走相对路径 /house-api。 */
@@ -87,14 +88,33 @@ export class RemoteRepo implements HouseRepo {
   }
 
   async upsertCommunity(input: { name: string; district?: string }): Promise<number> {
-    void input;
-    // TODO(P1): 服务器暂不接受新建小区（抓数才建）；本地先落 outbox，等后台建库。
+    // 服务器只认抓数建立的小区；手填的先入 outbox，等 push 后由 /sync/pull 分配 uid。
+    // 返回值是本地句柄，Web 端没有自增 id，一律 0——页面用 uid 追踪。
+    await outbox.enqueue({
+      table: "community",
+      uid: crypto.randomUUID(),
+      op: "upsert",
+      fields: { name: input.name, district: input.district ?? "", lng: 0, lat: 0 },
+      baseRev: 0,
+      clientTs: new Date().toISOString(),
+    });
     return 0;
   }
 
-  listShortlist(): Promise<Community[]> {
-    // TODO(P2): 从 /sync/pull 的快照读。
-    return Promise.resolve([]);
+  async listShortlist(): Promise<Community[]> {
+    // 快照来自 /sync/pull：待选行只存 uid + note，小区主体在 community 表里。
+    const [short, communities] = await Promise.all([
+      snapshot.rows("shortlist"),
+      snapshot.rows("community"),
+    ]);
+    const byUid = new Map<string, Record<string, unknown>>();
+    for (const c of communities) byUid.set(String(c.uid ?? ""), c);
+    const out: Community[] = [];
+    for (const s of short) {
+      const c = byUid.get(String(s.community_uid ?? ""));
+      if (c) out.push(toCommunity(c));
+    }
+    return out;
   }
 
   async addShortlist(communityId: number, note?: string): Promise<void> {
@@ -119,9 +139,18 @@ export class RemoteRepo implements HouseRepo {
     });
   }
 
-  listQuality(communityId: number): Promise<QualityRow[]> {
-    void communityId;
-    return Promise.resolve([]);
+  async listQuality(communityId: number): Promise<QualityRow[]> {
+    const rows = await snapshot.rows("community_quality");
+    const key = String(communityId);
+    return rows
+      .filter((r) => String(r.community_uid ?? r.community_id ?? "") === key)
+      .map((r) => ({
+        itemKey: String(r.item_key ?? ""),
+        valueNum: r.value_num == null ? null : Number(r.value_num),
+        valueText: r.value_text == null ? null : String(r.value_text),
+        source: r.source == null ? null : String(r.source),
+        fetchedAt: r.fetched_at == null ? null : String(r.fetched_at),
+      }));
   }
 
   async setQuality(
@@ -141,8 +170,15 @@ export class RemoteRepo implements HouseRepo {
     });
   }
 
-  listChecks(): Promise<CheckRow[]> {
-    return Promise.resolve([]);
+  async listChecks(): Promise<CheckRow[]> {
+    const rows = await snapshot.rows("check_state");
+    return rows.map((r) => ({
+      kind: String(r.kind ?? "") as CheckRow["kind"],
+      itemKey: String(r.item_key ?? ""),
+      checked: Number(r.checked ?? 0) === 1 || r.checked === true,
+      note: r.note == null ? null : String(r.note),
+      updatedAt: r.updated_at == null ? null : String(r.updated_at),
+    }));
   }
 
   async setCheck(kind: string, itemKey: string, checked: boolean, note?: string): Promise<void> {
@@ -156,8 +192,13 @@ export class RemoteRepo implements HouseRepo {
     });
   }
 
-  getSettings(): Promise<Record<string, string>> {
-    return Promise.resolve({});
+  async getSettings(): Promise<Record<string, string>> {
+    const rows = await snapshot.rows("app_setting");
+    const out: Record<string, string> = {};
+    for (const r of rows) {
+      if (r.key != null && r.value != null) out[String(r.key)] = String(r.value);
+    }
+    return out;
   }
 
   async putSetting(key: string, value: string): Promise<void> {
@@ -232,11 +273,14 @@ export class RemoteRepo implements HouseRepo {
   }
 
   async sync(): Promise<SyncReport> {
-    if (!navigator.onLine) return { pushed: 0, pulled: 0, conflicts: 0, rev: 0, ok: false, error: "offline" };
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      return { pushed: 0, pulled: 0, conflicts: 0, rev: 0, ok: false, error: "offline" };
+    }
+    const REV_KEY = "house.sync.rev";
+    let rev = Number(localStorage.getItem(REV_KEY) ?? 0);
     const pending = await outbox.peekAll(200);
     let pushed = 0;
     let conflicts = 0;
-    let rev = 0;
     if (pending.length) {
       const r = await push({
         deviceId: localStorage.getItem("house.deviceId") ?? "dev_unknown",
@@ -244,14 +288,56 @@ export class RemoteRepo implements HouseRepo {
       });
       pushed = r.applied.length;
       conflicts = r.conflicts.length;
-      rev = r.rev;
+      rev = Math.max(rev, r.rev);
       await outbox.ack(r.applied.map((a) => a.uid));
       await outbox.ack(r.conflicts.map((c) => c.uid));
     }
-    return { pushed, pulled: 0, conflicts, rev, ok: true };
+
+    // Web 没有 SQLite：pull 回来的行落 IndexedDB 快照，list* 从快照读。
+    let pulled = 0;
+    for (let page = 0; page < 20; page += 1) {
+      const body = await pull(rev, [...SYNC_TABLES]);
+      const before = rev;
+      pulled += await snapshot.savePage(body);
+      if (body.rev > rev) rev = body.rev;
+      if (!body.more || body.rev <= before) break;
+    }
+    localStorage.setItem(REV_KEY, String(rev));
+    return { pushed, pulled, conflicts, rev, ok: true };
   }
 
   async rules(): Promise<RuleSet> {
     return api<RuleSet>(ApiRoutes.rules);
   }
+}
+
+/** 快照里的行是服务器原样（snake_case），这里统一成 @house/core 的 Community。 */
+function toCommunity(row: Record<string, unknown>): Community {
+  const num = (v: unknown): number | null => (v == null || v === "" ? null : Number(v));
+  const str = (v: unknown): string | null => (v == null ? null : String(v));
+  const pick = (camel: string, snake: string) => (row[camel] !== undefined ? row[camel] : row[snake]);
+  return {
+    uid: String(row.uid ?? ""),
+    id: row.id == null ? undefined : Number(row.id),
+    name: String(row.name ?? ""),
+    district: String(row.district ?? ""),
+    bizcircle: str(row.bizcircle),
+    lng: Number(row.lng ?? 0),
+    lat: Number(row.lat ?? 0),
+    buildYear: num(pick("buildYear", "build_year")),
+    buildType: str(pick("buildType", "build_type")),
+    propertyType: str(pick("propertyType", "property_type")),
+    price: num(row.price),
+    priceTx: num(pick("priceTx", "price_tx")),
+    priceSrcN: num(pick("priceSrcN", "price_src_n")),
+    bargain: num(row.bargain),
+    cycleDays: num(pick("cycleDays", "cycle_days")),
+    txN: num(pick("txN", "tx_n")),
+    online: row.online == null ? null : row.online === true || Number(row.online) === 1,
+    address: str(row.address),
+    tags: Array.isArray(row.tags) ? (row.tags as string[]) : String(row.tags ?? "").split(",").map((s) => s.trim()).filter(Boolean),
+    source: str(row.source),
+    fetchedAt: str(pick("fetchedAt", "fetched_at")),
+    rev: Number(row.rev ?? 0),
+  };
 }

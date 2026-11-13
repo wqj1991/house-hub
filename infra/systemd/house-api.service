@@ -7,11 +7,16 @@ Wants=network-online.target
 Type=simple
 User=house
 Group=house
-WorkingDirectory=/opt/house
+# current 是软链，指向 releases/<stamp>；deploy 切链后 restart 即可换版
+WorkingDirectory=/opt/house/current
 EnvironmentFile=/opt/house/api.env
+Environment=NODE_ENV=production
 ExecStart=/usr/bin/env pnpm --filter @house/api start
+# tsx 在 devDependencies 里，所以部署时不能 --prod（见 infra/README「为什么装 devDependencies」）
 Restart=always
-RestartSec=2
+RestartSec=3
+TimeoutStartSec=40
+TimeoutStopSec=20
 
 # 只让它写库目录
 NoNewPrivileges=true

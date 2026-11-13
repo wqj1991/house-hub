@@ -1466,7 +1466,11 @@ body[data-tone="dawn"] .skeleton-line{
   position:fixed;left:16px;right:16px;bottom:86px;z-index:120;
   display:flex;flex-direction:column;gap:8px;
   pointer-events:none;
+  --cyan:var(--accent-cyan);
+  --amber:var(--accent-amber);
 }
+#mToastStack .toast-icon{color:var(--cyan);background:color-mix(in srgb, var(--accent-cyan) 16%, transparent)}
+#mToastStack .g-toast.is-out{opacity:0;transform:translateY(8px)}
 #mToastStack .g-toast{
   pointer-events:auto;
   transition:opacity 0.24s ease, transform 0.24s ease;
@@ -3943,7 +3947,7 @@ document.querySelectorAll('.spotlight-item[data-jump]').forEach(function(item){
     icon.className = 'toast-icon';
     icon.textContent = '\u2713';
     var body = document.createElement('div');
-    body.className = 'toast-body';
+    body.className = 'toast-content';
     var ttl = document.createElement('div');
     ttl.className = 'toast-title';
     ttl.textContent = title || '';

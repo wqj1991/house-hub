@@ -1428,3 +1428,36 @@ body[data-tone="dawn"] .skeleton-line{
 }
 @keyframes shimmer{0%{background-position:200% 0} 100%{background-position:-200% 0}}
 
+/* ===================================================================
+   7. 移动端「组件」屏 (cp) · 液态玻璃点击组件（640px 以下弹层走底部 sheet）
+   说明：本屏卡片刻意不使用 backdrop-filter —— 该属性会成为 position:fixed
+   后代的包含块，把底部弹层锁进卡片内部而显示错位。
+   =================================================================== */
+.m-screen[data-mscr="cp"]{
+  --cyan:var(--accent-cyan, #0F8B7B);
+  --amber:var(--accent-amber, #D97706);
+  --coral:var(--accent-coral, #DC2626);
+  --glass-inner-hl:var(--glass-highlight, inset 0 1px 1.5px rgba(255,255,255,0.45));
+}
+.m-comp-card{
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  border-radius:24px;padding:16px;
+  box-shadow:var(--glass-highlight), var(--glass-shadow);
+  display:flex;flex-direction:column;gap:12px;
+}
+.m-comp-card .sec-title{font-size:15px}
+.m-comp-card .btn-group{gap:8px}
+.m-comp-card .btn-group .g-btn{padding:9px 14px;font-size:12.5px}
+.m-comp-note{font-size:11.5px;line-height:1.65;color:var(--text-dim)}
+.m-screen[data-mscr="cp"] .modal-preview-box{padding:0;background:none;border:0}
+.m-screen[data-mscr="cp"] .g-modal{animation:none}
+
+
+/* 8 个胶囊 Tab 在 430px 以下收窄内边距，避免文字被挤压换行 */
+@media (max-width:430px){
+  .m-tabbar{padding:0 4px}
+  .m-tab-btn{padding:8px 7px;font-size:11.5px}
+}
+
+

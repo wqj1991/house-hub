@@ -1,3 +1,4 @@
+import type { PullResponse } from "@house/protocol";
 import type {
   CheckRow,
   Community,
@@ -53,6 +54,10 @@ export interface HouseRepo {
 
   /** Local: 推 outbox + 拉增量；Remote: 推 outbox（只读数据靠 fetch 直取）。 */
   sync(): Promise<SyncReport>;
+  /** 本地落库：单事务 upsert + 墓碑，返回写入行数。只有 Local 端实现。 */
+  applySyncPage?(page: PullResponse): Promise<number>;
+  /** 本地同步游标（sync_meta.rev）。Local 端以它为准，localStorage 只是兜底。 */
+  syncRev?(): Promise<number>;
   /** score_rule 全集 + version + hash；hash 不匹配时页面黄条公示，不静默出旧分。 */
   rules(): Promise<RuleSet>;
 }

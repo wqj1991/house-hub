@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: 类型检查 · 前端构建
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm version:check
+      - name: Worker 语法检查
+        run: python3 -m py_compile services/worker/worker.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: apps/web/dist
+          retention-days: 7
+
+  smoke:
+    name: API 端到端冒烟
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: 启动 API
+        run: |
+          mkdir -p "$RUNNER_TEMP/house"
+          HOUSE_DB_PATH="$RUNNER_TEMP/house/house.db" \
+          HOUSE_INTERNAL_TOKEN=dev-internal-token \
+          nohup pnpm --filter @house/api start > "$RUNNER_TEMP/api.log" 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8787/health > /dev/null; then echo "api up"; exit 0; fi
+            sleep 1
+          done
+          echo "api failed to start"; tail -50 "$RUNNER_TEMP/api.log"; exit 1
+      - name: 冒烟脚本
+        env:
+          BASE: http://127.0.0.1:8787
+          ITOKEN: dev-internal-token
+        run: bash scripts/smoke.sh
+      - name: 失败时打印 API 日志
+        if: failure()
+        run: tail -100 "$RUNNER_TEMP/api.log" || true

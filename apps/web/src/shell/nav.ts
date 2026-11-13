@@ -32,7 +32,7 @@ export const VIEW_TITLE: Record<DesktopView, string> = {
 export interface MobileTabItem {
   key: string;
   label: string;
-  /** 组件页在移动端没有独立屏，落到“我的” */
+  /** 移动端屏 key，必须与 registry 的 MOBILE_SCREENS key 一一对应 */
   screen: string;
 }
 
@@ -43,6 +43,6 @@ export const MOBILE_TABS: MobileTabItem[] = [
   { key: "det", label: "小区", screen: "det" },
   { key: "sl", label: "待选", screen: "sl" },
   { key: "my", label: "算钱", screen: "my" },
-  { key: "cp", label: "组件", screen: "me" },
+  { key: "cp", label: "组件", screen: "cp" },
   { key: "me", label: "我的", screen: "me" },
 ];

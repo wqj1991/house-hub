@@ -25,7 +25,7 @@ const NAV_TO_SCREEN: Record<string, string> = {
   money: "my",
   quality: "det",
   compare: "cm",
-  components: "me",
+  components: "cp",
   profile: "me",
 };
 
@@ -35,6 +35,17 @@ function initialScreen(): string {
   if (screens.includes(raw)) return raw;
   return NAV_TO_SCREEN[raw] ?? "ov";
 }
+
+/** 反向表：手机屏 key → 桌面导轨 key（me 被「组件库 / 我的」共用，取「我的与主题」）。 */
+const SCREEN_TO_NAV: Record<string, string> = {
+  gd: "guide",
+  ov: "commute",
+  sl: "shortlist",
+  my: "money",
+  det: "quality",
+  cm: "compare",
+  me: "profile",
+};
 
 export function App() {
   const [tone, setTone] = useState<ToneKey>(loadTone);
@@ -51,6 +62,26 @@ export function App() {
     document.body.dataset.tone = tone;
     saveTone(tone);
   }, [tone]);
+
+  // 地址栏 ↔ 视图双向同步：刷新、前进后退、外链深链都落到同一个 key
+  useEffect(() => {
+    const apply = () => {
+      const raw = hashKey();
+      if (DESKTOP_NAV.some((item) => item.key === raw)) {
+        setNavKey(raw);
+        const next = NAV_TO_SCREEN[raw];
+        if (next) setScreen(next);
+        return;
+      }
+      if (MOBILE_SCREENS.some((s) => s.key === raw)) {
+        setScreen(raw);
+        const nav = SCREEN_TO_NAV[raw];
+        if (nav) setNavKey(nav);
+      }
+    };
+    window.addEventListener("hashchange", apply);
+    return () => window.removeEventListener("hashchange", apply);
+  }, []);
 
   // 底膜卡片 / 按钮：data-tone-pick（我的页）与 data-tone-val（顶栏）
   useEffect(() => {
@@ -96,9 +127,10 @@ export function App() {
 
   const closeSpotlight = useCallback(() => setSpotlight(false), []);
   const jump = useCallback((target: string) => {
-    const screenKey = target === "cp" ? "me" : target;
+    const screenKey = target;
     setScreen(screenKey);
-    setNavKey(target === "gd" ? "guide" : "commute");
+    setNavKey(SCREEN_TO_NAV[screenKey] ?? "commute");
+    if (window.location.hash !== "#/" + screenKey) window.location.hash = "/" + screenKey;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
@@ -111,6 +143,7 @@ export function App() {
 
   const selectScreen = useCallback((key: string) => {
     setScreen(key);
+    if (window.location.hash !== "#/" + key) window.location.hash = "/" + key;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 

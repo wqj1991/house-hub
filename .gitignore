@@ -20,3 +20,8 @@ apps/shell/src-tauri/gen/
 *.tmpdir/
 tools/**/out/
 coverage/
+
+# Windows 保留设备名误建文件（读取会挂死）
+/CON
+*.jks
+*.keystore

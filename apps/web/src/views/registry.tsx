@@ -4,6 +4,7 @@ import { ComponentsView } from "./desktop/ComponentsView";
 import { GuideView } from "./desktop/GuideView";
 import { ProfileView } from "./desktop/ProfileView";
 import { CmScreen } from "./mobile/CmScreen";
+import { CpScreen } from "./mobile/CpScreen";
 import { DetScreen } from "./mobile/DetScreen";
 import { GdScreen } from "./mobile/GdScreen";
 import { MeScreen } from "./mobile/MeScreen";
@@ -26,5 +27,6 @@ export const MOBILE_SCREENS: Array<{ key: string; node: ReactNode }> = [
   { key: "det", node: <DetScreen /> },
   { key: "sl", node: <SlScreen /> },
   { key: "my", node: <MyScreen /> },
+  { key: "cp", node: <CpScreen /> },
   { key: "me", node: <MeScreen /> },
 ];

@@ -10,6 +10,7 @@ import type {
   ShuttleLine,
   SyncReport,
 } from "@house/core";
+import type { PullResponse } from "@house/protocol";
 import type { HouseRepo } from "./repo";
 import { SyncEngine } from "./sync";
 
@@ -121,8 +122,17 @@ export class LocalRepo implements HouseRepo {
     return new SyncEngine(this).tick();
   }
 
+  /** 单事务落库在 Rust 侧（apply_sync_page）：跨 16 张表的 upsert 不能半途而废。 */
+  applySyncPage(page: PullResponse): Promise<number> {
+    return ipc<number>("apply_sync_page", { page });
+  }
+
+  syncRev(): Promise<number> {
+    return ipc<number>("sync_rev");
+  }
+
+  /** score_rule 全集与 hash 由 Rust 侧算（list_rules），页面据此判断是否在校旧分。 */
   rules(): Promise<RuleSet> {
-    // TODO(P5): 本地 score_rule 表读出全集并算 hash；当前先走服务器。
     return ipc<RuleSet>("list_rules");
   }
 }

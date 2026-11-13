@@ -19,6 +19,8 @@
     "test": "pnpm -r --if-present test",
     "worker:once": "python services/worker/worker.py --once",
     "version:sync": "node scripts/version.mjs",
-    "version:check": "node scripts/version.mjs --check"
+    "version:check": "node scripts/version.mjs --check",
+    "check:schema": "node scripts/schema-check.mjs",
+    "deploy": "bash infra/deploy.sh"
   }
 }

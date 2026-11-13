@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Aura } from "./Aura";
+import { DataStatus } from "./DataStatus";
 import { RailPanel } from "./RailPanel";
 import { DESKTOP_NAV, VIEW_TITLE, type DesktopView } from "./nav";
 
@@ -26,7 +27,16 @@ export function DesktopShell({ activeKey, view, onSelect, children }: Props) {
                 key={item.key}
                 className={"d-nav-item" + (item.key === activeKey ? " is-active" : "")}
                 data-dview={item.key}
+                role="button"
+                tabIndex={0}
+                aria-current={item.key === activeKey ? "page" : undefined}
                 onClick={() => onSelect(item.key)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onSelect(item.key);
+                  }
+                }}
               >
                 <span>{item.icon}</span>
                 {item.label}
@@ -72,7 +82,10 @@ export function DesktopShell({ activeKey, view, onSelect, children }: Props) {
               <h1 id="dPageTitle">{VIEW_TITLE[view]}</h1>
               <p>单程硬筛 ≤ 90 min · 80′~90′ 标黄预警 · 双人独立正交轴</p>
             </div>
-            <div style={{ fontSize: 12, color: "var(--text-dim)", fontFamily: "var(--num)" }}>宽屏决策模式</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <DataStatus />
+              <div style={{ fontSize: 12, color: "var(--text-dim)", fontFamily: "var(--num)" }}>宽屏决策模式</div>
+            </div>
           </div>
 
           <div className="desktop-content">{children}</div>
