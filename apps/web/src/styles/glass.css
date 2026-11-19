@@ -473,7 +473,7 @@ body[data-tone="dawn"] .m-search-k{background:#fff;border-color:rgba(0,0,0,0.1);
 }
 .m-tabbar{
   display:grid;
-  grid-template-columns:repeat(var(--m-tabs, 8), minmax(0, 1fr));
+  grid-template-columns:repeat(var(--m-tabs, 6), minmax(0, 1fr));
   gap:2px;padding:5px;border-radius:27px;
   background:var(--glass-bg);
   backdrop-filter:blur(30px) saturate(210%);

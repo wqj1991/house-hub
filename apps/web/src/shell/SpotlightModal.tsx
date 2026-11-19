@@ -27,7 +27,7 @@ export function SpotlightModal({ open }: { open: boolean }) {
     <span className="spotlight-chip" data-filter="budget">资金盘 (3)</span>
   </div>
   <div className="spotlight-list">
-    <div className="spotlight-item" data-type="house" data-jump="det">
+    <div className="spotlight-item" data-type="house" data-jump="cm">
       <div>
         <div style={{ fontSize: 14, fontWeight: 700 }}>德茂佳苑 (大兴 旧宫)</div>
         <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>老公 62′ · 老婆 88′ · 成交价 381 万 · 议价 −14 万</div>
@@ -55,7 +55,7 @@ export function SpotlightModal({ open }: { open: boolean }) {
       </div>
       <span className="tag-pill" style={{ background: 'rgba(220,38,38,0.2)', color: 'var(--accent-coral)' }}>超筛出榜</span>
     </div>
-    <div className="spotlight-item" data-type="house" data-jump="det">
+    <div className="spotlight-item" data-type="house" data-jump="cm">
       <div>
         <div style={{ fontSize: 14, fontWeight: 700 }}>金地中央格林 (昌平 回龙观)</div>
         <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>老婆 45′ 直达 · 老公 82′ 班车直达点接驳</div>

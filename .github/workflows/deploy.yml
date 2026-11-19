@@ -35,7 +35,9 @@ jobs:
       - name: 版本一致性
         run: pnpm version:check
 
-      - name: 构建前端
+      - name: 构建前端（base=/house/，与 openresty 站点路径一致）
+        env:
+          HOUSE_WEB_BASE: /house/
         run: pnpm build
 
       - name: 发布（1Panel API：上传 → 切链 → 同步静态 → 重启 → 自检）
@@ -57,3 +59,8 @@ jobs:
           CODE="$(curl -s -o /dev/null -w '%{http_code}' -m 10 http://47.95.238.28/house/)"
           echo "page: $CODE"
           [ "$CODE" = "200" ]
+          # 页面挂在 /house/ 下，产物里的资源必须是 /house/assets/*；base 配错时这里会 404
+          ASSET="$(curl -fsS -m 10 http://47.95.238.28/house/ | grep -o '/house/assets/[^"]*\.js' | head -1)"
+          echo "asset: $ASSET"
+          [ -n "$ASSET" ]
+          curl -fsS -o /dev/null -m 20 "http://47.95.238.28$ASSET"

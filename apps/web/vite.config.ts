@@ -11,6 +11,9 @@ const { version } = JSON.parse(
 ) as { version: string };
 
 export default defineConfig({
+  // 线上由 openresty 挂在 /house/ 下（见 infra/openresty/house.conf、conf.d/house-agent.conf），
+  // 部署流水线用 HOUSE_WEB_BASE=/house/ 构建；桌面端/安卓端走 Tauri 自定义协议，保持 "/"。
+  base: process.env.HOUSE_WEB_BASE ?? "/",
   plugins: [react(), tailwindcss()],
   clearScreen: false,
   resolve: {
@@ -37,6 +40,8 @@ export default defineConfig({
     },
     // 安卓走 adb reverse：HMR 复用 1420 这条隧道，不再单独开 1421（设备侧到不了宿主 1421）
     hmr: host ? { protocol: "ws", host, port: 1420 } : undefined,
+    // 注意：packages/* 的源码是软链进 node_modules 的，改了 core 这里不会失效模块图，
+    // 页面会继续吃旧代码——改完工作区包要 touch 本文件（Vite 自行重启）或在浏览器里重启 dev server。
     // docs/ 与 tools/ 里会放 Excel 打开着的 .md/.xlsx；watcher 注册时 EBUSY 会让 dev server 直接崩。
     watch: {
       ignored: [

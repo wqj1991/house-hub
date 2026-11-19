@@ -18,8 +18,8 @@ export interface CommuteSnapshot extends CommuteProfile {
   updatedAt: number;
 }
 
-const VEHICLES: CommuteVehicle[] = ["transit", "shuttle", "walk", "ebike"];
-const LEGACY_VEHICLE: Record<string, CommuteVehicle> = { metro: "transit", bus: "transit", drive: "transit", bike: "ebike" };
+const VEHICLES: CommuteVehicle[] = ["transit", "shuttle", "drive", "walk", "ebike"];
+const LEGACY_VEHICLE: Record<string, CommuteVehicle> = { metro: "transit", bus: "transit", bike: "ebike" };
 const SEATS: ShuttleSeat[] = ["reserved", "firstCome", "unknown"];
 
 let seq = 0;

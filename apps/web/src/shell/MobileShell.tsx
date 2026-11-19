@@ -6,8 +6,6 @@ import {
   Building2,
   Calculator,
   LayoutDashboard,
-  MapPin,
-  Star,
   UserRound,
   type LucideIcon,
 } from "lucide-react";
@@ -29,8 +27,6 @@ const TAB_ICONS: Record<string, LucideIcon> = {
   pk: Building2,
   gd: BookOpenText,
   ov: LayoutDashboard,
-  det: MapPin,
-  sl: Star,
   my: Calculator,
   cp: Blocks,
   me: UserRound,

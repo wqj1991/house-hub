@@ -39,13 +39,11 @@ export interface MobileTabItem {
   screen: string;
 }
 
-/** 底部 tab 8 项：选房与桌面同一入口（新房 / 二手房），通勤榜在「概览」里看。 */
+/** 底部 tab 6 项：选房与桌面同一入口（新房 / 二手房），通勤榜在「概览」里看。 */
 export const MOBILE_TABS: MobileTabItem[] = [
   { key: "pk", label: "选房", screen: "pk" },
   { key: "gd", label: "指南", screen: "gd" },
   { key: "ov", label: "概览", screen: "ov" },
-  { key: "det", label: "小区", screen: "det" },
-  { key: "sl", label: "待选", screen: "sl" },
   { key: "my", label: "算钱", screen: "my" },
   { key: "cp", label: "组件", screen: "cp" },
   { key: "me", label: "我的", screen: "me" },

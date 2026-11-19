@@ -8,17 +8,18 @@
  * - 班车只在 vehicle === "shuttle" 时才看 shuttle 里的线路 / 站点 / 发车 / 末班。
  */
 
-export type CommuteVehicle = "transit" | "shuttle" | "walk" | "ebike";
+export type CommuteVehicle = "transit" | "shuttle" | "drive" | "walk" | "ebike";
 
 export const COMMUTE_VEHICLE_LABEL: Record<CommuteVehicle, string> = {
   transit: "公共交通",
   shuttle: "公司班车",
+  drive: "自驾",
   walk: "步行",
   ebike: "电动自行车",
 };
 
-/** 录入界面的排列顺序：先公共交通，再班车，最后两条腿解决。 */
-export const COMMUTE_VEHICLE_ORDER: CommuteVehicle[] = ["transit", "shuttle", "walk", "ebike"];
+/** 录入界面的排列顺序：先公共交通，再班车、自驾，最后两条腿解决。 */
+export const COMMUTE_VEHICLE_ORDER: CommuteVehicle[] = ["transit", "shuttle", "drive", "walk", "ebike"];
 
 /** 接驳腿的走法：家→公交/地铁站、出站→公司、家→班车上车点，都只有这两种。 */
 export type CommuteAccess = "walk" | "ebike";

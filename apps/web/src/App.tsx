@@ -28,9 +28,7 @@ const NAV_TO_SCREEN: Record<string, string> = {
   // 选房两端共用一份数据：桌面双列挑盘，手机单列卡片
   picks: "pk",
   guide: "gd",
-  shortlist: "sl",
   money: "my",
-  quality: "det",
   compare: "cm",
   components: "cp",
   profile: "me",
@@ -47,9 +45,7 @@ function initialScreen(): string {
 const SCREEN_TO_NAV: Record<string, string> = {
   pk: "picks",
   gd: "guide",
-  sl: "shortlist",
   my: "money",
-  det: "quality",
   cm: "compare",
   me: "profile",
 };

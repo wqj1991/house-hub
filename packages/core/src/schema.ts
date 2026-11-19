@@ -130,14 +130,14 @@ export const officeLocationSchema = z.object({
 export const commuteHabitSchema = z.object({
   uid: z.string().min(1).max(64),
   label: z.string().max(40).default(""),
-  /** 走法：公共交通 / 公司班车 / 步行 / 电动自行车；老数据的 metro·bus·drive·bike 统一收拢 */
+  /** 走法：公共交通 / 公司班车 / 自驾 / 步行 / 电动自行车；老数据的 metro·bus·bike 统一收拢（drive 现在是正式走法，不再收进 transit） */
   vehicle: z
     .preprocess(
       (value) => {
-        const legacy: Record<string, string> = { metro: "transit", bus: "transit", drive: "transit", bike: "ebike" };
+        const legacy: Record<string, string> = { metro: "transit", bus: "transit", bike: "ebike" };
         return typeof value === "string" && legacy[value] ? legacy[value] : value;
       },
-      z.enum(["transit", "shuttle", "walk", "ebike"]),
+      z.enum(["transit", "shuttle", "drive", "walk", "ebike"]),
     )
     .default("transit"),
   minutes: z.number().min(0).max(600),

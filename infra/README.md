@@ -97,6 +97,18 @@ sudo bash /opt/house/current/infra/restore.sh /var/backups/house/house-20261113-
 - worker 不碰 `house.db`，只调 `/internal/*`，所以 `house-worker.service` 里 `ReadWritePaths` 只有 `/var/lib/house`（留给日志/临时文件）。
 - 服务器装依赖要能编译 `better-sqlite3`：`python3`、`make`、`g++` 得有（Debian/Ubuntu 是 `build-essential`）；`pnpm install` 会走 `onlyBuiltDependencies` 里的原生构建。
 - 前端静态文件用 `rsync --delete` 覆盖 `/var/www/house`，`current` 切到哪版就同步哪版——回滚时也会一起回。
+## 打标签自动发布（GitHub Actions）
+
+推 `v*` 标签即触发两条流水线，互不阻塞：
+
+| 工作流 | 产物/动作 |
+|---|---|
+| `.github/workflows/deploy.yml` | 构建前端（`HOUSE_WEB_BASE=/house/`）→ `deploy-1panel.mjs --skip-build --no-data --with-web`：上传、切 `current`、同步静态到 `/www/house`、重启 `house-hub-api`、自检 health + 页面 + 哈希资源 |
+| `.github/workflows/release.yml` | 桌面端（Windows msi/nsis）、安卓 arm64 APK（有 keystore secrets 则签名）→ 发布 GitHub Release，附 `SHA256SUMS` |
+
+两条都要求仓库 secret **`ONEPANEL_KEY`**（面板设置 → API 接口的 key）。没有它 deploy 会在第一次 API 调用就失败。
+页面路径是 `/house/`（openresty `root /www`），所以前端构建必须带 `HOUSE_WEB_BASE=/house/`；桌面端/安卓端不要带，Tauri 走自定义协议根路径。
+
 ## 实际通道：1Panel（本机 → 47.95.238.28）
 
 ```bash

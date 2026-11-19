@@ -1,4 +1,15 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+
+/** 仓库根的 package.json 是版本唯一真值（scripts/version.mjs 往下同步）；读不到就返回空串。 */
+function pkgVersion(): string {
+  try {
+    const url = new URL("../../../package.json", import.meta.url);
+    const j = JSON.parse(readFileSync(url, "utf8")) as { version?: string };
+    return j.version ?? "";
+  } catch {
+    return "";
+  }
+}
 
 /** 服务端配置：路径从环境来，不写死进代码（ARCHITECTURE §2 硬边界）。 */
 export interface Config {
@@ -44,6 +55,8 @@ export function loadConfig(): Config {
     amapKey: (process.env.HOUSE_AMAP_KEY ?? process.env.AMAP_KEY ?? "").trim(),
     amapCity: (process.env.HOUSE_AMAP_CITY ?? "北京").trim() || "北京",
     logLevel: process.env.HOUSE_LOG_LEVEL ?? "info",
-    version: process.env.npm_package_version ?? "0.1.0",
+    // systemd 直跑 tsx 时没有 npm_package_version，读仓库根 package.json（version.mjs 的唯一真值），
+    // 否则 /health 会一直报旧版本号。
+    version: process.env.HOUSE_VERSION ?? process.env.npm_package_version ?? pkgVersion(),
   };
 }
