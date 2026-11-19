@@ -1,6 +1,8 @@
 name: Deploy
 
 # 打 tag（v*）即发布：服务端（API + 代码切链）与页面端（apps/web/dist → 静态目录）一起上线。
+# 数据（SQLite 库）不在这里同步：CI 固定 --no-data，且脚本在 GITHUB_ACTIONS 下强制跳过库导入；
+# 需要把本地库推到线上时，在本机跑 node infra/deploy-1panel.mjs --skip-build --with-web。
 # 通道固定走 1Panel v1 HTTP API —— 这台机器 SSH 22 从外网不可达（见 infra/README.md）。
 on:
   push:

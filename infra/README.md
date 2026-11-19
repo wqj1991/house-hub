@@ -102,9 +102,11 @@ sudo bash /opt/house/current/infra/restore.sh /var/backups/house/house-20261113-
 1Panel 站点 `house-hub`（`conf/conf.d/house-hub.conf`，快照见 `infra/openresty/house-hub-18766.conf`）：
 
 - `listen 18766 ssl http2`，证书是 **Let's Encrypt IP 证书**（SAN=IP 47.95.238.28，只签发 6 天，到期前必须续）
-- `location ^~ /house/` → `root /www` 直出 Vite 产物（和 80 端口那份是同一个目录，部署时 `--with-web` 一次同步两边都新）
-- `location ^~ /`（`www/sites/house-hub/proxy/root.conf`）→ `proxy_pass http://127.0.0.1:8766`，API 与 `/house-api/...` 都走它
-- 页面里的接口调用是相对路径，所以 https 页面自动打 https API，不用改前端的 `HOUSE_WEB_BASE`
+- `location ^~ /` → `root /www/house`：**根路径直接出前端页面**（SPA 深链回落 `/house/index.html`）
+- `location ^~ /house/` → `root /www`：同样一份产物按 `/house/` 挂载，兼容 base=/house/ 产物的资源路径
+- `location ^~ /house-api/` → `proxy_pass http://127.0.0.1:8766/`（结尾斜杠剥前缀）：**后端只有这个前缀**
+- 原来 1Panel 生成的 `include /www/sites/house-hub/proxy/*.conf`（`location ^~ /` 全量反代 8766）必须删掉，否则根路径会被吃成接口
+- 前端调接口用的是绝对 `/house-api/...`（`apps/web/src/lib/session.ts`），所以同一份产物在根路径和 /house/ 下都能正确打接口
 
 改配置后的生效方式（openresty 跑在容器里，宿主机没有 openresty 二进制）：
 

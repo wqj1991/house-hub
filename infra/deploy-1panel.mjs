@@ -66,8 +66,14 @@ async function main() {
   const dist = path.join(ROOT, "apps/web/dist/index.html");
   if (!fs.existsSync(dist)) throw new Error("缺 apps/web/dist，先跑 pnpm build");
 
+  // GitHub Actions 只发代码与页面，绝不导入数据库：数据同步一律本机手动执行。
+  // 需要破例时显式设 HOUSE_ALLOW_DATA_IN_CI=1（正常发版不要设）。
+  const ciNoData = process.env.GITHUB_ACTIONS === "true" && process.env.HOUSE_ALLOW_DATA_IN_CI !== "1";
+
   let snapshot = null;
-  if (!argv.has("--no-data")) {
+  if (ciNoData) {
+    log("CI 环境：跳过数据库导入（不读本地库、不上传 .db、不覆盖线上库）");
+  } else if (!argv.has("--no-data")) {
     step(2, "本地库一致性快照（VACUUM INTO，WAL 下也稳）");
     snapshot = path.join(os.tmpdir(), DBFILE);
     const code = [
