@@ -2,15 +2,23 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { ZodError } from "zod";
-import { ErrorCodes } from "@house/protocol";
+import { API_PREFIX, ErrorCodes } from "@house/protocol";
 import { loadConfig, loadDotEnv } from "./config";
 import { createLogger } from "./logger";
 import { openDb } from "./db";
+import { ensureDefaultAccount } from "./account";
 import type { AppEnv } from "./auth";
 import { healthRoutes } from "./routes/health";
 import { authRoutes } from "./routes/auth";
 import { syncRoutes } from "./routes/sync";
+import { commuteRoutes, ensureDefaultShuttleBindings } from "./routes/commute";
+import { geoRoutes } from "./routes/geo";
+import { shuttleRoutes } from "./routes/shuttle";
+import { ensureShuttleSeed } from "./shuttleSeed";
+import { ensureNewProjectSeed } from "./newProjectSeed";
+import { incomeRoutes } from "./routes/income";
 import { communityRoutes } from "./routes/communities";
+import { newProjectRoutes } from "./routes/newProjects";
 import { ruleRoutes } from "./routes/rules";
 import { jobRoutes } from "./routes/jobs";
 
@@ -18,6 +26,14 @@ loadDotEnv();
 const cfg = loadConfig();
 const log = createLogger(cfg.logLevel);
 const db = openDb(cfg.dbPath);
+// 班车线路库是事实数据：每次启动按 core 快照对齐，改了数据重启即生效
+const shuttleSeed = ensureShuttleSeed(db);
+// 默认 9 条线挂到「施耐德」那处公司地点下；只补从没归属过的线路
+const shuttleBind = ensureDefaultShuttleBindings(db);
+// 新房快照同理：抓数产物入仓，重抓一次重启即生效
+const projectSeed = ensureNewProjectSeed(db);
+// 默认账号：库里没有就建（admin / Wynnyo@19910102），有就不动密码
+const adminSeed = ensureDefaultAccount(db, cfg.adminUser, cfg.adminPass);
 
 const app = new Hono<AppEnv>();
 
@@ -38,15 +54,41 @@ app.onError((err, c) => {
   return c.json({ code: ErrorCodes.internal, message: err.message }, 500);
 });
 
-app.route("/", healthRoutes(db, cfg.version));
-app.route("/", authRoutes(db, cfg.internalToken));
-app.route("/", syncRoutes(db));
-app.route("/", communityRoutes(db));
-app.route("/", ruleRoutes(db));
-app.route("/", jobRoutes(db, cfg.internalToken));
+/** 业务路由只挂一次，下面按两种前缀各挂一遍。 */
+const routes = new Hono<AppEnv>();
+routes.route("/", healthRoutes(db, cfg.version));
+routes.route("/", authRoutes(db, cfg.internalToken, cfg.pairKey, cfg.adminUser));
+routes.route("/", syncRoutes(db));
+routes.route("/", incomeRoutes(db));
+routes.route("/", commuteRoutes(db));
+routes.route("/", geoRoutes(db, { key: cfg.amapKey, city: cfg.amapCity }));
+routes.route("/", shuttleRoutes(db));
+routes.route("/", communityRoutes(db));
+routes.route("/", newProjectRoutes(db));
+routes.route("/", ruleRoutes(db));
+routes.route("/", jobRoutes(db, cfg.internalToken));
+
+app.route("/", routes);
+// 客户端把反代前缀写进 base 时请求会带 /house-api，线上 openresty 会 rewrite 掉，
+// 直连 api 端口没这层，这里同名再挂一份，两种前缀都通。
+app.route(API_PREFIX, routes);
 
 const server = serve({ fetch: app.fetch, hostname: cfg.host, port: cfg.port }, (info) => {
-  log.info({ host: cfg.host, port: info.port, db: cfg.dbPath }, "house-api listening");
+  log.info(
+    {
+      host: cfg.host,
+      port: info.port,
+      db: cfg.dbPath,
+      amap: cfg.amapKey ? "on" : "off",
+      shuttle: shuttleSeed.lines + " 条线 / " + shuttleSeed.stops + " 站",
+      shuttleChanged: shuttleSeed.changed,
+      shuttleBound: shuttleBind.bound,
+      shuttleOffice: shuttleBind.office || "none",
+      newProjects: projectSeed.total + " 个盘 / 变更 " + projectSeed.changed + " / 下架 " + projectSeed.removed,
+      admin: adminSeed.username + (adminSeed.created ? "（新建）" : "（已存在）"),
+    },
+    "house-api listening",
+  );
 });
 
 for (const signal of ["SIGINT", "SIGTERM"] as const) {

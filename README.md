@@ -30,6 +30,7 @@ docs                架构 / 选型 / ADR / UI 设计稿（docs/ui 是 169KB 设
 pnpm install
 pnpm dev            # http://localhost:1420 —— 浏览器里跑 Web 端（RemoteRepo，需要 API）
 pnpm api:dev        # http://127.0.0.1:8787 —— 本地 API，首次启动自动建库
+pnpm web:dev        # API(18878) + Web(1420) 一起起，Ctrl-C 一起收 —— 见 scripts/web-dev.sh
 pnpm typecheck      # 全仓 tsc --noEmit
 pnpm build          # apps/web → dist
 pnpm version:check  # 校验 7 个包的版本没有漂移

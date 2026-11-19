@@ -18,6 +18,7 @@
     pnpm install
     pnpm api:dev      # http://127.0.0.1:8787，首次启动自动建库并跑迁移
     pnpm dev          # http://localhost:1420，Web 端（走 /house-api 代理到上面的 API）
+    pnpm web:dev      # 上面两条合成一条：API 18878 + Vite 1420，自动开浏览器（scripts/web-dev.sh）
     pnpm typecheck    # 全仓 tsc --noEmit
 
 桌面壳要 Rust：`pnpm app:dev`。安卓壳先 `pnpm --filter @house/shell android:init`。

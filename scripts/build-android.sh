@@ -21,6 +21,8 @@ SHELL_DIR="$ROOT/apps/shell"
 ANDROID_DIR="$SHELL_DIR/src-tauri/gen/android"
 SO="$SHELL_DIR/src-tauri/target/${TARGET}-linux-android/release/libhouse_hub_lib.so"
 SDK="${ANDROID_HOME:-${LOCALAPPDATA:-$HOME/AppData/Local}/Android/Sdk}"
+# Windows 下 LOCALAPPDATA 带反斜杠，bash 里必须换成斜杠，否则 build-tools 路径解析为空
+SDK="${SDK//\\\\//}"
 BT="$(ls -d "$SDK"/build-tools/* | sort -V | tail -1)"
 OUT="${OUT_DIR:-$ROOT/apps/shell/src-tauri/gen/android/app/build/outputs/apk/universal/release}"
 KS="${KEYSTORE:-D:/dsh/cache/android/house-hub.jks}"
@@ -29,6 +31,12 @@ if [ -z "${KEYSTORE_PASS:-}" ] && [ -f D:/dsh/cache/android/keystore.pass ]; the
   KEYSTORE_PASS="$(cat D:/dsh/cache/android/keystore.pass)"
 fi
 KS_PASS="${KEYSTORE_PASS:?需要 KEYSTORE_PASS 环境变量或 D:/dsh/cache/android/keystore.pass}"
+
+# 16KB 页对齐：Android 15+ 设备 page size=16384，4KB 对齐的 .so 会被 dlopen 拒绝
+PAGE_FLAGS="-C link-arg=-Wl,-z,max-page-size=16384 -C link-arg=-Wl,-z,common-page-size=16384"
+UP="$(echo "$TARGET" | tr 'a-z' 'A-Z' | tr '-' '_')"
+export "CARGO_TARGET_${UP}_LINUX_ANDROID_RUSTFLAGS=${PAGE_FLAGS}"
+[ "$TARGET" = "armv7" ] && export CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_RUSTFLAGS="$PAGE_FLAGS"
 
 echo "==> 1/4 编译 Rust（链接 jniLibs 会失败，忽略）"
 (cd "$SHELL_DIR" && GRADLE_USER_HOME="${GRADLE_USER_HOME:-D:/dsh/cache/gradle}" pnpm exec tauri android build --target "$TARGET") || true
@@ -51,7 +59,8 @@ mkdir -p D:/dsh/cache/android D:/dsh/downloads
 [ -f "$KS" ] || keytool -genkeypair -keystore "$KS" -alias househub -keyalg RSA -keysize 2048 \
   -validity 10000 -storepass "$KS_PASS" -keypass "$KS_PASS" \
   -dname "CN=YG, OU=Personal, O=House Hub, L=Beijing, ST=Beijing, C=CN"
-"$BT/zipalign.exe" -f -p 4 "$UNSIGNED" D:/dsh/cache/android/app-aligned.apk
+# -P 16：把未压缩的 .so 按 16KB 页对齐（Android 15+ 16KB 页设备必需；与 -p 互斥，不能同用）
+"$BT/zipalign.exe" -P 16 -f 4 "$UNSIGNED" D:/dsh/cache/android/app-aligned.apk
 "$BT/apksigner.bat" sign --ks "$KS" --ks-pass "pass:$KS_PASS" --key-pass "pass:$KS_PASS" \
   --out "D:/dsh/downloads/house-hub_0.2.0_${ABI}-release.apk" D:/dsh/cache/android/app-aligned.apk
 "$BT/apksigner.bat" verify --print-certs "D:/dsh/downloads/house-hub_0.2.0_${ABI}-release.apk" | head -3

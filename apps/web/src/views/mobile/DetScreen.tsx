@@ -5,7 +5,7 @@ export function DetScreen() {
       <div className="m-nav-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div className="m-nav-circle-btn" style={{ width: 34, height: 34, fontSize: 18, fontWeight: 700 }} title="返回">‹</div>
-          <h1 className="m-nav-title" style={{ fontSize: 24 }}>小区详情</h1>
+          <h1 className="m-nav-title" style={{ fontSize: 20 }}>小区详情</h1>
         </div>
         <div className="m-nav-actions">
           <div className="m-nav-circle-btn" title="加入待选">

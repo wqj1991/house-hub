@@ -23,5 +23,9 @@ coverage/
 
 # Windows 保留设备名误建文件（读取会挂死）
 /CON
+
+# 一次性探针脚本（本地排查用，不进仓库）
+/scripts/_probe.mjs
+/scripts/_sig_probe.sh
 *.jks
 *.keystore

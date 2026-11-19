@@ -1,0 +1,14 @@
+# Android 16KB page size 支持（targetSdk 34+/Android 15+ 设备 page size 为 16KB）
+# 不加大页对齐时 dlopen 报：
+#   program alignment (4096) cannot be smaller than system page size (16384)
+[target.aarch64-linux-android]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384", "-C", "link-arg=-Wl,-z,common-page-size=16384"]
+
+[target.armv7-linux-androideabi]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384", "-C", "link-arg=-Wl,-z,common-page-size=16384"]
+
+[target.x86_64-linux-android]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384", "-C", "link-arg=-Wl,-z,common-page-size=16384"]
+
+[target.i686-linux-android]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384", "-C", "link-arg=-Wl,-z,common-page-size=16384"]

@@ -9,6 +9,7 @@
 | [`adr/`](adr/README.md) | 决策记录 0001–0005，一篇一个决定；索引与取代关系在 `adr/README.md` | 全部在本仓库，正文有效 |
 | [`ui/spec.md`](ui/spec.md) | UI 设计输入：产品口径、使用者场景、核心信息点（只说「要说什么」，不说「长什么样」） | 有效 |
 | [`ui/index.html`](ui/index.html) | 悬浮纸主题包的三方向设计稿（169 KB，单文件可视） | 参考件：样式真值以 `apps/web/src/styles/glass.css` 为准 |
+| [`ANDROID-RELEASE.md`](ANDROID-RELEASE.md) | 安卓发版：adb 设备（127.0.0.1:58526 / WSA）、`install -r` 装包、`monkey` 启动、排错与版本核对 | 有效（本机实测） |
 
 ## 文档从哪里来
 

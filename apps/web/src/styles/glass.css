@@ -127,19 +127,21 @@ body[data-tone="dawn"] {
    ===================================================================== */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{
-  width:100%;min-height:100vh;
+  width:100%;min-height:100vh;min-height:100dvh;
   font-family:var(--sans);
   background:var(--bg-space);
   color:var(--text-main);
-  background-image:var(--bg-grad);
-  background-attachment:fixed;
   overflow-x:hidden;
   transition:background 0.35s ease, color 0.3s ease;
 }
 
-/* 背景光斑 */
+/* 背景光斑：渐变挂在这一层，固定铺满整屏（含安卓系统栏覆盖的区域），
+   避免移动端 background-attachment:fixed 在 WebView 里底部留空条 */
 .aura{
   position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;
+  background:var(--bg-grad);
+  background-color:var(--bg-space);
+  transition:background 0.35s ease;
 }
 .blob{
   position:absolute;border-radius:50%;filter:blur(80px);opacity:0.38;
@@ -170,6 +172,14 @@ html,body{
   border-radius:20px;
   padding:14px 16px;
   transition:background 0.25s ease;
+}
+
+/* 列表行「进入」尖角：卡片头与列表行共用，尺寸/字重/颜色一处定 */
+.row-chevron{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:20px;height:20px;flex:0 0 auto;
+  font-size:18px;font-weight:600;line-height:1;
+  color:var(--text-dim);
 }
 
 /* 通用辅助类 */
@@ -365,65 +375,28 @@ body[data-tone="dawn"] .table-row:hover{background:rgba(255,255,255,0.65)}
 .mobile-shell{
   display:none; /* 默认在桌面隐藏 */
   width:100%;max-width:540px;margin:0 auto;
-  min-height:100vh;
+  height:100vh;height:100dvh;
   position:relative;z-index:2;
-  padding:12px 16px 90px; /* 留出底部药丸胶囊空间 */
   flex-direction:column;
+  /* 页面自身不滚，滚动交给 .m-viewport：标题条才能在该视口顶部吸顶 */
+  overflow:hidden;
 }
 
-/* 原生手机状态栏 (参照用户截图 13:06 / 灵动岛 / 5G / 电量) */
-.m-status-bar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:6px 8px 10px;
-  font-size:14px;font-weight:700;letter-spacing:-0.02em;
-  color:var(--text-main);
-  user-select:none;
-}
-.m-status-time{
-  font-family:var(--num);font-weight:700;font-size:15px;letter-spacing:-0.03em;
-}
-.m-island-pill{
-  width:104px;height:26px;border-radius:14px;
-  background:#000000;
-  box-shadow:0 0 0 1px rgba(255,255,255,0.1), 0 3px 10px rgba(0,0,0,0.4);
-  display:flex;align-items:center;justify-content:space-between;padding:0 9px;
-  position:relative;
-}
-.m-island-dot{
-  width:8px;height:8px;border-radius:50%;background:#1E293B;
-}
-.m-island-cam{
-  width:10px;height:10px;border-radius:50%;background:#0F172A;border:1.5px solid #1E293B;
-}
-.m-status-icons{
-  display:flex;align-items:center;gap:6px;
-  font-family:var(--num);font-size:12px;font-weight:700;
-}
-.m-status-icons svg{
-  width:16px;height:16px;fill:currentColor;stroke:none;
-}
-.m-battery-box{
-  display:flex;align-items:center;gap:2px;
-}
-.m-battery-pill{
-  width:22px;height:11px;border-radius:3px;border:1.5px solid currentColor;
-  padding:1px;position:relative;display:flex;align-items:center;
-}
-.m-battery-pill::after{
-  content:'';position:absolute;right:-3.5px;top:2px;width:1.5px;height:4px;
-  background:currentColor;border-radius:0 1px 1px 0;
-}
-.m-battery-fill{
-  width:65%;height:100%;background:currentColor;border-radius:1px;
-}
-
-/* 移动端原生大标题与右侧圆钮 (参照截图大标题与右上角操作区) */
+/* 移动端原生大标题与右侧圆钮 (参照截图大标题与右上角操作区)
+   置顶吸顶：滚动时标题与右侧圆钮不随内容上移，左右出血 16px 防止卡片从两侧缝隙漏出 */
 .m-nav-header{
+  position:sticky;top:0;z-index:60;
   display:flex;align-items:center;justify-content:space-between;
-  padding:4px 2px 12px;
+  margin:0 -16px;
+  /* 半透明浮层：底色取当前色板 --bg-space 的 55% 透明度，滚动时内容在标题下虚化透出 */
+  padding:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 22px) 18px 12px;
+  background:var(--glass-card);
+  background:color-mix(in oklab, var(--bg-space) 55%, transparent);
+  backdrop-filter:blur(14px) saturate(160%);
+  -webkit-backdrop-filter:blur(14px) saturate(160%);
 }
 .m-nav-title{
-  font-size:28px;font-weight:800;color:var(--text-main);letter-spacing:-0.03em;line-height:1.15;
+  font-size:22px;font-weight:800;color:var(--text-main);letter-spacing:-0.02em;line-height:1.2;
 }
 .m-nav-actions{
   display:flex;align-items:center;gap:10px;
@@ -466,10 +439,15 @@ body[data-tone="dawn"] .m-search-k{background:#fff;border-color:rgba(0,0,0,0.1);
 
 /* 移动端 6 屏视口容器 */
 .m-viewport{
-  position:relative;flex:1;
+  position:relative;flex:1;min-height:0;
+  overflow-y:auto;overscroll-behavior-y:contain;
+  /* 底部预留手势条/导航栏 + 悬浮药丸胶囊空间（62px 胶囊 + 12px 悬浮间距 + 12px 余光） */
+  padding-bottom:calc(var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 96px);
 }
 .m-screen{
   display:none;flex-direction:column;gap:12px;
+  /* 左右留白从 .mobile-shell 下放到屏幕层，标题条才能用负外边距铺满整宽 */
+  padding:0 16px;
   animation:fadeIn 0.2s cubic-bezier(0.16,1,0.3,1);
 }
 .m-screen.is-active{
@@ -482,15 +460,21 @@ body[data-tone="dawn"] .m-search-k{background:#fff;border-color:rgba(0,0,0,0.1);
   border-radius:24px;padding:16px 18px;
 }
 
-/* 底部悬浮药丸胶囊 TabBar */
+/* 底部悬浮药丸胶囊 TabBar · 图标 + 文字（8 项等分）
+   几何：胶囊 62px 高（52 内容 + 5 上下内衬），单项 ≤46px 宽，
+   20px 线性图标在上、10.5px 标签在下；390px 视口 8 项 = 43.5px/项，
+   留出 3px 呼吸位，任何一项都不换行。
+   选中态不用整块白底（8 项时白块会抢走图标），改成「图标染色 + 柔光镜片」，
+   镜片用 radial-gradient 半径 15px，靠 currentColor 之外的 accent 变量跟着底膜走。 */
 .m-tabbar-wrap{
-  position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
-  width:calc(100% - 32px);max-width:480px;z-index:80;
+  position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 12px);
+  width:calc(100% - 24px);max-width:460px;z-index:80;
 }
 .m-tabbar{
-  height:58px;border-radius:29px;
-  display:flex;align-items:center;justify-content:space-around;
-  padding:0 6px;
+  display:grid;
+  grid-template-columns:repeat(var(--m-tabs, 8), minmax(0, 1fr));
+  gap:2px;padding:5px;border-radius:27px;
   background:var(--glass-bg);
   backdrop-filter:blur(30px) saturate(210%);
   -webkit-backdrop-filter:blur(30px) saturate(210%);
@@ -498,18 +482,36 @@ body[data-tone="dawn"] .m-search-k{background:#fff;border-color:rgba(0,0,0,0.1);
   box-shadow:var(--glass-highlight), 0 14px 34px rgba(0,0,0,0.18);
 }
 .m-tab-btn{
-  background:none;border:0;
-  color:var(--text-sub);font-family:var(--sans);font-size:12px;font-weight:600;
-  padding:8px 12px;border-radius:20px;cursor:pointer;transition:all 0.18s ease;
-  display:flex;flex-direction:column;align-items:center;gap:2px;
+  position:relative;isolation:isolate;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  min-width:0;height:52px;padding:5px 1px 4px;
+  border:0;border-radius:21px;background:none;
+  color:var(--text-sub);
+  font-family:var(--sans);font-size:10.5px;font-weight:600;line-height:1;letter-spacing:0;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:color .18s ease,background .18s ease,transform .12s ease;
 }
+.m-tab-btn:active{transform:scale(.94)}
+.m-tab-ico{position:relative;display:grid;place-items:center;width:26px;height:26px}
+.m-tab-ico svg{transition:transform .18s cubic-bezier(.2,.9,.25,1)}
+.m-tab-label{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 选中态：一层 accent 染色的「软胶囊」托住整格（比白底轻、比纯染色清楚） */
 .m-tab-btn.is-active{
-  color:var(--text-main);
-  background:rgba(255,255,255,0.28);
-  box-shadow:inset 0 1px 1px rgba(255,255,255,0.65), 0 4px 12px rgba(0,0,0,0.1);
+  color:var(--accent-cyan);
+  background:color-mix(in srgb, var(--accent-cyan) 12%, transparent);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--accent-cyan) 20%, transparent);
 }
-body[data-tone="dawn"] .m-tab-btn.is-active{
-  background:#fff;color:#111E33;box-shadow:0 2px 8px rgba(40,70,110,0.12);
+.m-tab-btn.is-active .m-tab-ico::before{
+  content:"";position:absolute;inset:-4px -8px;border-radius:13px;z-index:-1;
+  background:radial-gradient(closest-side,
+    color-mix(in srgb, var(--accent-cyan) 34%, transparent) 0%,
+    color-mix(in srgb, var(--accent-cyan) 12%, transparent) 60%,
+    transparent 100%);
+}
+.m-tab-btn.is-active .m-tab-ico svg{transform:translateY(-1px) scale(1.04)}
+.m-tab-btn.is-active .m-tab-label{color:var(--accent-cyan);font-weight:700}
+@media (hover:hover){
+  .m-tab-btn:not(.is-active):hover{color:var(--text-main);background:color-mix(in srgb, var(--text-main) 7%, transparent)}
 }
 
 /* 全屏高斯模糊 Spotlight 检索浮层 (跨端共用/移动端自适应) */
@@ -761,6 +763,7 @@ body[data-tone="dawn"] .spotlight-item:hover{background:#fff}
   .guide-tactics-grid{grid-template-columns:1fr;gap:8px}
 }
 
+
 /* =====================================================================
    我的页面 参照高品质 iOS/原生卡片式重构
    ===================================================================== */
@@ -918,6 +921,89 @@ body[data-tone="dawn"] .theme-card.is-active{background:#F0F9FF}
 .theme-info span{font-size:11px;color:var(--text-dim);margin-top:2px;display:block}
 .theme-preview-dots{display:flex;gap:4px}
 .theme-dot{width:14px;height:14px;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+
+/* =====================================================================
+   5. 自定义背景图（「我的 → 视觉主题」上传）
+   ===================================================================== */
+.tone-bg-layer{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background-position:center;
+  background-size:cover;
+  background-repeat:no-repeat;
+  background-color:var(--bg-space);
+}
+.tone-bg-veil{
+  position:absolute;inset:0;background:#03080F;
+  transition:opacity 0.25s ease;
+}
+body[data-tone="dawn"] .tone-bg-veil{background:#F6F9FC}
+/* 有自定义背景图时内置三色光斑减弱，避免和照片糊成一片 */
+body[data-tone-bg="on"] .aura .blob{opacity:0.14}
+
+/* 设置卡：桌面嵌在玻璃卡片里、手机嵌在 me-group-card 里，只做内容段 */
+.tone-bg-setting{
+  margin-top:14px;padding-top:14px;
+  border-top:1px solid var(--glass-border-subtle);
+  display:flex;flex-direction:column;gap:10px;
+}
+body[data-tone="dawn"] .tone-bg-setting{border-top-color:#E2E8F0}
+.tone-bg-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.tone-bg-head strong{font-size:13px;display:block;color:var(--text-main)}
+.tone-bg-head span{font-size:11px;color:var(--text-dim);margin-top:2px;display:block;line-height:1.5}
+.tone-bg-actions{display:flex;gap:6px;flex-shrink:0}
+.tone-bg-btn{
+  font-family:var(--sans);font-size:11px;font-weight:700;
+  padding:6px 12px;border-radius:14px;cursor:pointer;
+  border:1px solid var(--glass-border);
+  background:rgba(255,255,255,0.16);color:var(--text-main);
+  transition:transform 0.18s cubic-bezier(0.16,1,0.3,1), background 0.18s ease, opacity 0.18s ease;
+}
+body[data-tone="dawn"] .tone-bg-btn{background:#FFFFFF;border-color:#CBD5E1;color:#334155}
+.tone-bg-btn:hover:not(:disabled){transform:translateY(-1px)}
+.tone-bg-btn:disabled{opacity:0.55;cursor:progress}
+.tone-bg-btn.is-ghost{background:transparent;color:var(--text-sub)}
+body[data-tone="dawn"] .tone-bg-btn.is-ghost{background:transparent;border-color:#E2E8F0;color:#64748B}
+.tone-bg-drop{
+  display:grid;place-items:center;gap:3px;
+  min-height:78px;border-radius:14px;cursor:pointer;
+  border:1px dashed var(--glass-border-subtle);
+  background:rgba(255,255,255,0.06);
+  font-size:12px;color:var(--text-dim);text-align:center;
+  transition:border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+body[data-tone="dawn"] .tone-bg-drop{background:#F8FAFC;border-color:#CBD5E1}
+.tone-bg-drop.is-dragging{
+  border-color:var(--accent-cyan);
+  background:rgba(2,132,199,0.08);
+  color:var(--text-main);
+}
+.tone-bg-thumb{
+  position:relative;height:104px;border-radius:14px;overflow:hidden;
+  border:1px solid var(--glass-border);
+}
+.tone-bg-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.tone-bg-thumb-veil{position:absolute;inset:0;background:#03080F;transition:opacity 0.2s ease}
+body[data-tone="dawn"] .tone-bg-thumb-veil{background:#F6F9FC}
+.tone-bg-range{
+  display:flex;align-items:center;gap:10px;
+  font-size:11px;font-family:var(--num);color:var(--text-dim);
+  letter-spacing:0.02em;
+}
+.tone-bg-range span{flex-shrink:0;min-width:64px}
+.tone-bg-range input[type="range"]{
+  -webkit-appearance:none;appearance:none;
+  flex:1;height:4px;border-radius:2px;outline:none;
+  background:var(--glass-border-subtle);cursor:pointer;
+}
+.tone-bg-range input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+  background:var(--accent-cyan);border:2px solid #FFFFFF;
+  box-shadow:0 1px 4px rgba(0,0,0,0.25);cursor:pointer;
+}
+.tone-bg-range input[type="range"]::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;
+  background:var(--accent-cyan);border:2px solid #FFFFFF;cursor:pointer;
+}
 
 
 /* === COMPONENT LIBRARY INTEGRATION STYLES === */
@@ -1137,7 +1223,8 @@ body[data-tone="dawn"] .g-input{background:rgba(255,255,255,0.65)}
 }
 body[data-tone="dawn"] .g-input:focus{background:#fff}
 .input-icon{
-  position:absolute;left:12px;font-size:14px;color:var(--text-dim);pointer-events:none;
+  position:absolute;left:12px;z-index:2;display:flex;align-items:center;justify-content:center;
+  font-size:14px;color:var(--text-dim);pointer-events:none;
 }
 
 /* ================= CUSTOM GLASS DROPDOWN & TIME PICKER ================= */
@@ -1454,10 +1541,49 @@ body[data-tone="dawn"] .skeleton-line{
 .m-screen[data-mscr="cp"] .g-modal{animation:none}
 
 
-/* 8 个胶囊 Tab 在 430px 以下收窄内边距，避免文字被挤压换行 */
+/* 8 个胶囊 Tab 在 430px 以下收窄图标与标签，避免文字被挤压换行 */
 @media (max-width:430px){
-  .m-tabbar{padding:0 4px}
-  .m-tab-btn{padding:8px 7px;font-size:11.5px}
+  .m-tabbar{padding:4px;gap:1px}
+  .m-tab-btn{height:50px;gap:2px;font-size:10px}
+  .m-tab-ico{width:24px;height:24px}
 }
+/* 360–380px 的老机型：8 格挤不出 44px，只能把两侧留白再让一点出来
+   （352 - 8 内衬 = 344 / 8 ≈ 43px/格，仍高于文内 40px 的观感下限） */
+@media (max-width:380px){
+  .m-tabbar-wrap{width:calc(100% - 8px)}
+  .m-tabbar{padding:4px 3px;gap:0}
+  .m-tab-btn{height:50px;padding:4px 0 3px;font-size:9.5px;border-radius:19px}
+  .m-tab-ico{width:23px;height:23px}
+  .m-tab-label{letter-spacing:-.2px}
+}
+/* ── 移动端性能层（安卓 WebView / WSA 软件渲染掉帧的两个主因）─────
+   ① .blob：3 个 520px 元素带 filter:blur(80px) 且无限位移动画，每帧都要全屏重模糊；
+      关掉动画后只光栅一次，视觉上只是不再缓慢漂移。
+   ② backdrop-filter：每个玻璃元素每帧重新采样背后的背景，而背后就是一层平滑渐变，
+      模糊与不模糊几乎看不出差别，关掉省下大量合成开销。弹层/下拉/Toast 保留模糊
+      （出现时间短，且需要遮挡下方文字）。
+   只在小屏断点(<1024px)生效，桌面端玻璃效果完全不变。 */
+@media (max-width: 1023px){
+  .blob{animation:none}
+  .mobile-shell .glass,
+  .mobile-shell .m-nav-header,
+  .mobile-shell .m-tabbar,
+  .mobile-shell .guide-card,
+  .mobile-shell .mode-switch,
+  .mobile-shell .section-box,
+  .mobile-shell .me-user-card,
+  .mobile-shell .me-group-card,
+  .mobile-shell .custom-select-trigger,
+  .mobile-shell .g-input{
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+  }
+  /* 骨架屏的 shimmer 是无限 background-position 动画，同样每帧重绘 */
+  .mobile-shell .skeleton,
+  .mobile-shell [class*="shimmer"]{animation:none}
+}
+
+
+
 
 

@@ -68,6 +68,54 @@ export function communityDto(row: Record<string, unknown>) {
   };
 }
 
+/** 新房楼盘行 → 页面 DTO。抓数快照表，字段全部只读。 */
+export function newProjectDto(row: Record<string, unknown>) {
+  return {
+    uid: row.uid,
+    name: row.name,
+    district: row.district,
+    bizcircle: row.bizcircle,
+    address: row.address,
+    ring: row.ring,
+    priceAvg: row.price_avg,
+    priceText: row.price_text,
+    totalPriceFrom: row.total_price_from,
+    saleStatus: row.sale_status,
+    propertyType: row.property_type,
+    tags: parseTags(row.tags),
+    layouts: row.layouts,
+    areaText: row.area_text,
+    phone: row.phone,
+    image: row.image,
+    openDate: row.open_date,
+    deliveryDate: row.delivery_date,
+    developer: row.developer,
+    decoration: row.decoration,
+    buildingType: row.building_type,
+    ownership: row.ownership,
+    salesAddress: row.sales_address,
+    sourceUrl: row.source_url,
+    /** 地图落点（GCJ-02），没匹配到就是 null，前端不出地图卡 */
+    lng: row.lng ?? null,
+    lat: row.lat ?? null,
+    /** 户型清单，快照里存的是 JSON 字符串，解不开就当没有 */
+    floorPlans: parseFloorPlans(row.floor_plans),
+    fetchedAt: row.fetched_at,
+    rev: row.rev,
+  };
+}
+
+function parseFloorPlans(raw: unknown): unknown[] {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw !== "string" || !raw.trim()) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 function parseTags(raw: unknown): string[] {
   if (Array.isArray(raw)) return raw.map(String);
   if (typeof raw !== "string" || !raw.trim()) return [];

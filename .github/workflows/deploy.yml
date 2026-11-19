@@ -1,0 +1,59 @@
+name: Deploy
+
+# 打 tag（v*）即发布：服务端（API + 代码切链）与页面端（apps/web/dist → 静态目录）一起上线。
+# 通道固定走 1Panel v1 HTTP API —— 这台机器 SSH 22 从外网不可达（见 infra/README.md）。
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: 部署服务端 · 页面端
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: 版本一致性
+        run: pnpm version:check
+
+      - name: 构建前端
+        run: pnpm build
+
+      - name: 发布（1Panel API：上传 → 切链 → 同步静态 → 重启 → 自检）
+        env:
+          ONEPANEL_KEY: ${{ secrets.ONEPANEL_KEY }}
+          HOUSE_BASE: /opt/house-hub
+          HOUSE_WEB_ROOT: /opt/1panel/apps/openresty/openresty/www/house
+        run: node infra/deploy-1panel.mjs --skip-build --no-data --with-web
+
+      - name: 线上自检
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 20); do
+            BODY="$(curl -fsS -m 5 http://47.95.238.28/house-api/health || true)"
+            case "$BODY" in *'"ok":true'*) echo "health: $BODY"; break;; esac
+            sleep 3
+            [ "$i" = 20 ] && { echo "health 未就绪"; exit 1; }
+          done
+          CODE="$(curl -s -o /dev/null -w '%{http_code}' -m 10 http://47.95.238.28/house/)"
+          echo "page: $CODE"
+          [ "$CODE" = "200" ]

@@ -1,5 +1,7 @@
 name: Release
 
+# 打 tag（v*）即出三端产物：Windows 桌面端、安卓 APK，并发布 GitHub Release。
+# 服务端/页面端由 deploy.yml 并行负责，两个工作流互不阻塞。
 on:
   push:
     tags: ["v*"]
@@ -18,27 +20,46 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: pnpm/action-setup@v4
         with:
           version: 11.25.0
+
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
+
       - uses: dtolnay/rust-toolchain@stable
+
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: apps/shell/src-tauri -> target
+
       - run: pnpm install --frozen-lockfile
-      - name: tauri build
+
+      - name: tauri build（msi + nsis）
         run: pnpm --filter @house/shell exec tauri build --ci
+
+      - name: 归档（按 tag 命名）
+        shell: bash
+        run: |
+          set -euo pipefail
+          VER="${GITHUB_REF_NAME:-dev}"
+          mkdir -p out
+          shopt -s nullglob
+          for f in apps/shell/src-tauri/target/release/bundle/nsis/*.exe; do
+            cp "$f" "out/house-hub-${VER}-windows-x64-setup.exe"
+          done
+          for f in apps/shell/src-tauri/target/release/bundle/msi/*.msi; do
+            cp "$f" "out/house-hub-${VER}-windows-x64.msi"
+          done
+          ls -lh out
+
       - uses: actions/upload-artifact@v4
         with:
           name: desktop-windows
-          path: |
-            apps/shell/src-tauri/target/release/house-hub.exe
-            apps/shell/src-tauri/target/release/bundle/msi/*.msi
-            apps/shell/src-tauri/target/release/bundle/nsis/*.exe
+          path: out/*
           if-no-files-found: error
 
   android:
@@ -46,35 +67,54 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: pnpm/action-setup@v4
         with:
           version: 11.25.0
+
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
+
       - uses: android-actions/setup-android@v3
         with:
           # 新版 cmdline-tools 里已经没有 "tools" 包，默认值会让 sdkmanager 直接失败
           packages: platform-tools
+
       - name: 安装 NDK
         run: sdkmanager --install "ndk;27.3.13750724" "platform-tools" "build-tools;36.0.0" "platforms;android-36"
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android
+
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: apps/shell/src-tauri -> target
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('apps/shell/src-tauri/gen/android/**/*.gradle*', 'apps/shell/src-tauri/gen/android/**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
       - run: pnpm install --frozen-lockfile
+
       - name: 初始化安卓工程
         run: cd apps/shell && pnpm exec tauri android init --ci
+
       - name: 构建 APK
         run: cd apps/shell && pnpm exec tauri android build --apk --target aarch64 --ci
-      - name: 签名（有 secrets 时）
+
+      - name: 签名（有 secrets 时）· 无 secrets 输出未签名包
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -83,11 +123,19 @@ jobs:
         run: |
           set -euo pipefail
           BT="${ANDROID_SDK_ROOT}/build-tools/36.0.0"
-          UNSIGNED="$(ls apps/shell/src-tauri/gen/android/app/build/outputs/apk/universal/release/*-unsigned.apk | head -1)"
+          VER="${GITHUB_REF_NAME:-dev}"
+          # tauri android build 的产物目录随 --target 变（universal / arm64 / aarch64），按文件找而不是猜路径
+          UNSIGNED="$(find apps/shell/src-tauri/gen/android/app/build/outputs/apk -name '*-unsigned.apk' | head -1)"
+          if [ -z "${UNSIGNED:-}" ]; then
+            echo "没找到未签名 APK，产物树："
+            find apps/shell/src-tauri/gen/android/app/build/outputs -name '*.apk' || true
+            exit 1
+          fi
+          echo "unsigned: $UNSIGNED"
           mkdir -p out
           if [ -z "${KEYSTORE_B64:-}" ]; then
             echo "::warning::缺少 ANDROID_KEYSTORE_BASE64，输出未签名 APK"
-            cp "$UNSIGNED" out/house-hub-unsigned.apk
+            cp "$UNSIGNED" "out/house-hub-${VER}-arm64-unsigned.apk"
             exit 0
           fi
           echo "$KEYSTORE_B64" | base64 -d > /tmp/release.jks
@@ -95,8 +143,10 @@ jobs:
           "$BT/apksigner" sign --ks /tmp/release.jks \
             --ks-pass "pass:${KS_PASS}" --ks-key-alias "${KEY_ALIAS:-househub}" \
             --key-pass "pass:${KEY_PASS:-${KS_PASS}}" \
-            --out out/house-hub-arm64-release.apk /tmp/app-aligned.apk
-          "$BT/apksigner" verify --print-certs out/house-hub-arm64-release.apk
+            --out "out/house-hub-${VER}-arm64-release.apk" /tmp/app-aligned.apk
+          "$BT/apksigner" verify --print-certs "out/house-hub-${VER}-arm64-release.apk"
+          ls -lh out
+
       - uses: actions/upload-artifact@v4
         with:
           name: android-arm64
@@ -112,10 +162,19 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      - name: 校验和
+        run: |
+          set -euo pipefail
+          cd artifacts
+          find . -type f \( -name '*.exe' -o -name '*.msi' -o -name '*.apk' \) -printf '%P\n' \
+            | sort | xargs -r sha256sum > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
       - uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/desktop-windows/*.exe
-            artifacts/desktop-windows/*.msi
-            artifacts/android-arm64/*.apk
+            artifacts/desktop-windows/*
+            artifacts/android-arm64/*
+            artifacts/SHA256SUMS.txt
           generate_release_notes: true

@@ -4,7 +4,7 @@ import { RemoteRepo } from "./remote";
 
 export type { HouseRepo } from "./repo";
 export { LocalRepo } from "./local";
-export { RemoteRepo, api, configureApi } from "./remote";
+export { RemoteRepo, api, configureApi, setUnauthorizedHandler } from "./remote";
 export { outbox } from "./outbox";
 export { SyncEngine, getRev, setRev, deviceId } from "./sync";
 

@@ -33,6 +33,12 @@ export const SERVER_ONLY_TABLES = ["route", "line", "stop", "score_rule"] as con
 
 export const ApiRoutes = {
   health: "/health",
+  /** 账号密码登录：进应用先过这一关，回来的是设备令牌 */
+  authLogin: "/auth/login",
+  /** 当前这枚设备令牌属于谁：卡片上显示的名字从这里来 */
+  authMe: "/auth/me",
+  /** 账号头像：data URL 存账号上，手机和 web 看到的是同一张 */
+  accountAvatar: "/account/avatar",
   authPair: "/auth/pair",
   authRefresh: "/auth/refresh",
   authRevoke: "/auth/revoke",
@@ -41,6 +47,33 @@ export const ApiRoutes = {
   communities: "/communities",
   community: "/communities/:uid",
   transactions: "/communities/:uid/transactions",
+  /** 新房楼盘（只读事实表）：大兴 / 通州新盘快照，服务端启动时从 core 灌进 new_project */
+  newProjects: "/new-projects",
+  newProject: "/new-projects/:uid",
+  income: "/income",
+  incomeMembers: "/income/members",
+  incomeMember: "/income/members/:uid",
+  incomeSettings: "/income/settings",
+  /** 通勤画像：公司地点 + 多条通勤习惯（班车 / 地铁 / 自驾） */
+  commute: "/commute",
+  commuteOffices: "/commute/offices",
+  commuteOffice: "/commute/offices/:uid",
+  commuteHabits: "/commute/habits",
+  commuteHabit: "/commute/habits/:uid",
+  /** 班车线路归属：线路号挂到哪处公司地点 */
+  commuteShuttles: "/commute/shuttle-links",
+  /** 公司班车线路库（只读）：9 条线 + 54 个上客点，服务端启动时从 core 灌进 line / stop */
+  shuttleLines: "/shuttle/lines",
+  shuttleLine: "/shuttle/lines/:code",
+  shuttleStops: "/shuttle/lines/:code/stops",
+  /** 高德地点检索：Key 只在服务端，客户端问这三个口 */
+  geoStatus: "/geo/status",
+  geoSearch: "/geo/search",
+  geoGeocode: "/geo/geocode",
+  /** 浏览器画地图必须自己带 Key（JSAPI 就是这么设计的），由这一层下发，前端仓库里不留 Key */
+  geoMapConfig: "/geo/map-config",
+  /** 驾车折线：服务端算好点串下发，浏览器不碰 restapi（JSAPI 插件会带 s=rsv3 被拒） */
+  geoRoute: "/geo/route",
   rules: "/rules",
   communityFill: "/community/fill",
   routeCompute: "/route/compute",

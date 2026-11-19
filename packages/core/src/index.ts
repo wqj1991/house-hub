@@ -1,5 +1,9 @@
+export * from "./domain/shuttleRoutes";
+export * from "./domain/commuteProfile";
 export * from "./domain/community";
+export * from "./domain/newProject";
 export * from "./domain/house";
+export * from "./domain/income";
 export * from "./domain/person";
 export * from "./domain/shortlist";
 export * from "./domain/sync";
@@ -10,4 +14,6 @@ export * from "./scoring/commute";
 export * from "./scoring/jifen";
 export * from "./content/checks";
 export * from "./content/guide";
+export * from "./content/newhouse";
+export * from "./content/newhouseDetail";
 export * as schema from "./schema";

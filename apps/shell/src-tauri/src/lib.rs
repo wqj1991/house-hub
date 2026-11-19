@@ -395,7 +395,17 @@ fn apply_sync_page(state: tauri::State<Db>, page: SyncPage) -> Result<i64, Strin
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
-            let (conn, _path) = open_db(app.handle())?;
+            // 建库失败也不能让进程直接退出（移动端表现为无提示闪退）：退回内存库，
+            // 让界面照常起来，真实错误由 db_status 暴露。
+            let conn = match open_db(app.handle()) {
+                Ok((conn, _path)) => conn,
+                Err(err) => {
+                    eprintln!("[house-hub] open_db failed: {err}");
+                    let fallback = Connection::open_in_memory().expect("in-memory sqlite");
+                    let _ = fallback.execute_batch(include_str!("schema.sql"));
+                    fallback
+                }
+            };
             app.manage(Db(Mutex::new(conn)));
             Ok(())
         })

@@ -6,6 +6,15 @@ export interface Config {
   port: number;
   dbPath: string;
   internalToken: string;
+  /** 长期配对密钥：手机端填这一条就能换设备令牌，省掉每 10 分钟出一次的 6 位码。空＝只能用配对码。 */
+  pairKey: string;
+  /** 默认账号：库里没这个用户名时启动即建；已存在则不动（改密码不会被启动覆盖）。 */
+  adminUser: string;
+  adminPass: string;
+  /** 高德 Web 服务 Key：只在服务端用，客户端永远拿不到；留空＝地点检索不可用 */
+  amapKey: string;
+  /** 高德默认城市：地点检索的 city 缺省值，请求里可以覆盖 */
+  amapCity: string;
   logLevel: string;
   version: string;
 }
@@ -27,6 +36,13 @@ export function loadConfig(): Config {
     // 线上 /var/lib/house/house.db；本地默认落缓存盘，不写进仓库
     dbPath: process.env.HOUSE_DB_PATH ?? "D:/dsh/cache/house/house.db",
     internalToken: process.env.HOUSE_INTERNAL_TOKEN ?? "dev-internal-token",
+    pairKey: process.env.HOUSE_PAIR_KEY ?? "",
+    // 默认账号 admin / Wynnyo@19910102：HOUSE_ADMIN_USER、HOUSE_ADMIN_PASS 可覆盖
+    adminUser: (process.env.HOUSE_ADMIN_USER ?? "admin").trim() || "admin",
+    adminPass: process.env.HOUSE_ADMIN_PASS ?? "Wynnyo@19910102",
+    // 沿用 house / luohu 两个老项目的变量名 AMAP_KEY，同一台机器不必写两份
+    amapKey: (process.env.HOUSE_AMAP_KEY ?? process.env.AMAP_KEY ?? "").trim(),
+    amapCity: (process.env.HOUSE_AMAP_CITY ?? "北京").trim() || "北京",
     logLevel: process.env.HOUSE_LOG_LEVEL ?? "info",
     version: process.env.npm_package_version ?? "0.1.0",
   };

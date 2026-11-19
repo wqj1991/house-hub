@@ -74,7 +74,7 @@ flowchart TB
 |---|---|---|---|---|
 | Web | 浏览器 | 只读快照缓存（Cache Storage）+ IndexedDB outbox | RemoteRepo 直连 API | URL 路由 #/community/123、导出/打印 |
 | 桌面 | Tauri 2（Win/macOS/Linux） | app_data_dir/house.db（现有） | LocalRepo + SyncEngine | 批量导入导出、离线重算 |
-| 移动 | Tauri 2（Android，iOS 待签名） | /data/data/com.yg.house/files/house.db | LocalRepo + SyncEngine | 离线优先、现场拍照（v2） |
+| 移动 | Tauri 2（Android，iOS 待签名） | /data/data/com.househub.mobile/files/house.db | LocalRepo + SyncEngine | 离线优先、现场拍照（v2） |
 
 为什么 Web 不跑 WASM SQLite：页面查询都是「列表 + 详情 + 勾选」，数据量 3000 小区 / 6.2 万成交。Web 端的正确解法是「服务端查 + 客户端缓存最近一次 pull 的快照（约 300 KB 轻量索引 + 命中详情）」，而不是把 30 MB 的 sqlite 塞进浏览器再为 OPFS 兼容性还债。
 
@@ -318,6 +318,7 @@ App 首次启动 输入配对码 POST /auth/pair {code, device_name, platform}
 - 桌面/移动把 token 存进系统钥匙串（Tauri plugin-store 加密，或 tauri-plugin-stronghold）。
 - Web 同源部署，token 放 httpOnly; Secure; SameSite=Lax cookie，前端不碰。
 - 撤销 = 一行 revoked=1，下次请求 401，客户端提示重新配对。
+- 令牌失效的恢复路径（换库/撤设备/换服务器都会走到）：`api()` 见 401 就回调 `setUnauthorizedHandler`，Web 端清掉本地死凭证 → 界面回到「未连接」；同步面板的配对码输入框**常显**，已连接时叫「更换令牌」，另有「清除本机令牌」只清本机。数据导入不改 device 表（`infra/keep-devices.mjs` 从被覆盖的旧库搬回），设备跟着服务器走、不跟着数据快照走。
 
 ### 7.3 服务端选型：为什么是 Node + SQLite，不是 Postgres + 一堆容器
 

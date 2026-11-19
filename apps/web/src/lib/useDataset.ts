@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { getRepo } from "@house/data";
 import type { DbStatus } from "@house/core";
 import { DEMO_ROWS, toRow, type Row } from "./demo";
+import { bootServer } from "./serverClient";
 
 export interface Dataset {
   loading: boolean;
@@ -30,16 +31,23 @@ export function useDataset(): Dataset {
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    const repo = getRepo();
-    Promise.all([repo.status(), repo.searchCommunities("", 100), repo.listShortlist()])
-      .then(([st, list, short]) => {
-        if (!alive) return;
-        setStatus(st);
-        setError(null);
-        const mapped = list.map(toRow);
-        setRows(mapped.length > 0 ? mapped : DEMO_ROWS);
-        setShortKeys(short.map((c) => c.uid));
-      })
+    // 必须先换到设备令牌再读：Web 端 RemoteRepo 没有匿名通道，抢在配对前请求只会拿到 401，
+    // 页面就会挂着「连接失败 · 示例口径」的假象，其实服务器是通的。
+    void (async () => {
+      await bootServer();
+      const repo = getRepo();
+      const [st, list, short] = await Promise.all([
+        repo.status(),
+        repo.searchCommunities("", 100),
+        repo.listShortlist(),
+      ]);
+      if (!alive) return;
+      setStatus(st);
+      setError(null);
+      const mapped = list.map(toRow);
+      setRows(mapped.length > 0 ? mapped : DEMO_ROWS);
+      setShortKeys(short.map((c) => c.uid));
+    })()
       .catch((e: unknown) => {
         if (!alive) return;
         setError(e instanceof Error ? e.message : String(e));

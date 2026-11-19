@@ -1,6 +1,8 @@
 # infra
 
-部署面：openresty 当着门，systemd 管进程，`deploy.sh` 在本机、`release.sh` 在服务器。
+部署面：openresty 当着门，systemd 管进程。
+
+**这台服务器（47.95.238.28）SSH 22 从外网不可达**，`deploy.sh`/`release.sh` 那套 SSH 流程在本机上用不了；实际在用 `deploy-1panel.mjs` —— 走 1Panel v1 HTTP API（上传 + 计划任务跑 shell），见下。
 
 | 文件 | 在哪跑 | 作用 |
 |---|---|---|
@@ -95,3 +97,20 @@ sudo bash /opt/house/current/infra/restore.sh /var/backups/house/house-20261113-
 - worker 不碰 `house.db`，只调 `/internal/*`，所以 `house-worker.service` 里 `ReadWritePaths` 只有 `/var/lib/house`（留给日志/临时文件）。
 - 服务器装依赖要能编译 `better-sqlite3`：`python3`、`make`、`g++` 得有（Debian/Ubuntu 是 `build-essential`）；`pnpm install` 会走 `onlyBuiltDependencies` 里的原生构建。
 - 前端静态文件用 `rsync --delete` 覆盖 `/var/www/house`，`current` 切到哪版就同步哪版——回滚时也会一起回。
+## 实际通道：1Panel（本机 → 47.95.238.28）
+
+```bash
+node infra/deploy-1panel.mjs              # 构建 → 打包 → 上传 → 带数据切链 → 重启 → 自检
+node infra/deploy-1panel.mjs --no-data    # 只发代码，不动线上库
+node infra/deploy-1panel.mjs --skip-build # 复用现有 apps/web/dist
+node infra/deploy-1panel.mjs --restart    # 只重启 house-hub-api
+node infra/deploy-1panel.mjs --with-web   # 顺带把 dist 同步到 nginx 静态目录（默认不碰）
+```
+
+- Key：`ONEPANEL_KEY` / `ONEPANEL_API_KEY` 环境变量，或 `~/.1panel_key`（1Panel → 面板设置 → API 接口）。
+- 传输：`/api/v1/files/upload`；远端执行：`/api/v1/cronjobs/update` + `/cronjobs/handle`（cron id 2 当 shell 槽位），输出回读 `/api/v1/files/content`。
+- 端口：API 监听 **8766**（`/opt/house-hub/api.env` 的 `PORT`，反代 `/house-api/` → 8766）。改端口只动 api.env + 反代，`deploy-1panel.mjs` 从 api.env 读，不写死。
+- 服务器布局：`/opt/house-hub/{current,releases,incoming,logs,api.env}`，库 `/var/lib/house/house.db`，服务 `house-hub-api.service`（tsx 直跑 `services/api/src/server.ts`，node 固定在 `/root/.nvm/versions/node/v24.21.0/bin/node`）。
+- 依赖：**不能在服务器上硬链上一版 node_modules**——pnpm 只往根 `node_modules` 建 `.pnpm`，各 package 的链接是相对软链；服务器 store 已有货，一律 `pnpm install --frozen-lockfile --offline`。
+- 数据：本机 `VACUUM INTO` 出的一致快照上传后，停服 → 现库留底 `house.db.bak-<stamp>` → 覆盖 → 起服 → 自检；库里带 `user_version`，迁移随服务启动补跑。
+- 反代/静态站点不归这个脚本管（`--with-web` 只覆盖 `/opt/1panel/apps/openresty/openresty/www/house/`）。

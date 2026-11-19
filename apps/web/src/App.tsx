@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { installGlassWidgets, renderCalendar } from "@/lib/glassWidgets";
 import { loadTone, saveTone, TONES, type ToneKey } from "@/lib/theme";
 import { DesktopShell } from "@/shell/DesktopShell";
 import { MobileShell } from "@/shell/MobileShell";
 import { Spotlight } from "@/shell/Spotlight";
+import { ToneBackdropLayer } from "@/shell/ToneBackdrop";
 import { ToastHost } from "@/shell/ToastHost";
 import { DESKTOP_NAV, VIEW_TITLE, type DesktopView } from "@/shell/nav";
 import { DESKTOP_VIEWS, MOBILE_SCREENS } from "@/views/registry";
@@ -12,15 +13,21 @@ function hashKey(): string {
   return window.location.hash.replace(/^#\/?/, "");
 }
 
+/** 深链可能是「视图/子资源」（如 picks/fs-1010130563），取第一段当视图 key。 */
+function viewKey(raw: string): string {
+  return raw.split("/")[0] ?? raw;
+}
+
 function initialKey(keys: string[], fallback: string): string {
-  const raw = hashKey();
+  const raw = viewKey(hashKey());
   return keys.includes(raw) ? raw : fallback;
 }
 
 /** 桌面导轨 key ↔ 手机屏 key：深链只给一个 key 时两边都能落到对应内容。 */
 const NAV_TO_SCREEN: Record<string, string> = {
+  // 选房两端共用一份数据：桌面双列挑盘，手机单列卡片
+  picks: "pk",
   guide: "gd",
-  commute: "ov",
   shortlist: "sl",
   money: "my",
   quality: "det",
@@ -30,7 +37,7 @@ const NAV_TO_SCREEN: Record<string, string> = {
 };
 
 function initialScreen(): string {
-  const raw = hashKey();
+  const raw = viewKey(hashKey());
   const screens = MOBILE_SCREENS.map((s) => s.key);
   if (screens.includes(raw)) return raw;
   return NAV_TO_SCREEN[raw] ?? "ov";
@@ -38,8 +45,8 @@ function initialScreen(): string {
 
 /** 反向表：手机屏 key → 桌面导轨 key（me 被「组件库 / 我的」共用，取「我的与主题」）。 */
 const SCREEN_TO_NAV: Record<string, string> = {
+  pk: "picks",
   gd: "guide",
-  ov: "commute",
   sl: "shortlist",
   my: "money",
   det: "quality",
@@ -49,7 +56,7 @@ const SCREEN_TO_NAV: Record<string, string> = {
 
 export function App() {
   const [tone, setTone] = useState<ToneKey>(loadTone);
-  const [navKey, setNavKey] = useState(() => initialKey(DESKTOP_NAV.map((i) => i.key), "commute"));
+  const [navKey, setNavKey] = useState(() => initialKey(DESKTOP_NAV.map((i) => i.key), "shortlist"));
   const [screen, setScreen] = useState(initialScreen);
   const [spotlight, setSpotlight] = useState(false);
 
@@ -63,10 +70,17 @@ export function App() {
     saveTone(tone);
   }, [tone]);
 
+  // 底膜卡片的高亮必须跟当前底膜一致：桌面「我的」视图按需挂载，切换视图后要重新同步一次
+  useLayoutEffect(() => {
+    document.querySelectorAll<HTMLElement>("[data-tone-pick]").forEach((card) => {
+      card.classList.toggle("is-active", card.dataset.tonePick === tone);
+    });
+  }, [tone, view]);
+
   // 地址栏 ↔ 视图双向同步：刷新、前进后退、外链深链都落到同一个 key
   useEffect(() => {
     const apply = () => {
-      const raw = hashKey();
+      const raw = viewKey(hashKey());
       if (DESKTOP_NAV.some((item) => item.key === raw)) {
         setNavKey(raw);
         const next = NAV_TO_SCREEN[raw];
@@ -129,7 +143,7 @@ export function App() {
   const jump = useCallback((target: string) => {
     const screenKey = target;
     setScreen(screenKey);
-    setNavKey(SCREEN_TO_NAV[screenKey] ?? "commute");
+    setNavKey(SCREEN_TO_NAV[screenKey] ?? "shortlist");
     if (window.location.hash !== "#/" + screenKey) window.location.hash = "/" + screenKey;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
@@ -149,6 +163,7 @@ export function App() {
 
   return (
     <>
+      <ToneBackdropLayer />
       <DesktopShell activeKey={navKey} view={view} onSelect={selectNav}>
         {DESKTOP_VIEWS[view]()}
       </DesktopShell>

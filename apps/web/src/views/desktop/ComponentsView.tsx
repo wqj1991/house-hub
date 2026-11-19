@@ -1,3 +1,5 @@
+import { SearchIcon } from "@/components/icons";
+
 export function ComponentsView() {
   return (
     <>
@@ -81,7 +83,9 @@ export function ComponentsView() {
         <div className="input-field">
           <div className="input-label"><span>搜索房源或商圈</span><span style={{ fontSize: 11, color: 'var(--cyan)' }}>实时过滤</span></div>
           <div className="g-input-wrap">
-            <span className="input-icon">🔍</span>
+            <span className="input-icon" aria-hidden="true">
+              <SearchIcon />
+            </span>
             <input className="g-input" placeholder="输入小区名（如：望京西园）..." defaultValue="望京西园三区" />
           </div>
         </div>

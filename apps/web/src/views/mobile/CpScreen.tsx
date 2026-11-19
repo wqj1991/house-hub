@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { showToast } from "@/lib/toast";
+import { SearchIcon } from "@/components/icons";
 
 const HOURS = ["06", "07", "08", "09", "10"];
 const MINUTES = ["00", "15", "30", "45", "52"];
@@ -192,7 +193,9 @@ export function CpScreen() {
               <span style={{ fontSize: 11, color: "var(--cyan)" }}>实时过滤</span>
             </div>
             <div className="g-input-wrap">
-              <span className="input-icon">🔍</span>
+              <span className="input-icon" aria-hidden="true">
+                <SearchIcon />
+              </span>
               <input className="g-input" placeholder="输入小区名（如：望京西园）..." defaultValue="望京西园三区" />
             </div>
           </div>

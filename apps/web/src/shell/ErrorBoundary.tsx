@@ -28,9 +28,15 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({ error: null, stack: "" });
   };
 
+  /** 只清界面偏好，保留「连哪台服务器 + 我是哪台设备」这两个身份键：清了身份就看不到服务器上的数据。 */
   private resetLocal = (): void => {
     try {
+      const keep = ["house-hub:token", "house-hub:sync:base", "house-hub:sync:device"];
+      const stash = keep.map((key) => [key, localStorage.getItem(key)] as const);
       localStorage.clear();
+      stash.forEach(([key, value]) => {
+        if (value !== null) localStorage.setItem(key, value);
+      });
     } catch {
       /* 隐私模式下没有 localStorage，忽略 */
     }

@@ -62,6 +62,8 @@ const SERVER_ONLY = new Map([
   ["job", "抓数任务队列，只有 worker 领活"],
   ["rule_set", "规则集版本快照，客户端拿 list_rules 的结果"],
   ["geo_cache", "地理编码缓存，避免重复买配额"],
+  ["income_doc", "收入与公积金单行文档，只住服务器，客户端按需读整份"],
+  ["commute_doc", "通勤画像单行文档，跟收入一样只住服务器"],
 ]);
 
 function columnsOf(body) {

@@ -20,11 +20,11 @@ export function SpotlightModal({ open }: { open: boolean }) {
     <button className="spotlight-cancel" id="spotlightCancel" type="button">完成</button>
   </div>
   <div className="spotlight-chips">
-    <span className="spotlight-chip is-active" data-filter="all">全部 (12)</span>
+    <span className="spotlight-chip is-active" data-filter="all">全部 (13)</span>
     <span className="spotlight-chip" data-filter="house">候选房源 (5)</span>
     <span className="spotlight-chip" data-filter="station">班车站 (3)</span>
     <span className="spotlight-chip" data-filter="rule">硬筛规则 (2)</span>
-    <span className="spotlight-chip" data-filter="budget">资金盘 (2)</span>
+    <span className="spotlight-chip" data-filter="budget">资金盘 (3)</span>
   </div>
   <div className="spotlight-list">
     <div className="spotlight-item" data-type="house" data-jump="det">
@@ -110,6 +110,13 @@ export function SpotlightModal({ open }: { open: boolean }) {
         <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>按月供 11,799 元储备 14.16 万元强冻结备用金</div>
       </div>
       <span className="tag-pill" style={{ background: 'rgba(5,150,105,0.2)', color: 'var(--accent-emerald)' }}>安全垫</span>
+    </div>
+    <div className="spotlight-item" data-type="budget" data-jump="me">
+      <div>
+        <div style={{ fontSize: 14, fontWeight: 700 }}>收入与公积金 · 家庭可贷录入</div>
+        <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>成员收入 / 缴存年限合并 → 家庭收入与公积金可贷额度实时测算</div>
+      </div>
+      <span className="tag-pill" style={{ background: 'rgba(5,150,105,0.2)', color: 'var(--accent-emerald)' }}>收入录入</span>
     </div>
   </div>
 </div>

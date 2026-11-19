@@ -26,8 +26,32 @@ export interface ApiClientOptions {
 let base = API_PREFIX;
 let token: string | null = null;
 
+/**
+ * 401 回调：令牌被服务端换掉（换库 / 吊销）时，调用方要能清掉本地这份死凭证，
+ * 否则界面一直以为「已配对」，用户既看不到配对入口，重连也没有触发点。
+ * 配对请求本身 401 是「配对码不对」，不是令牌失效，不回调。
+ */
+let onUnauthorized: (() => void) | null = null;
+
+export function setUnauthorizedHandler(fn: (() => void) | null): void {
+  onUnauthorized = fn;
+}
+
+/**
+ * base 只该是「协议 + 主机 + 端口」。
+ * 手填地址时经常把反代前缀 /house-api 一起贴进来，那样拼出来就是 /house-api/shuttle/lines，
+ * 服务端认不出（Hono 默认回 404 Not Found 纯文本），前端 JSON.parse 直接炸。
+ * 路径前缀由 ApiRoutes 统一带，所以这里见到就剥掉。
+ */
+function normalizeBase(raw: string): string {
+  let next = raw.trim().replace(/\/+$/, "");
+  if (next.endsWith(API_PREFIX)) next = next.slice(0, -API_PREFIX.length).replace(/\/+$/, "");
+  return next;
+}
+
 export function configureApi(opts: ApiClientOptions): void {
-  if (opts.base) base = opts.base.replace(/\/$/, "");
+  // 显式传空串＝切回同源（走 /house-api 反代或 dev proxy）；不传才保持上一次的地址
+  if (opts.base !== undefined) base = opts.base ? normalizeBase(opts.base) : API_PREFIX;
   token = opts.token ?? null;
 }
 
@@ -40,8 +64,20 @@ export async function api<T>(route: string, init: RequestInit = {}): Promise<T> 
 
   const res = await fetch(base + route, { ...init, headers, credentials: "include" });
   const text = await res.text();
-  const body = text ? (JSON.parse(text) as unknown) : null;
+  let body: unknown = null;
+  if (text) {
+    try {
+      body = JSON.parse(text) as unknown;
+    } catch {
+      // 反代没转发、或地址多带了前缀时这里是纯文本 404，别让 JSON.parse 的报错盖掉真正原因
+      const peek = text.slice(0, 60).replace(/\s+/g, " ").trim();
+      throw new Error(
+        `${res.status} ${ErrorCodes.internal}: 服务器返回了非 JSON 响应「${peek}」，检查服务器地址是否多带了 ${API_PREFIX}`,
+      );
+    }
+  }
   if (!res.ok) {
+    if (res.status === 401 && route !== ApiRoutes.authPair) onUnauthorized?.();
     const err = (body ?? {}) as { code?: string; message?: string };
     throw new Error(`${res.status} ${err.code ?? ErrorCodes.internal}: ${err.message ?? route}`);
   }

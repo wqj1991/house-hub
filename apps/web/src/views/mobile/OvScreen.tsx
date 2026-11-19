@@ -1,3 +1,56 @@
+import { assessHf, familyIncome } from "@house/core";
+import { formatWan, formatYuan } from "@/lib/incomeFormat";
+import { useIncomeState } from "@/lib/incomeState";
+
+/** 概览首页上的家庭收入与公积金可贷：只读概要，详细录入在「我的 → 收入与公积金」。 */
+function IncomeCard() {
+  const state = useIncomeState();
+  const family = familyIncome(state.members);
+  const hf = assessHf(state.members, family, { years: state.years, second: state.second });
+  const safetyMonthly = Math.round(family.monthlyAvg * hf.policy.safetyRatio);
+  const empty = state.members.length === 0;
+  const rows = [
+    { label: state.phase === "ready" ? "家庭月均入" : "月入（未连服务器）", value: formatYuan(Math.round(family.monthlyAvg)) + " 元/月" },
+    { label: "公积金月缴存", value: formatYuan(family.hfMonthly) + " 元/月" },
+    { label: "可提取余额", value: formatWan(family.hfBalance) + " 万元" },
+    { label: "月供硬上限 " + Math.round(hf.policy.safetyRatio * 100) + "%", value: formatYuan(safetyMonthly) + " 元/月" },
+  ];
+
+  return (
+    <div className="m-card glass">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+        <div className="lb">家庭收入 · 公积金可贷</div>
+        <span style={{ fontSize: 11, color: "var(--text-dim)" }}>
+          {state.second ? "二套" : "首套"} · {state.years} 年 · {family.contributors} 人计入
+        </span>
+      </div>
+
+      {empty ? (
+        <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.6, marginTop: 8 }}>
+          还没有收入数据 · 去「我的 → 收入与公积金」添加本人和家庭成员
+        </div>
+      ) : (
+        <>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 6 }}>
+            <span className="n cyan" style={{ fontSize: 40, fontWeight: 800, lineHeight: 1 }}>
+              {hf.finalQuotaWan.toFixed(1)}
+            </span>
+            <span style={{ fontSize: 14, color: "var(--text-sub)" }}>万元可贷 · 月供 {formatYuan(hf.finalMonthly)} 元</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
+            {rows.map((row) => (
+              <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+                <span style={{ fontSize: 12, color: "var(--text-sub)" }}>{row.label}</span>
+                <span className="n" style={{ fontSize: 13, fontWeight: 600 }}>{row.value}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function OvScreen() {
   return (
     <>
@@ -49,6 +102,7 @@ export function OvScreen() {
           </div>
         </div>
       </div>
+      <IncomeCard />
       <div className="m-card glass">
         <div className="lb">积分前置平坦声明</div>
         <div style={{ fontSize: 12, color: 'var(--text-sub)', lineHeight: 1.6, marginTop: 6 }}>

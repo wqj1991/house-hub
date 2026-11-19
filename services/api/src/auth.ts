@@ -7,6 +7,7 @@ export interface Device {
   id: string;
   name: string;
   platform: string;
+  accountId: string | null;
 }
 
 /** 认证后 c.get("device") 的类型。 */
@@ -37,7 +38,7 @@ export function deviceAuth(db: Db): MiddlewareHandler<AppEnv> {
     const token = bearer(c);
     if (!token) return c.json({ code: ErrorCodes.unauthorized, message: "缺少设备令牌" }, 401);
     const row = db
-      .prepare("select id, name, platform from device where token_hash = ? and revoked = 0")
+      .prepare("select id, name, platform, account_id as accountId from device where token_hash = ? and revoked = 0")
       .get(hashToken(token)) as Device | undefined;
     if (!row) return c.json({ code: ErrorCodes.unauthorized, message: "设备令牌无效" }, 401);
     db.prepare("update device set last_seen = datetime('now') where id = ?").run(row.id);
