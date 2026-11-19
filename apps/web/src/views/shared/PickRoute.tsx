@@ -401,9 +401,11 @@ export function PickRoutePage({
                 ? plan
                   ? "骑行 " + plan.accessMinutes + " 分 + 班车 " + plan.rideMinutes + " 分 = 全程 " + plan.totalMinutes + " 分"
                   : "正在按最近的上客点算骑行 + 班车的时长"
-                : habit.minutes > 0
-                  ? "档案单程 " + habit.minutes + " 分钟"
-                  : "档案里单程时长还没填"}
+                : path
+                  ? COMMUTE_ROUTE_MODE_LABEL[mode] + " " + fmtMinutes(path.duration) + "（按路线实算）"
+                  : habit.minutes > 0
+                    ? "档案单程 " + habit.minutes + " 分钟"
+                    : "单程时长正在算"}
               {arriveAt ? " · " + arriveAt + " 到岗" : ""}
               {slack !== null
                 ? slack >= 0
