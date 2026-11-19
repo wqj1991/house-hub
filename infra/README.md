@@ -97,6 +97,24 @@ sudo bash /opt/house/current/infra/restore.sh /var/backups/house/house-20261113-
 - worker 不碰 `house.db`，只调 `/internal/*`，所以 `house-worker.service` 里 `ReadWritePaths` 只有 `/var/lib/house`（留给日志/临时文件）。
 - 服务器装依赖要能编译 `better-sqlite3`：`python3`、`make`、`g++` 得有（Debian/Ubuntu 是 `build-essential`）；`pnpm install` 会走 `onlyBuiltDependencies` 里的原生构建。
 - 前端静态文件用 `rsync --delete` 覆盖 `/var/www/house`，`current` 切到哪版就同步哪版——回滚时也会一起回。
+## HTTPS 站点 18766（页面 + API 同端口）
+
+1Panel 站点 `house-hub`（`conf/conf.d/house-hub.conf`，快照见 `infra/openresty/house-hub-18766.conf`）：
+
+- `listen 18766 ssl http2`，证书是 **Let's Encrypt IP 证书**（SAN=IP 47.95.238.28，只签发 6 天，到期前必须续）
+- `location ^~ /house/` → `root /www` 直出 Vite 产物（和 80 端口那份是同一个目录，部署时 `--with-web` 一次同步两边都新）
+- `location ^~ /`（`www/sites/house-hub/proxy/root.conf`）→ `proxy_pass http://127.0.0.1:8766`，API 与 `/house-api/...` 都走它
+- 页面里的接口调用是相对路径，所以 https 页面自动打 https API，不用改前端的 `HOUSE_WEB_BASE`
+
+改配置后的生效方式（openresty 跑在容器里，宿主机没有 openresty 二进制）：
+
+```bash
+docker exec 1Panel-openresty-OLgm openresty -t
+docker exec 1Panel-openresty-OLgm openresty -s reload
+```
+
+面板里再「保存」这个站点会把手工加的 `location ^~ /house/` 两段冲掉，需要重新贴回。
+
 ## 打标签自动发布（GitHub Actions）
 
 推 `v*` 标签即触发两条流水线，互不阻塞：
