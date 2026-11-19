@@ -349,7 +349,11 @@ export function NewProjectDetail({ uid, onBack }: { uid: string; onBack: () => v
         {hasMap && officeOrder.length && primaryHabit ? (
           <div className="pick-route-note">
             默认通勤习惯：{COMMUTE_VEHICLE_LABEL[primaryHabit.vehicle]}
-            {primaryHabit.minutes > 0 ? " · 单程 " + primaryHabit.minutes + " 分钟" : " · 单程时长待填"}
+            {primaryHabit.vehicle === "shuttle"
+              ? " · 点进去按「骑行 + 班车」实算时长"
+              : primaryHabit.minutes > 0
+                ? " · 单程 " + primaryHabit.minutes + " 分钟"
+                : " · 单程时长待填"}
             {primaryHabit.arriveWork ? " · " + primaryHabit.arriveWork + " 到岗" : ""}
             ；点「默认」那行按这个习惯看路线。
           </div>

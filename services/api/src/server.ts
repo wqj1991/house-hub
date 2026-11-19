@@ -65,7 +65,7 @@ routes.route("/", syncRoutes(db));
 routes.route("/", incomeRoutes(db));
 routes.route("/", commuteRoutes(db));
 routes.route("/", geoRoutes(db, { key: cfg.amapKey, city: cfg.amapCity }));
-routes.route("/", shuttleRoutes(db));
+routes.route("/", shuttleRoutes(db, { key: cfg.amapKey, city: cfg.amapCity }));
 routes.route("/", communityRoutes(db));
 routes.route("/", newProjectRoutes(db));
 routes.route("/", ruleRoutes(db));

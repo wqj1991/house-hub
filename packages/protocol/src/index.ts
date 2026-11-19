@@ -66,6 +66,8 @@ export const ApiRoutes = {
   shuttleLines: "/shuttle/lines",
   shuttleLine: "/shuttle/lines/:code",
   shuttleStops: "/shuttle/lines/:code/stops",
+  /** 班车通勤整条走法：家→（骑行）→最近上客点→（班车）→公司，含倒推的出门时刻 */
+  shuttlePlan: "/shuttle/plan",
   /** 高德地点检索：Key 只在服务端，客户端问这三个口 */
   geoStatus: "/geo/status",
   geoSearch: "/geo/search",

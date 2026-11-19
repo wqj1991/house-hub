@@ -6,6 +6,8 @@ import { deviceAuth } from "../auth";
 import type { AppEnv } from "../auth";
 import { nextRev } from "../db";
 import type { Db } from "../db";
+import { AmapError } from "../amap";
+import { planShuttle } from "../shuttlePlan";
 import { unbindShuttle } from "./commute";
 
 /**
@@ -145,7 +147,25 @@ function firstIssue(result: { error?: { issues?: { message: string }[] } }): str
   return result.error?.issues?.[0]?.message ?? "参数不合法";
 }
 
-export function shuttleRoutes(db: Db): Hono<AppEnv> {
+export interface ShuttleOptions {
+  /** 高德 Key：班车接驳的骑行折线由服务端算 */
+  key: string;
+  /** 默认城市（骑行不需要，留给以后的公交接驳） */
+  city: string;
+}
+
+/** "116.37,39.79" → { lng, lat }；越界和 0,0 一律当没写。 */
+function parsePoint(raw: string | undefined): { lng: number; lat: number } | null {
+  const [lngRaw, latRaw] = (raw ?? "").split(",");
+  const lng = Number(lngRaw);
+  const lat = Number(latRaw);
+  if (!Number.isFinite(lng) || !Number.isFinite(lat)) return null;
+  if (Math.abs(lng) > 180 || Math.abs(lat) > 90) return null;
+  if (lng === 0 && lat === 0) return null;
+  return { lng, lat };
+}
+
+export function shuttleRoutes(db: Db, opts: ShuttleOptions): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
   const auth = deviceAuth(db);
   const now = (): string => new Date().toISOString();
@@ -184,6 +204,29 @@ export function shuttleRoutes(db: Db): Hono<AppEnv> {
   };
 
   app.get(ApiRoutes.shuttleLines, auth, (c) => c.json(library()));
+
+  /**
+   * 班车整条走法：家（楼盘坐标）→ 骑行到最近的上客点 → 班车到公司。
+   * 返回折线、骑行/在车/总分钟、以及按发车时刻倒推的出门时刻。
+   */
+  app.get(ApiRoutes.shuttlePlan, auth, async (c) => {
+    const from = parsePoint(c.req.query("from"));
+    if (!from) {
+      return c.json({ code: "bad_point", message: "from 要写成 lng,lat", plan: null }, 400);
+    }
+    const officeUid = (c.req.query("officeUid") ?? "").trim();
+    const code = (c.req.query("code") ?? "").trim().toUpperCase();
+    try {
+      const plan = await planShuttle(db, opts.key, { from, officeUid, code });
+      return c.json({ plan, configured: Boolean(opts.key && opts.key.trim()) });
+    } catch (err) {
+      if (err instanceof AmapError) {
+        const status = err.code === "amap_unconfigured" ? 503 : 502;
+        return c.json({ code: err.code, message: err.message, plan: null }, status);
+      }
+      throw err;
+    }
+  });
 
   /** 新增线路：线路号重复（没被删的）直接 409；软删过的同号线路则复活改写。 */
   app.post(ApiRoutes.shuttleLines, auth, async (c) => {

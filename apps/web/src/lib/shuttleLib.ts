@@ -65,6 +65,47 @@ export function blankShuttleStop(): ShuttleStopInput {
   return { name: "", depart: "", lng: 0, lat: 0 };
 }
 
+/** 班车整条走法：家 →（骑行）→ 上客点 →（班车）→ 公司，时间全部由服务端算好。 */
+export interface ShuttlePlanStop {
+  uid: string;
+  name: string;
+  depart: string;
+  lng: number;
+  lat: number;
+}
+
+export interface ShuttlePlanView {
+  code: string;
+  name: string;
+  arrive: string;
+  stop: ShuttlePlanStop;
+  access: { distance: number; duration: number; points: { lng: number; lat: number }[] };
+  /** 骑行到站点的分钟 */
+  accessMinutes: number;
+  /** 班车在车上的分钟 */
+  rideMinutes: number;
+  /** 出门 → 到岗总分钟 */
+  totalMinutes: number;
+  /** 按发车时刻倒推的出门时刻 */
+  leaveHome: string;
+  /** 最近几个站里真正算过骑行折线的个数 */
+  considered: number;
+}
+
+/** 问服务端要「骑行 + 班车」的整条走法；code 传空＝在这处公司挂的所有线里挑最快的。 */
+export async function fetchShuttlePlan(
+  from: { lng: number; lat: number },
+  opts: { officeUid?: string; code?: string; signal?: AbortSignal } = {},
+): Promise<{ plan: ShuttlePlanView | null; configured: boolean }> {
+  await bootServer();
+  const qs = new URLSearchParams({ from: from.lng.toFixed(6) + "," + from.lat.toFixed(6) });
+  if (opts.officeUid) qs.set("officeUid", opts.officeUid);
+  if (opts.code) qs.set("code", opts.code);
+  return api<{ plan: ShuttlePlanView | null; configured: boolean }>(`${ApiRoutes.shuttlePlan}?${qs.toString()}`, {
+    signal: opts.signal,
+  });
+}
+
 export type ShuttlePhase = "idle" | "loading" | "ready" | "error";
 
 export interface ShuttleSnapshot {
