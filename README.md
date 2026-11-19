@@ -38,6 +38,8 @@ pnpm check:schema   # 本地 schema 与服务器迁移的列对齐（缺表/缺�
 pnpm deploy         # 构建 → 打包 → 服务器原子切换 → 自检 → 失败自动回滚（见 infra/README）
 ```
 
+发布：`git tag -a v0.3.1 -m "…" && git push origin v0.3.1`。打 `v*` 标签会同时触发 **Deploy**（服务端 + `/house/` 页面，见 infra/README）和 **Release**（Windows msi/exe、安卓 arm64 APK 上传到 GitHub Release）。
+
 桌面壳：`pnpm app:dev`（需要 Rust 1.90+）。移动壳：`pnpm --filter @house/shell android:dev`。
 
 ## 当前进度（对齐 ARCHITECTURE §11）
