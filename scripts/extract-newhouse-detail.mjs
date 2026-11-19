@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * 从房天下抽「地图坐标 + 完整户型」，生成 packages/core/src/content/newhouseDetail.ts，
- * 并把户型图下载到 apps/web/public/huxing/<uid>-d<户型id>.jpg。
+ * 并把户型图下载到 services/api/assets/huxing/<uid>-d<户型id>.jpg（前端包不带图，页面从服务端取）。
  *
  * 两个来源：
  *   ① 户型相册页 /loupan/<id>/photo/list_900_3_1.htm —— 户型主来源，一页给全（含楼层奇偶、
@@ -30,7 +30,7 @@ const OUT = join(ROOT, "packages/core/src/content/newhouseDetail.ts");
 const CACHE = "D:/dsh/cache/house/jina";
 const HX_CACHE = "D:/dsh/cache/house/huxing";
 const HOUSE_CACHE = "D:/dsh/cache/house/housedetail";
-const IMG_DIR = join(ROOT, "apps/web/public/huxing");
+const IMG_DIR = join(ROOT, "services/api/assets/huxing");
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 const REFERER = "https://newhouse.fang.com/";
 const MAX_PLANS = 24;
@@ -557,5 +557,5 @@ if (!LIMIT) {
 const files = readdirSync(IMG_DIR).filter((f) => /\.(jpe?g|png|webp)$/.test(f));
 const bytes = files.reduce((n, f) => n + readFileSync(join(IMG_DIR, f)).length, 0);
 if (dropped) console.log("清掉旧户型图 " + dropped + " 张");
-console.log("public/huxing：" + files.length + " 张，" + (bytes / 1024 / 1024).toFixed(1) + " MB");
+console.log("assets/huxing：" + files.length + " 张，" + (bytes / 1024 / 1024).toFixed(1) + " MB");
 if (!LIMIT && withGeo < projects.length * 0.6) console.log("警告：坐标覆盖率偏低，检查详情页缓存是否过期");

@@ -1,5 +1,5 @@
 import { api, configureApi, inTauri, setUnauthorizedHandler } from "@house/data";
-import { ApiRoutes } from "@house/protocol";
+import { API_PREFIX, ApiRoutes } from "@house/protocol";
 import { getAccount, setAccount, type AccountProfile } from "./account";
 import { getToken, setToken } from "./session";
 
@@ -61,6 +61,11 @@ export function getServerBase(): string {
   } catch {
     return cleanBase(DEFAULT_BASE);
   }
+}
+
+/** 户型图 / 封面图住在服务端（api 的 assets/huxing、assets/covers），快照里的 /huxing/... 是相对它的路径。 */
+export function mediaUrl(path: string): string {
+  return path ? getServerBase() + API_PREFIX + path : "";
 }
 
 function setLoggedOut(next: boolean): void {

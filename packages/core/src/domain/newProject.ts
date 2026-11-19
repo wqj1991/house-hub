@@ -57,11 +57,11 @@ export interface NewProjectFloorPlan {
   area: number | null;
   /** 卖点标签：户型方正 / 动静分离 / 南北通透… */
   tags: string[];
-  /** 本地户型图（public/huxing/<uid>-<n>.jpg），快照自带，断网也能看 */
+  /** 户型图路径（/huxing/<uid>-<n>.jpg）：文件在服务端 assets/huxing，前端用 mediaUrl 拼地址 */
   image: string;
   /** 房天下户型图直链（640px），本地图缺失时兜底 */
   imageRemote: string;
-  /** 本地户型测评图（public/huxing/<uid>-d<户型id>-cp.jpg）：带房间面积与空间评价的彩图；源页没有就是空串 */
+  /** 户型测评图（/huxing/<uid>-d<户型id>-cp.jpg）：带房间面积与空间评价的彩图；源页没有就是空串 */
   reviewImage: string;
   /** 源站户型详情页，点回去核对 */
   sourceUrl: string;

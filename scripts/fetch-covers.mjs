@@ -1,6 +1,6 @@
 /**
  * 把新盘封面抓成本地文件：房天下图片域名本机直连不通（必须走代理），
- * 浏览器里 <img> 没法带代理，所以统一下载到 apps/web/public/covers/<uid>.jpg，
+ * 浏览器里 <img> 没法带代理，所以统一下载到 services/api/assets/covers/<uid>.jpg（由 api 直出），
  * 页面只引用 /covers/xxx.jpg，离线、Tauri 打包、换网络都不会白图。
  */
 import { execFileSync } from "node:child_process";
@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = join(root, "packages/core/src/content/newhouse.ts");
-const OUT = join(root, "apps/web/public/covers");
+const OUT = join(root, "services/api/assets/covers");
 const SIZE = process.argv.includes("--size") ? process.argv[process.argv.indexOf("--size") + 1] : "800x600";
 const FORCE = process.argv.includes("--force");
 

@@ -232,6 +232,7 @@ Vite 配置里必须保留的三件事（都是踩过坑的）：
 |---|---|---|
 | 反代 | openresty（机器现有） | /house-api/ → 127.0.0.1:8787；/ → /var/www/house |
 | 静态资源 | 直接落盘 + immutable 缓存 + SPA fallback | 不上 CDN，一台机器 |
+| 户型图 / 封面 | `services/api/assets/{huxing,covers}`，由 api 直出 `/huxing/*`、`/covers/*` | 不进前端包（48MB），页面用 `mediaUrl()` 拼地址 |
 | 进程 | systemd（house-api / house-worker / house-backup.timer） | 不装 Docker |
 | 部署通道 | 1Panel v1 HTTP API（SSH 22 外网封） | infra/deploy.sh 全自动；保留人工兜底 |
 | 配置 | /opt/house/api.env（chmod 600） | 密钥不进口令行 |

@@ -1,6 +1,9 @@
 import { serve } from "@hono/node-server";
+import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { fileURLToPath } from "node:url";
+import { relative } from "node:path";
 import { ZodError } from "zod";
 import { API_PREFIX, ErrorCodes } from "@house/protocol";
 import { loadConfig, loadDotEnv } from "./config";
@@ -67,6 +70,22 @@ routes.route("/", communityRoutes(db));
 routes.route("/", newProjectRoutes(db));
 routes.route("/", ruleRoutes(db));
 routes.route("/", jobRoutes(db, cfg.internalToken));
+
+/**
+ * 户型图 / 封面图（48MB 级快照）：只放服务端，前端包里不再带（APK 因此回到个位数 MB）。
+ * 文件名带楼盘 uid，内容一改就换名，故一周长缓存；图片不敏感，不挂令牌（<img> 也带不了 Authorization）。
+ * serveStatic 的 root 只认相对 cwd 的路径，cwd 可能是仓库根也可能是 services/api，这里算一次。
+ */
+const MEDIA_ROOT = relative(process.cwd(), fileURLToPath(new URL("../assets", import.meta.url)));
+const media = serveStatic({ root: MEDIA_ROOT, rewriteRequestPath: (p) => p.replace(API_PREFIX, "") });
+for (const prefix of ["", API_PREFIX]) {
+  for (const dir of ["huxing", "covers"]) {
+    app.use(`${prefix}/${dir}/*`, async (c, next) => {
+      c.header("cache-control", "public, max-age=604800");
+      await next();
+    }, media);
+  }
+}
 
 app.route("/", routes);
 // 客户端把反代前缀写进 base 时请求会带 /house-api，线上 openresty 会 rewrite 掉，

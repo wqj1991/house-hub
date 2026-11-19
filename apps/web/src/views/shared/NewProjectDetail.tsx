@@ -5,6 +5,7 @@ import type { NewProjectDto } from "@/lib/newhouseApi";
 import { fmtAvg, fmtPhone, fmtStamp, statusClass } from "@/lib/newhouseFormat";
 import { loadCommute, useCommuteState } from "@/lib/commuteState";
 import { fetchGeoRoute } from "@/lib/geoApi";
+import { mediaUrl } from "@/lib/serverClient";
 import type { GeoDrivePath } from "@/lib/geoApi";
 import { AmapSpotMap } from "@/components/AmapSpotMap";
 import { FloorPlanGallery } from "@/components/FloorPlanGallery";
@@ -75,7 +76,7 @@ function pickOffice(offices: OfficeLocation[], habits: CommuteHabit[], shuttles:
 export function NewProjectDetail({ uid, onBack }: { uid: string; onBack: () => void }) {
   const [item, setItem] = useState<NewProjectDto | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // 封面：优先本地快照（/covers/<uid>.jpg，房天下图片域名本机直连不通），失败再退远程，再退占位
+  // 封面：优先服务器快照（/covers/<uid>.jpg，房天下图片域名本机直连不通），失败再退远程，再退占位
   const [coverStage, setCoverStage] = useState(0);
   useEffect(() => setCoverStage(0), [uid]);
 
@@ -191,7 +192,8 @@ export function NewProjectDetail({ uid, onBack }: { uid: string; onBack: () => v
     );
   }
 
-  const coverSrc = coverStage === 0 ? "/covers/" + item.uid + ".jpg" : coverStage === 1 ? item.image || null : null;
+  const coverSrc =
+    coverStage === 0 ? mediaUrl("/covers/" + item.uid + ".jpg") : coverStage === 1 ? item.image || null : null;
 
   // 地图落点：抓数时换算成 GCJ-02 的才算数，0 也是没落到
   const hasMap =

@@ -1,18 +1,19 @@
 import { useCallback, useEffect, useState } from "react";
 import type { NewProjectFloorPlanDto } from "@/lib/newhouseApi";
+import { mediaUrl } from "@/lib/serverClient";
 
 /**
  * 户型清单：卡片看全，点开看大图。
  *
- * 图优先用本地快照（public/huxing/<uid>-<n>.jpg，抓数时一次下好），
- * 本地缺图才退房天下直链 —— 那个域名在本机常被拦，所以顺序不能反。
+ * 图优先走服务器快照（/huxing/<uid>-<n>.jpg，见 services/api/assets），
+ * 服务器缺图才退房天下直链 —— 那个域名在本机常被拦，所以顺序不能反。
  */
 
 function PlanImage({ plan, big }: { plan: NewProjectFloorPlanDto; big?: boolean }) {
   const [stage, setStage] = useState(0);
   useEffect(() => setStage(0), [plan.image, plan.imageRemote]);
 
-  const src = stage === 0 ? plan.image : stage === 1 ? plan.imageRemote : "";
+  const src = stage === 0 ? mediaUrl(plan.image) : stage === 1 ? plan.imageRemote : "";
   if (!src) {
     return <div className={big ? "pick-fp-empty is-big" : "pick-fp-empty"}>户型图没抓到</div>;
   }
@@ -35,7 +36,7 @@ function ReviewImage({ plan, big }: { plan: NewProjectFloorPlanDto; big?: boolea
   }
   return (
     <img
-      src={plan.reviewImage}
+      src={mediaUrl(plan.reviewImage)}
       alt={[plan.name, plan.layout, "户型测评图"].filter(Boolean).join(" ")}
       loading="lazy"
       onError={() => setBroken(true)}

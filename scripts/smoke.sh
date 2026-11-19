@@ -61,6 +61,16 @@ curl -s -o /dev/null -w 'internal无令牌:%{http_code} ' -X POST "$BASE/interna
 curl -s -o /dev/null -w 'internal错令牌:%{http_code} ' -X POST "$BASE/internal/jobs/claim" -H 'x-internal-token: wrong'
 curl -s -o /dev/null -w '缺小区:%{http_code}\n' "$BASE/communities/nope" -H "$AUTH"
 
+say 户型图（api 直出，前端包不带图）
+HX="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/services/api/assets/huxing"
+F=$(basename "$(find "$HX" -maxdepth 1 -name "*.jpg" -print -quit)")
+# grep 不用 -q：管道里提前退出会让 curl 吃 SIGPIPE，pipefail 下直接 141
+if curl -fsS -D - -o /dev/null "$BASE/huxing/$F" | grep -i 'content-type: image/jpeg' > /dev/null; then
+  echo "huxing ok: $F"
+else
+  echo "户型图取不到（前端会白图）：$BASE/huxing/$F"; exit 1
+fi
+
 say rules
 curl -fsS "$BASE/rules" -H "$AUTH"; echo
 
