@@ -232,6 +232,8 @@ export function PickRoutePage({
 
   function chooseOffice(uid: string): void {
     setOfficeUid(uid);
+    // 换公司就换线路库：上一处公司手选的线路号在新公司下面未必存在
+    setPickedCode("");
     const next = habitFor(located.find((row) => row.uid === uid) ?? null);
     if (next) setMode(commuteRouteMode(next.vehicle));
   }
