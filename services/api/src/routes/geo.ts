@@ -3,7 +3,8 @@ import { ApiRoutes } from "@house/protocol";
 import { deviceAuth } from "../auth";
 import type { AppEnv } from "../auth";
 import type { Db } from "../db";
-import { AmapError, amapConfigured, drivingPath, geocodeAddress, searchPlaces } from "../amap";
+import { AMAP_ROUTE_MODES, AmapError, amapConfigured, geocodeAddress, routePath, searchPlaces } from "../amap";
+import type { AmapRouteMode } from "../amap";
 
 /**
  * 地点检索：客户端输入公司地点时只问这一层。
@@ -64,7 +65,8 @@ export function geoRoutes(db: Db, opts: GeoOptions): Hono<AppEnv> {
   );
 
   /**
-   * 驾车折线：前端画「这条班车线怎么走」用。
+   * 路线折线：mode = drive / transit / walk / bike，默认 drive（老调用方不用改）。
+   * 前端画通勤路线时按「默认通勤习惯」选 mode；公交要按城市查，city 缺省用服务端配置。
    * 浏览器里的 AMap.Driving 插件会带 s=rsv3 打 restapi，这把 Key 没开数字签名就被
    * 回 USERKEY_PLAT_NOMATCH，所以折线由服务端算好，只把点串下发。
    */
@@ -74,8 +76,17 @@ export function geoRoutes(db: Db, opts: GeoOptions): Hono<AppEnv> {
     if (!from || !to) {
       return c.json({ code: "bad_point", message: "from / to 要写成 lng,lat", path: null, configured }, 400);
     }
+    const rawMode = (c.req.query("mode") ?? "drive").trim() || "drive";
+    if (!(AMAP_ROUTE_MODES as string[]).includes(rawMode)) {
+      return c.json(
+        { code: "bad_mode", message: "mode 只认 " + AMAP_ROUTE_MODES.join(" / "), path: null, configured },
+        400,
+      );
+    }
+    const mode = rawMode as AmapRouteMode;
+    const city = (c.req.query("city") ?? "").trim() || opts.city;
     try {
-      return c.json({ path: await drivingPath(opts.key, from, to), configured });
+      return c.json({ path: await routePath(opts.key, from, to, mode, { city }), configured });
     } catch (err) {
       if (err instanceof AmapError) {
         return c.json({ code: err.code, message: err.message, path: null, configured }, errorStatus(err));

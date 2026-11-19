@@ -31,6 +31,55 @@ export const COMMUTE_ACCESS_LABEL: Record<CommuteAccess, string> = {
 
 export const COMMUTE_ACCESS_ORDER: CommuteAccess[] = ["walk", "ebike"];
 
+/**
+ * 地图上画得出来的走法。班车不在里面：它是一串带时刻的上客点，没有连续折线，
+ * 画线时退回驾车给个距离参照，真正的班车走法看班车线路库。
+ */
+export type CommuteRouteMode = "drive" | "transit" | "walk" | "bike";
+
+export const COMMUTE_ROUTE_MODE_LABEL: Record<CommuteRouteMode, string> = {
+  drive: "驾车",
+  transit: "公交 / 地铁",
+  walk: "步行",
+  bike: "骑行",
+};
+
+export const COMMUTE_ROUTE_MODE_ORDER: CommuteRouteMode[] = ["drive", "transit", "walk", "bike"];
+
+/** 习惯用哪种走法 → 地图画哪种线：电动车按骑行算，班车退回驾车。 */
+export function commuteRouteMode(vehicle: CommuteVehicle): CommuteRouteMode {
+  if (vehicle === "transit") return "transit";
+  if (vehicle === "walk") return "walk";
+  if (vehicle === "ebike") return "bike";
+  return "drive";
+}
+
+/** 默认通勤习惯：标了 primary 的那条，没有就第一条 —— 和 commuteOverview 的主用口径一致。 */
+export function defaultHabit(habits: CommuteHabit[]): CommuteHabit | null {
+  return habits.find((habit) => habit.primary) ?? habits[0] ?? null;
+}
+
+/** 这条习惯对应哪处公司：指定了就用指定的，没指定就是第一处（通用）。 */
+export function habitOffice(habit: CommuteHabit | null, offices: OfficeLocation[]): OfficeLocation | null {
+  if (!habit) return null;
+  if (habit.officeUid) return offices.find((office) => office.uid === habit.officeUid) ?? null;
+  return offices[0] ?? null;
+}
+
+/**
+ * 某处公司该用哪条习惯：
+ * 1) 主用习惯指向它（或主用是「通用」）—— 它就是这个人的默认习惯，别的条只是备选；
+ * 2) 否则用这处公司自己的主用习惯，再次是它的第一条；
+ * 3) 都没有就返回 null，页面按「没习惯」处理（比如只画驾车）。
+ * 换公司看路线时按这条规则重取，不能把别处公司的主用习惯套过来。
+ */
+export function habitForOffice(habits: CommuteHabit[], officeUid: string): CommuteHabit | null {
+  const primary = defaultHabit(habits);
+  if (primary && (!primary.officeUid || primary.officeUid === officeUid)) return primary;
+  const rows = habits.filter((habit) => habit.officeUid === officeUid);
+  return rows.find((habit) => habit.primary) ?? rows[0] ?? null;
+}
+
 export type ShuttleSeat = "reserved" | "firstCome" | "unknown";
 
 export const SHUTTLE_SEAT_LABEL: Record<ShuttleSeat, string> = {
@@ -202,8 +251,7 @@ export interface CommuteOverview {
 }
 
 function officeFor(habit: CommuteHabit, offices: OfficeLocation[]): OfficeLocation | null {
-  if (habit.officeUid) return offices.find((office) => office.uid === habit.officeUid) ?? null;
-  return offices[0] ?? null;
+  return habitOffice(habit, offices);
 }
 
 function habitWarnings(habit: CommuteHabit, office: OfficeLocation | null, shuttleOnly: boolean): string[] {

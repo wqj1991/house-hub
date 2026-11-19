@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { COMMUTE_VEHICLE_LABEL } from "@house/core";
 import type { CommuteHabit, OfficeLocation } from "@house/core";
 import { fetchNewProject } from "@/lib/newhouseApi";
 import type { NewProjectDto } from "@/lib/newhouseApi";
@@ -6,7 +7,7 @@ import { fmtAvg, fmtPhone, fmtStamp, statusClass } from "@/lib/newhouseFormat";
 import { loadCommute, useCommuteState } from "@/lib/commuteState";
 import { fetchGeoRoute } from "@/lib/geoApi";
 import { mediaUrl } from "@/lib/serverClient";
-import type { GeoDrivePath } from "@/lib/geoApi";
+import type { GeoRoutePath } from "@/lib/geoApi";
 import { AmapSpotMap } from "@/components/AmapSpotMap";
 import { FloorPlanGallery } from "@/components/FloorPlanGallery";
 import { PickRoutePage } from "@/views/shared/PickRoute";
@@ -106,7 +107,7 @@ export function NewProjectDetail({ uid, onBack }: { uid: string; onBack: () => v
     : locatedOffices;
   const officeSig = officeOrder.map((row) => row.uid + ":" + row.lng + "," + row.lat).join("|");
   // 每处公司各一条驾车路线：同一把口径 /geo/route，路线页复用同一组参数
-  const [legs, setLegs] = useState<Record<string, GeoDrivePath | null | undefined>>({});
+  const [legs, setLegs] = useState<Record<string, GeoRoutePath | null | undefined>>({});
 
   useEffect(() => {
     let alive = true;
@@ -184,6 +185,8 @@ export function NewProjectDetail({ uid, onBack }: { uid: string; onBack: () => v
       <PickRoutePage
         item={item}
         offices={commute.offices}
+        habits={commute.habits}
+        shuttles={commute.shuttles}
         preferredUid={hashPickOffice() || office?.uid || ""}
         onBack={() => {
           window.location.hash = "/picks/" + uid;
@@ -342,7 +345,16 @@ export function NewProjectDetail({ uid, onBack }: { uid: string; onBack: () => v
               );
             })}
           </div>
-        ) : hasMap ? (
+        ) : null}
+        {hasMap && officeOrder.length && primaryHabit ? (
+          <div className="pick-route-note">
+            默认通勤习惯：{COMMUTE_VEHICLE_LABEL[primaryHabit.vehicle]}
+            {primaryHabit.minutes > 0 ? " · 单程 " + primaryHabit.minutes + " 分钟" : " · 单程时长待填"}
+            {primaryHabit.arriveWork ? " · " + primaryHabit.arriveWork + " 到岗" : ""}
+            ；点「默认」那行按这个习惯看路线。
+          </div>
+        ) : null}
+        {hasMap && !officeOrder.length ? (
           <div className="pick-commute is-off">
             {commute.phase === "loading"
               ? "正在读通勤档案…"

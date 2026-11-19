@@ -72,7 +72,7 @@ export const ApiRoutes = {
   geoGeocode: "/geo/geocode",
   /** 浏览器画地图必须自己带 Key（JSAPI 就是这么设计的），由这一层下发，前端仓库里不留 Key */
   geoMapConfig: "/geo/map-config",
-  /** 驾车折线：服务端算好点串下发，浏览器不碰 restapi（JSAPI 插件会带 s=rsv3 被拒） */
+  /** 路线折线（mode=drive/transit/walk/bike）：服务端算好点串下发，浏览器不碰 restapi（JSAPI 插件会带 s=rsv3 被拒） */
   geoRoute: "/geo/route",
   rules: "/rules",
   communityFill: "/community/fill",

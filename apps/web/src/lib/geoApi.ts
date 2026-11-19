@@ -69,30 +69,39 @@ export async function fetchGeoMapConfig(): Promise<GeoMapConfig> {
   return api<GeoMapConfig>(ApiRoutes.geoMapConfig);
 }
 
-/** 一段驾车路径：points 是 GCJ-02 的点串，可直接喂给 AMap.Polyline。 */
-export interface GeoDrivePath {
+/** 画得出来的四种走法：跟通勤习惯的 vehicle 对齐（班车退回驾车）。 */
+export type GeoRouteMode = "drive" | "transit" | "walk" | "bike";
+
+/** 一段路径：points 是 GCJ-02 的点串，可直接喂给 AMap.Polyline。 */
+export interface GeoRoutePath {
+  mode: GeoRouteMode;
   distance: number;
   duration: number;
   points: { lng: number; lat: number }[];
+  /** 公交 / 地铁方案坐到的线路名；其他走法为空 */
+  lines: string[];
 }
 
 /**
- * 两坐标之间的驾车折线。为什么不直接在浏览器里 new AMap.Driving：
- * 那个插件会带 s=rsv3 打 restapi.amap.com/v3/direction/driving，这把 Key 没开
- * 数字签名，必然回 USERKEY_PLAT_NOMATCH —— 折线只能由服务端算。
- * 算不出来返回 null（起终点不在可驾车道路附近），不算错误。
+ * 两坐标之间的折线（驾车 / 公交地铁 / 步行 / 骑行，默认驾车）。
+ * 为什么不直接在浏览器里 new AMap.Driving：那个插件会带 s=rsv3 打
+ * restapi.amap.com/v3/direction/driving，这把 Key 没开数字签名，必然回
+ * USERKEY_PLAT_NOMATCH —— 折线只能由服务端算。
+ * 算不出来返回 null（起终点不在可通行道路附近），不算错误。
  */
 export async function fetchGeoRoute(
   from: { lng: number; lat: number },
   to: { lng: number; lat: number },
-  opts: { signal?: AbortSignal } = {},
-): Promise<GeoDrivePath | null> {
+  opts: { mode?: GeoRouteMode; city?: string; signal?: AbortSignal } = {},
+): Promise<GeoRoutePath | null> {
   await bootServer();
   const qs = new URLSearchParams({
     from: from.lng.toFixed(6) + "," + from.lat.toFixed(6),
     to: to.lng.toFixed(6) + "," + to.lat.toFixed(6),
+    mode: opts.mode ?? "drive",
   });
-  const res = await api<{ path: GeoDrivePath | null }>(`${ApiRoutes.geoRoute}?${qs.toString()}`, {
+  if (opts.city) qs.set("city", opts.city);
+  const res = await api<{ path: GeoRoutePath | null }>(`${ApiRoutes.geoRoute}?${qs.toString()}`, {
     signal: opts.signal,
   });
   return res.path ?? null;

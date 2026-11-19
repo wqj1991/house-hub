@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchGeoMapConfig } from "@/lib/geoApi";
-import type { GeoDrivePath } from "@/lib/geoApi";
+import type { GeoRouteMode, GeoRoutePath } from "@/lib/geoApi";
 import { loadAmap, type AmapMap } from "@/lib/amap";
 
 /**
  * 两点通勤路线图：楼盘 → 公司。
  *
- * 折线不在这里算：/geo/route 由服务端调高德驾车规划，把 GCJ-02 点串下发
- * （浏览器里的 AMap.Driving 会带 s=rsv3 打 restapi，这把 Key 没开签名必被拒）。
- * path 传 undefined 表示还在算，null 表示算不出来，两种情况都给出说得清的提示。
+ * 折线不在这里算：/geo/route 按走法（驾车 / 公交 / 步行 / 骑行）由服务端调高德，
+ * 把 GCJ-02 点串下发（浏览器里的 AMap.Driving 会带 s=rsv3 打 restapi，这把 Key
+ * 没开签名必被拒）。path 传 undefined 表示还在算，null 表示算不出来，
+ * 两种情况都给出说得清的提示；mode 只决定线的颜色和虚实。
  */
 
 export interface CommutePoint {
@@ -37,16 +38,27 @@ function bubble(text: string, bg: string, size = 24): string {
   );
 }
 
+/** 走法 → 折线样式：步行虚线、骑行紫实线、公交蓝、驾车深蓝。 */
+const ROUTE_STYLE: Record<GeoRouteMode, { color: string; weight: number; dashed: boolean }> = {
+  drive: { color: "#2563eb", weight: 5, dashed: false },
+  transit: { color: "#0284c7", weight: 5, dashed: false },
+  walk: { color: "#16a34a", weight: 4, dashed: true },
+  bike: { color: "#7c3aed", weight: 4, dashed: false },
+};
+
 export function AmapCommuteRoute({
   from,
   to,
   path,
+  mode = "drive",
   height = 320,
 }: {
   from: CommutePoint;
   to: CommutePoint;
   /** undefined = 正在算，null = 没算出来 */
-  path: GeoDrivePath | null | undefined;
+  path: GeoRoutePath | null | undefined;
+  /** 习惯用哪种走法：只影响线色和虚实，点串一律来自服务端 */
+  mode?: GeoRouteMode;
   height?: number;
 }) {
   const boxRef = useRef<HTMLDivElement | null>(null);
@@ -116,13 +128,15 @@ export function AmapCommuteRoute({
         tail.on("click", openAt(to, "终点"));
 
         if (points && points.length >= 2) {
+          const style = ROUTE_STYLE[mode] ?? ROUTE_STYLE.drive;
           const road = new amap.Polyline({
             path: points.map((point) => [point.lng, point.lat] as [number, number]),
-            strokeColor: "#2563eb",
-            strokeWeight: 5,
+            strokeColor: style.color,
+            strokeWeight: style.weight,
             strokeOpacity: 0.95,
+            strokeStyle: style.dashed ? "dashed" : "solid",
             lineJoin: "round",
-            showDir: true,
+            showDir: style.dashed ? false : true,
             zIndex: 80,
           });
           (map as AmapMap).add(road);
@@ -158,7 +172,7 @@ export function AmapCommuteRoute({
       map = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [share_key(from.lng), share_key(from.lat), share_key(to.lng), share_key(to.lat), shape]);
+  }, [share_key(from.lng), share_key(from.lat), share_key(to.lng), share_key(to.lat), shape, mode]);
 
   return (
     <div className="pick-map">

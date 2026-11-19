@@ -1,15 +1,33 @@
 import { useEffect, useState } from "react";
-import type { OfficeLocation } from "@house/core";
+import {
+  COMMUTE_ROUTE_MODE_LABEL,
+  COMMUTE_ROUTE_MODE_ORDER,
+  COMMUTE_VEHICLE_LABEL,
+  SHUTTLE_SEAT_LABEL,
+  commuteOverview,
+  commuteRouteMode,
+  defaultHabit,
+  habitForOffice,
+  habitOffice,
+} from "@house/core";
+import type { CommuteHabit, OfficeLocation, ShuttleBinding } from "@house/core";
 import type { NewProjectDto } from "@/lib/newhouseApi";
 import { fetchGeoRoute } from "@/lib/geoApi";
-import type { GeoDrivePath } from "@/lib/geoApi";
+import type { GeoRoutePath } from "@/lib/geoApi";
+import { loadShuttleLib } from "@/lib/shuttleLib";
+import type { ShuttleLineView } from "@/lib/shuttleLib";
 import { AmapCommuteRoute } from "@/components/AmapCommuteRoute";
+import { AmapRouteMap } from "@/components/AmapRouteMap";
 
 /**
  * 通勤路线页（/picks/<uid>/route）：点详情页地图下面那行「到公司」进来。
  *
- * 数字只有一个来源：服务端 /geo/route 的高德驾车规划（距离、时长、点串一起下发），
- * 页面上不再自己拿经纬度估时长，免得两个地方对不上。
+ * 按「默认通勤习惯」画：
+ * - 终点 = 习惯指向的公司（没指定就取第一处有坐标的）；
+ * - 走法 = 习惯的 vehicle（公交地铁 / 自驾 / 步行 / 电动车），可以临时换着看；
+ * - 时刻 = 习惯的出门、到岗，跟档案里同一口径，不在页面上另算一套。
+ * 数字只有一个来源：服务端 /geo/route 的高德规划（距离、时长、点串一起下发）。
+ * 班车没有连续折线，按线路库的站点顺序单独画一张，上面仍给驾车里程做对照。
  */
 
 function hasCoord(office: OfficeLocation): boolean {
@@ -26,18 +44,25 @@ function fmtMinutes(seconds: number): string {
 }
 
 /** "09:00" + 分钟数 → "08:32"；算不出来返回空串。 */
-function clockBefore(clock: string, minutes: number): string {
+function clockShift(clock: string, minutes: number): string {
   const matched = /^(\d{1,2}):(\d{2})$/.exec(clock.trim());
   if (!matched) return "";
-  const base = Number(matched[1]) * 60 + Number(matched[2]);
-  const at = base - minutes;
-  if (at < 0 || at > 24 * 60) return "";
+  const day = 24 * 60;
+  const at = ((Number(matched[1]) * 60 + Number(matched[2]) + minutes) % day + day) % day;
   const hh = Math.floor(at / 60);
   const mm = at % 60;
   return String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0");
 }
 
-function amapNavHref(from: { name: string; lng: number; lat: number }, to: { name: string; lng: number; lat: number }, mode: "car" | "bus"): string {
+function clockBefore(clock: string, minutes: number): string {
+  return clockShift(clock, -minutes);
+}
+
+function amapNavHref(
+  from: { name: string; lng: number; lat: number },
+  to: { name: string; lng: number; lat: number },
+  mode: "car" | "bus" | "walk" | "ride",
+): string {
   return (
     "https://uri.amap.com/navigation?from=" +
     from.lng + "," + from.lat + "," + encodeURIComponent(from.name) +
@@ -46,26 +71,51 @@ function amapNavHref(from: { name: string; lng: number; lat: number }, to: { nam
   );
 }
 
+/** 画线走法 → 高德 URI 的 mode。 */
+const NAV_MODE: Record<"drive" | "transit" | "walk" | "bike", "car" | "bus" | "walk" | "ride"> = {
+  drive: "car",
+  transit: "bus",
+  walk: "walk",
+  bike: "ride",
+};
+
 export function PickRoutePage({
   item,
   offices,
+  habits = [],
+  shuttles = [],
   preferredUid = "",
   onBack,
 }: {
   item: NewProjectDto;
   offices: OfficeLocation[];
+  /** 通勤习惯：默认那条决定走法与时刻，其它条只用来给「换公司」找对应习惯 */
+  habits?: CommuteHabit[];
+  /** 班车归属：习惯是班车时用它在公司下面找线路号 */
+  shuttles?: ShuttleBinding[];
   /** 详情页那行「到公司」用的同一处：进来先看同一个终点，别两个页面各算各的 */
   preferredUid?: string;
   onBack: () => void;
 }) {
   const located = offices.filter(hasCoord);
-  const [officeUid, setOfficeUid] = useState(
-    () => located.find((row) => row.uid === preferredUid)?.uid ?? located[0]?.uid ?? "",
-  );
+  const primary = defaultHabit(habits);
+  const habitFor = (target: OfficeLocation | null): CommuteHabit | null =>
+    target ? habitForOffice(habits, target.uid) : null;
+
+  const seededUid = [preferredUid, habitOffice(primary, offices)?.uid ?? "", located[0]?.uid ?? ""].find(
+    (uid) => uid !== "" && located.some((row) => row.uid === uid),
+  ) ?? "";
+  const [officeUid, setOfficeUid] = useState(seededUid);
   const office = located.find((row) => row.uid === officeUid) ?? located[0] ?? null;
 
+  const habit = habitFor(office);
+  const [mode, setMode] = useState(() => commuteRouteMode(habitFor(office)?.vehicle ?? "drive"));
+
+  const overview = commuteOverview({ offices, habits, shuttles });
+  const habitView = habit ? overview.views.find((view) => view.habit.uid === habit.uid) ?? null : null;
+
   const hasMap = typeof item.lng === "number" && typeof item.lat === "number" && (item.lng !== 0 || item.lat !== 0);
-  const [path, setPath] = useState<GeoDrivePath | null | undefined>(undefined);
+  const [path, setPath] = useState<GeoRoutePath | null | undefined>(undefined);
   const [failed, setFailed] = useState("");
 
   useEffect(() => {
@@ -73,7 +123,7 @@ export function PickRoutePage({
     let alive = true;
     setPath(undefined);
     setFailed("");
-    fetchGeoRoute({ lng: item.lng!, lat: item.lat! }, { lng: office.lng, lat: office.lat })
+    fetchGeoRoute({ lng: item.lng!, lat: item.lat! }, { lng: office.lng, lat: office.lat }, { mode })
       .then((leg) => {
         if (alive) setPath(leg);
       })
@@ -85,11 +135,49 @@ export function PickRoutePage({
     return () => {
       alive = false;
     };
-  }, [hasMap, item.lng, item.lat, office?.uid, office?.lng, office?.lat]);
+  }, [hasMap, item.lng, item.lat, office?.uid, office?.lng, office?.lat, mode]);
 
-  const km = path ? fmtKm(path.distance) : "";
-  const minutes = path ? fmtMinutes(path.duration) : "";
-  const leaveBy = path && office ? clockBefore(office.beIn, Math.round(path.duration / 60)) : "";
+  // 班车习惯：线路本体在服务端 line / stop，按归属把这条线找出来单独画
+  const shuttleCode =
+    habit?.vehicle === "shuttle" ? shuttles.find((row) => row.officeUid === office?.uid)?.code ?? "" : "";
+  const [shuttleLine, setShuttleLine] = useState<ShuttleLineView | null>(null);
+  const [shuttlePhase, setShuttlePhase] = useState<"idle" | "loading" | "ready" | "missing" | "error">("idle");
+  useEffect(() => {
+    if (!shuttleCode) {
+      setShuttleLine(null);
+      setShuttlePhase("idle");
+      return;
+    }
+    let alive = true;
+    setShuttlePhase("loading");
+    void loadShuttleLib().then((lib) => {
+      if (!alive) return;
+      if (!lib) {
+        setShuttlePhase("error");
+        return;
+      }
+      const line = lib.lines.find((row) => row.code === shuttleCode) ?? null;
+      setShuttleLine(line);
+      setShuttlePhase(line ? "ready" : "missing");
+    });
+    return () => {
+      alive = false;
+    };
+  }, [shuttleCode]);
+
+  const pathMinutes = path ? Math.round(path.duration / 60) : null;
+  const leaveBy = habit?.departHome || (path && office ? clockBefore(office.beIn, pathMinutes ?? 0) : "");
+  const arriveAt =
+    habit?.arriveWork ||
+    habitView?.computedArrive ||
+    (leaveBy && pathMinutes !== null ? clockShift(leaveBy, pathMinutes) : "");
+  const slack = habitView?.slackMin ?? null;
+
+  function chooseOffice(uid: string): void {
+    setOfficeUid(uid);
+    const next = habitFor(located.find((row) => row.uid === uid) ?? null);
+    if (next) setMode(commuteRouteMode(next.vehicle));
+  }
 
   const bar = (
     <div className="pick-page-bar">
@@ -99,7 +187,11 @@ export function PickRoutePage({
       {office && hasMap ? (
         <a
           className="pick-btn"
-          href={amapNavHref({ name: item.name, lng: item.lng!, lat: item.lat! }, { name: office.name, lng: office.lng, lat: office.lat }, "car")}
+          href={amapNavHref(
+            { name: item.name, lng: item.lng!, lat: item.lat! },
+            { name: office.name, lng: office.lng, lat: office.lat },
+            NAV_MODE[mode],
+          )}
           target="_blank"
           rel="noreferrer"
         >
@@ -140,35 +232,107 @@ export function PickRoutePage({
             <span className="pick-sec-count">{item.name} → {office.name}</span>
           </div>
           <div className="pick-sec-actions">
-            {path ? (
-              <a
-                className="pick-btn"
-                href={amapNavHref({ name: item.name, lng: item.lng!, lat: item.lat! }, { name: office.name, lng: office.lng, lat: office.lat }, "bus")}
-                target="_blank"
-                rel="noreferrer"
-              >
-                公交 / 地铁
-              </a>
+            <a
+              className="pick-btn"
+              href={amapNavHref(
+                { name: item.name, lng: item.lng!, lat: item.lat! },
+                { name: office.name, lng: office.lng, lat: office.lat },
+                NAV_MODE[mode],
+              )}
+              target="_blank"
+              rel="noreferrer"
+            >
+              按习惯导航
+            </a>
+          </div>
+        </div>
+
+        {habit ? (
+          <div className="card-inset" style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span className="me-setting-pill" style={{ fontSize: 11 }}>
+                {habit.uid === primary?.uid ? "默认习惯" : "这处公司的习惯"}
+              </span>
+              <b style={{ fontSize: 14 }}>
+                {COMMUTE_VEHICLE_LABEL[habit.vehicle]}
+                {habit.label ? " · " + habit.label : ""}
+              </b>
+              <span style={{ fontSize: 11.5, color: "var(--text-dim)" }}>
+                每周 {habit.daysPerWeek} 天 · 家 → 公司
+              </span>
+            </div>
+            <div style={{ fontSize: 12, color: "var(--text-sub)" }}>
+              {habit.minutes > 0 ? "档案单程 " + habit.minutes + " 分钟" : "档案里单程时长还没填"}
+              {habit.departHome ? " · " + habit.departHome + " 出门" : ""}
+              {arriveAt ? " · " + arriveAt + " 到岗" : ""}
+              {habitView && habitView.slackMin !== null
+                ? habitView.slackMin >= 0
+                  ? " · 到岗早 " + habitView.slackMin + " 分"
+                  : " · 迟到 " + Math.abs(habitView.slackMin) + " 分"
+                : ""}
+            </div>
+            {habit.shuttle ? (
+              <div style={{ fontSize: 11.5, color: "var(--text-dim)", lineHeight: 1.6 }}>
+                班车 {habit.shuttle.line || "未填线路"}
+                {habit.shuttle.stop ? " · " + habit.shuttle.stop + " 上车" : ""}
+                {habit.shuttle.depart ? " · " + habit.shuttle.depart + " 发车" : ""}
+                {habit.shuttle.arrive ? " · " + habit.shuttle.arrive + " 到公司" : ""}
+                {habit.shuttle.lastReturn ? " · 末班返程 " + habit.shuttle.lastReturn : ""}
+                {" · " + SHUTTLE_SEAT_LABEL[habit.shuttle.seat]}
+              </div>
+            ) : null}
+            {habitView && habitView.warnings.length > 0 ? (
+              <div style={{ fontSize: 11.5, color: "var(--text-sub)", lineHeight: 1.6 }}>
+                {habitView.warnings.map((warning) => (
+                  <div key={warning}>· {warning}</div>
+                ))}
+              </div>
             ) : null}
           </div>
+        ) : (
+          <div className="pick-route-note">
+            这处公司还没挂通勤习惯：这张图先按驾车画。去「通勤档案」录一条主用习惯，下次进来终点、走法、出门与到岗都跟习惯走。
+          </div>
+        )}
+
+        <div className="pick-route-offices" style={{ marginTop: 4 }}>
+          <span className="pick-sec-count">走法</span>
+          {COMMUTE_ROUTE_MODE_ORDER.map((row) => (
+            <button
+              key={row}
+              type="button"
+              className={"pick-btn" + (row === mode ? " is-primary" : "")}
+              onClick={() => setMode(row)}
+              title={
+                habit && row === commuteRouteMode(habit.vehicle)
+                  ? "默认通勤习惯用的走法"
+                  : COMMUTE_ROUTE_MODE_LABEL[row]
+              }
+            >
+              {COMMUTE_ROUTE_MODE_LABEL[row]}
+              {habit && row === commuteRouteMode(habit.vehicle) ? " · 习惯" : ""}
+            </button>
+          ))}
         </div>
 
         <div className="pick-route-stats">
           <div className="pick-route-stat">
-            <span>驾车距离</span>
-            <b>{path ? km : path === null ? "—" : "…"}</b>
+            <span>{COMMUTE_ROUTE_MODE_LABEL[mode]}距离</span>
+            <b>{path ? fmtKm(path.distance) : path === null ? "—" : "…"}</b>
           </div>
           <div className="pick-route-stat">
-            <span>驾车时长</span>
-            <b>{path ? minutes : path === null ? "—" : "…"}</b>
+            <span>{COMMUTE_ROUTE_MODE_LABEL[mode]}时长</span>
+            <b>{path ? fmtMinutes(path.duration) : path === null ? "—" : "…"}</b>
           </div>
           <div className="pick-route-stat">
-            <span>到岗 {office.beIn || "—"}</span>
-            <b>{leaveBy ? leaveBy + " 出门" : "—"}</b>
+            <span>
+              {habit?.departHome ? "出门（习惯）" : "出门（按到岗 " + (office.beIn || "—") + " 倒推）"}
+            </span>
+            <b>{leaveBy || "—"}</b>
           </div>
           <div className="pick-route-stat">
-            <span>终点</span>
-            <b className="is-text">{office.name}</b>
+            <span>到岗</span>
+            <b className={slack !== null && slack < 0 ? "coral" : undefined}>{arriveAt || office.beIn || "—"}</b>
           </div>
         </div>
 
@@ -176,18 +340,61 @@ export function PickRoutePage({
           from={{ name: item.name, address: item.address || item.salesAddress, lng: item.lng!, lat: item.lat! }}
           to={{ name: office.name, address: office.address, lng: office.lng, lat: office.lat }}
           path={path}
+          mode={mode}
           height={360}
         />
 
         {failed ? (
           <div className="pick-route-note is-warn">高德路线没算出来：{failed.slice(0, 120)}</div>
         ) : path === null ? (
-          <div className="pick-route-note is-warn">起终点可能不在可驾车道路附近，图上只能画直线，实际请按「高德导航」走一遍。</div>
+          <div className="pick-route-note is-warn">
+            起终点可能不在可通行道路附近，图上只能画直线；按上面的「高德导航」实际走一遍更准。
+          </div>
+        ) : path && path.lines?.length ? (
+          <div className="pick-route-note">
+            {path.lines.join(" → ")}；数字来自高德「{COMMUTE_ROUTE_MODE_LABEL[mode]}」规划，不含等车与步行找路的零碎时间。
+          </div>
         ) : (
           <div className="pick-route-note">
-            数字来自高德驾车规划（不含停车、找车位的零碎时间）；「出门」按公司到岗时刻倒推。楼盘这头是抓取到的坐标，口径是门口附近。
+            数字来自高德「{COMMUTE_ROUTE_MODE_LABEL[mode]}」规划（不含停车、找车位的零碎时间）；「出门」按公司到岗时刻倒推。楼盘这头是抓取到的坐标，口径是门口附近。
           </div>
         )}
+
+        {habit?.vehicle === "shuttle" ? (
+          <div className="card-inset" style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
+              <b style={{ fontSize: 13.5 }}>班车走法 {shuttleCode ? "· " + shuttleCode : ""}</b>
+              <span style={{ fontSize: 11.5, color: "var(--text-dim)" }}>
+                {shuttleCode ? "站点顺序来自线路库" : "这处公司还没挂线路"}
+              </span>
+            </div>
+            {shuttleLine && shuttlePhase === "ready" ? (
+              <AmapRouteMap
+                stops={shuttleLine.stops.map((stop) => ({
+                  name: stop.name,
+                  depart: stop.depart,
+                  lng: stop.lng,
+                  lat: stop.lat,
+                }))}
+                terminal={{ name: office.name, lng: office.lng, lat: office.lat }}
+                title={shuttleLine.code + " " + shuttleLine.name}
+                height={300}
+              />
+            ) : (
+              <div style={{ fontSize: 11.5, color: "var(--text-dim)", lineHeight: 1.6 }}>
+                {!shuttleCode
+                  ? "去「通勤档案 · 班车线路」把这处公司挂上一条线，这里就能画出班车从首站到公司的走法。"
+                  : shuttlePhase === "loading"
+                    ? "正在读线路站点…"
+                    : shuttlePhase === "missing"
+                      ? "线路库里找不到 " + shuttleCode + "：可能已被删掉，去「班车线路」重挂一条。"
+                      : shuttlePhase === "error"
+                        ? "线路没读出来：检查服务器连接后重新进这个页面。"
+                        : ""}
+              </div>
+            )}
+          </div>
+        ) : null}
 
         {located.length > 1 ? (
           <div className="pick-route-offices">
@@ -197,7 +404,7 @@ export function PickRoutePage({
                 key={row.uid}
                 type="button"
                 className={"pick-btn" + (row.uid === office.uid ? " is-primary" : "")}
-                onClick={() => setOfficeUid(row.uid)}
+                onClick={() => chooseOffice(row.uid)}
               >
                 {row.name || "未命名公司"}
               </button>

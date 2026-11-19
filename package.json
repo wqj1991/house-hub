@@ -1,7 +1,7 @@
 {
   "name": "house-hub",
   "private": true,
-  "version": "0.3.3",
+  "version": "0.3.4",
   "license": "UNLICENSED",
   "type": "module",
   "packageManager": "pnpm@11.25.0",
