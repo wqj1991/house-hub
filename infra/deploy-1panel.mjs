@@ -110,7 +110,16 @@ async function main() {
   await shell("mkdir -p " + BASE + "/incoming && df -h /opt | tail -1", { cronId: CRON_ID });
   await upload(tar, BASE + "/incoming");
   if (snapshot) await upload(snapshot, BASE + "/incoming");
-  const check = await shell("ls -l " + BASE + "/incoming/" + TARBALL + (snapshot ? " " + BASE + "/incoming/" + DBFILE : ""), { cronId: CRON_ID });
+  // 1Panel 的任务日志偶发串台（回读到别的任务的 nginx 输出），单次回读会误判成"没落地"，
+  // 所以按 3 次重试 + 只认文件名出现来判定；真没落地时三次都不会出现。
+  const listCmd = "ls -l " + BASE + "/incoming/" + TARBALL + (snapshot ? " " + BASE + "/incoming/" + DBFILE : "");
+  let check = "";
+  for (let i = 1; i <= 3; i++) {
+    check = await shell(listCmd, { cronId: CRON_ID });
+    if (check.includes(TARBALL)) break;
+    log("回读第 " + i + " 次未见 " + TARBALL + "，重试……");
+    await new Promise((r) => setTimeout(r, 3000));
+  }
   log(check.trim());
   if (!check.includes(TARBALL)) throw new Error("上传没落地，见上：1Panel upload 对部分目录会静默失败");
 
