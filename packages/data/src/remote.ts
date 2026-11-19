@@ -44,9 +44,11 @@ export function setUnauthorizedHandler(fn: (() => void) | null): void {
  * 路径前缀由 ApiRoutes 统一带，所以这里见到就剥掉。
  */
 function normalizeBase(raw: string): string {
-  let next = raw.trim().replace(/\/+$/, "");
-  if (next.endsWith(API_PREFIX)) next = next.slice(0, -API_PREFIX.length).replace(/\/+$/, "");
-  return next;
+  const next = raw.trim().replace(/\/+$/, "");
+  if (!next) return API_PREFIX;
+  // 显式给了绝对地址（桌面端 / 手机连远程服务器）时必须带反代前缀：
+  // 线上 18766 的站点根出的是前端页面，只有 /house-api/ 才转后端，少这段会拿到 HTML 而不是 JSON。
+  return next.endsWith(API_PREFIX) ? next : next + API_PREFIX;
 }
 
 export function configureApi(opts: ApiClientOptions): void {

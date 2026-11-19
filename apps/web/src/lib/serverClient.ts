@@ -25,15 +25,26 @@ const DEV_DIRECT = import.meta.env.DEV && LOOPBACK.has(window.location.hostname)
 /** 本机 8787 落在 Windows netsh 保留段（8699-8798）→ 监听时报 EACCES，故开发期默认 18878
  *  （见 scripts/android-dev.sh:60）。两个都探一遍，谁活着用谁，换机器不用改代码。 */
 const DEV_PORTS = [18878, 8787];
+/** 打包产物（桌面端 / 安卓 App）默认连线上服务器；浏览器里打开网页仍走同源 /house-api。 */
+const PACKAGED_BASE = "https://47.95.238.28:18766";
 const DEFAULT_BASE =
   (import.meta.env.VITE_HOUSE_SERVER as string | undefined)?.trim() ||
-  (DEV_DIRECT ? `http://127.0.0.1:${DEV_PORTS[0]}` : "");
+  (import.meta.env.DEV
+    ? DEV_DIRECT
+      ? `http://127.0.0.1:${DEV_PORTS[0]}`
+      : ""
+    : inTauri
+      ? PACKAGED_BASE
+      : "");
 
 
-/** 存进 localStorage 的地址只留「协议+主机+端口」：以前手填过 /house-api 的旧值在这里一并纠正。 */
+/**
+ * 数据源只存「协议 + 主机 + 端口」，反代前缀 /house-api 由 @house/data 的 normalizeBase 统一补。
+ * 老版本会把 /house-api 写进 localStorage，这里见一次剥一次，界面也就不再显示成 .../house-api。
+ */
 function cleanBase(raw: string): string {
-  const next = raw.trim().replace(/\/+$/, "");
-  return next.endsWith("/house-api") ? next.slice(0, -"/house-api".length).replace(/\/+$/, "") : next;
+  const next = raw.trim().replace(/\/+$/, "").replace(/\/house-api$/, "");
+  return next.replace(/\/+$/, "");
 }
 
 /** 服务器错误原文形如「401 unauthorized: 账号或密码不对」，界面上只留人话那半段。 */

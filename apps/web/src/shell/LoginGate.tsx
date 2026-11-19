@@ -201,7 +201,7 @@ export function LoginGate() {
                   </button>
                 </div>
                 <div style={{ fontSize: 11.5, color: "var(--text-dim)", lineHeight: 1.6 }}>
-                  留空＝同源部署（走 /house-api 反代）；本机直连填 http://127.0.0.1:18878。
+                  留空＝同源部署（走 /house-api 反代）；桌面端 / App 默认 https://47.95.238.28:18766（只填到端口，/house-api 由程序自己补），本机直连填 http://127.0.0.1:18878。
                 </div>
               </div>
             ) : null}
