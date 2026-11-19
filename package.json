@@ -24,6 +24,7 @@
     "version:check": "node scripts/version.mjs --check",
     "check:schema": "node scripts/schema-check.mjs",
     "deploy": "bash infra/deploy.sh",
-    "deploy:panel": "node infra/deploy-1panel.mjs"
+    "deploy:panel": "node infra/deploy-1panel.mjs",
+    "deploy:local": "bash infra/deploy-local.sh"
   }
 }

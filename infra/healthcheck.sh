@@ -23,7 +23,8 @@ if [ -f "$DB" ]; then
   echo "rev: ${rev:-读不到（库刚建或权限不足）}"
 fi
 
-use="$(df -P "$(dirname "$DB")" 2>/dev/null | awk "NR==2{gsub(/%/,"");print $5}")"
+# 单引号包 awk 程序：双引号会让 $5 被 shell 先展开成空（set -u 下直接报 unbound）
+use="$(df -P "$(dirname "$DB")" 2>/dev/null | awk 'NR==2{gsub(/%/,"");print $5}')"
 if [ -n "${use:-}" ] && [ "$use" -ge "$DISK_LIMIT" ]; then
   echo "!! 磁盘占用 ${use}% ≥ ${DISK_LIMIT}%"; exit 1
 fi

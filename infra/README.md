@@ -2,10 +2,14 @@
 
 部署面：openresty 当着门，systemd 管进程。
 
-**这台服务器（47.95.238.28）SSH 22 从外网不可达**，`deploy.sh`/`release.sh` 那套 SSH 流程在本机上用不了；实际在用 `deploy-1panel.mjs` —— 走 1Panel v1 HTTP API（上传 + 计划任务跑 shell），见下。
+**这台服务器（47.95.238.28）SSH 22 从外网不可达**，所以 `deploy.sh`/`release.sh` 那套 SSH 流程只在远端机器上有意义。
+
+- 代码已经在这台生产机上（`/root/house-hub`）：用 `deploy-local.sh` 本机直发，不联网不碰 1Panel，见「发布（本机直发）」。
+- 代码在别处 / CI 里：走 `deploy-1panel.mjs` 的 1Panel v1 HTTP API（上传 + 计划任务跑 shell）。
 
 | 文件 | 在哪跑 | 作用 |
 |---|---|---|
+| `deploy-local.sh` | **服务器（root，推荐）** | 构建 → 落 release → 装依赖 → 切 `current` → 同步静态 → 重启 → 自检 → **失败自动回滚** |
 | `deploy.sh` | 本机（Windows git bash） | 构建 → 打包 → 上传 → 远程调 `release.sh` → 外网自检 |
 | `release.sh` | 服务器（root） | 解包 → 装依赖 → 原子切 `current` → 同步静态 → 重启 → 自检 → **失败自动回滚** |
 | `rollback.sh` | 服务器（root） | 手动切回上一个 release |
@@ -53,7 +57,24 @@ sudo cp infra/openresty/house.conf /usr/local/openresty/nginx/conf/conf.d/
 sudo openresty -t && sudo systemctl reload openresty
 ```
 
-## 发布
+## 发布（本机直发，推荐）
+
+代码就在这台生产机上时，不需要打包/上传/1Panel——`deploy-local.sh` 直接发：
+
+```bash
+sudo pnpm deploy:local                 # 构建 → 落 releases/<stamp> → 装依赖 → 切 current → 同步静态 → 重启 → 自检
+sudo bash infra/deploy-local.sh --skip-build   # 已有 apps/web/dist（只改了后端）
+sudo bash infra/deploy-local.sh --no-web       # 只发 API，不动 nginx 静态目录
+sudo bash infra/deploy-local.sh --restart      # 只重启 + 自检
+```
+
+- 源码树默认 `/root/house-hub`（`HOUSE_SRC` 可改），产物落 `/opt/house-hub/releases/<stamp>`，`current` 软链原子切换。
+- 构建用 `HOUSE_WEB_BASE=/house/`，产物资源必须是 `/house/assets/*`——脚本里会先校验，base 配错直接失败。
+- 静态文件 `rsync --delete` 到 `/opt/1panel/apps/openresty/openresty/www/house`（openresty 在容器里，这里只写文件即可）。
+- 自检不过自动切回上一版并重启；成功则清理旧版（`HOUSE_KEEP`，默认 4），并写 `/opt/house-hub/.last-deploy.json`（stamp / git rev / 未提交改动数）。
+- 依赖：`rsync`、`pnpm`、`python3`+`make`+`g++`（`better-sqlite3` 原生构建）。
+
+## 发布（远端打包上传，旧路径）
 
 ```bash
 HOUSE_HOST=1.2.3.4 HOUSE_PUBLIC_URL=https://house.example.com pnpm deploy
