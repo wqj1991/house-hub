@@ -98,11 +98,8 @@ fi
 
 # ---------- 5. 重启 + 自检 ----------
 log "重启 $SERVICE"
-systemctl restart "$SERVICE"
-sleep 1
-
-log "自检"
-if health "$DEST"; then
+# restart 失败也算发布失败（不要 set -e 直接退：current 已经切过去了，必须回滚）
+if systemctl restart "$SERVICE" && sleep 1 && health "$DEST"; then
   log "OK：$STAMP 已上线（current → $DEST）"
   if command -v git >/dev/null && [ -d "$SRC/.git" ]; then
     REV="$(git -C "$SRC" rev-parse --short HEAD 2>/dev/null || echo '?')"
@@ -117,7 +114,7 @@ else
     ln -sfn "$PREV" "$BASE/current.new"
     mv -Tf "$BASE/current.new" "$BASE/current"
     [ "$NO_WEB" = 0 ] && rsync -a --delete "$PREV/apps/web/dist/" "$WEB_ROOT/"
-    systemctl restart "$SERVICE"
+    systemctl restart "$SERVICE" || true
     sleep 1
     health "$PREV" && { echo "已回滚，线上是 $(basename "$PREV")，本次改动未生效"; exit 1; }
     die "回滚后仍不健康，人工介入：journalctl -u $SERVICE -n 80 --no-pager"
