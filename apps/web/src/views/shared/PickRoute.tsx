@@ -137,14 +137,19 @@ export function PickRoutePage({
     };
   }, [hasMap, item.lng, item.lat, office?.uid, office?.lng, office?.lat, mode]);
 
-  // 班车习惯：线路本体在服务端 line / stop，按归属把这条线找出来单独画
-  const shuttleCode =
-    habit?.vehicle === "shuttle" ? shuttles.find((row) => row.officeUid === office?.uid)?.code ?? "" : "";
-  const [shuttleLine, setShuttleLine] = useState<ShuttleLineView | null>(null);
-  const [shuttlePhase, setShuttlePhase] = useState<"idle" | "loading" | "ready" | "missing" | "error">("idle");
+  // 班车习惯：线路本体在服务端 line / stop，把挂在这处公司的线路都取回来
+  const boundCodes =
+    habit?.vehicle === "shuttle"
+      ? Array.from(new Set(shuttles.filter((row) => row.officeUid === office?.uid).map((row) => row.code.toUpperCase())))
+      : [];
+  const boundSig = boundCodes.join(",");
+  const [shuttleLines, setShuttleLines] = useState<ShuttleLineView[]>([]);
+  const [shuttlePhase, setShuttlePhase] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [pickedCode, setPickedCode] = useState("");
+
   useEffect(() => {
-    if (!shuttleCode) {
-      setShuttleLine(null);
+    if (!boundSig) {
+      setShuttleLines([]);
       setShuttlePhase("idle");
       return;
     }
@@ -156,14 +161,26 @@ export function PickRoutePage({
         setShuttlePhase("error");
         return;
       }
-      const line = lib.lines.find((row) => row.code === shuttleCode) ?? null;
-      setShuttleLine(line);
-      setShuttlePhase(line ? "ready" : "missing");
+      const wanted = boundSig.split(",");
+      setShuttleLines(lib.lines.filter((row) => wanted.includes(row.code)));
+      setShuttlePhase("ready");
     });
     return () => {
       alive = false;
     };
-  }, [shuttleCode]);
+  }, [boundSig]);
+
+  // 习惯里写了线路名就按名字认一条；没写就先用挂在这处公司的第一条
+  const habitLine = (habit?.shuttle?.line ?? "").trim();
+  const guessedCode = habitLine
+    ? shuttleLines.find(
+        (row) =>
+          row.code.toLowerCase() === habitLine.toLowerCase() ||
+          (row.name.length > 1 && (habitLine.includes(row.name) || row.name.includes(habitLine))),
+      )?.code ?? ""
+    : "";
+  const activeCode = pickedCode || guessedCode || boundCodes[0] || "";
+  const shuttleLine = shuttleLines.find((row) => row.code === activeCode) ?? null;
 
   const pathMinutes = path ? Math.round(path.duration / 60) : null;
   const leaveBy = habit?.departHome || (path && office ? clockBefore(office.beIn, pathMinutes ?? 0) : "");
@@ -220,6 +237,68 @@ export function PickRoutePage({
       </div>
     );
   }
+
+  // 班车习惯的卡片：默认走法就是它，所以摆在「其它走法」前面
+  const shuttleCard =
+    habit?.vehicle === "shuttle" ? (
+      <div className="card-inset" style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
+          <b style={{ fontSize: 13.5 }}>默认习惯 · 班车</b>
+          <span style={{ fontSize: 11.5, color: "var(--text-dim)" }}>
+            {boundCodes.length ? "站点顺序来自线路库" : "这处公司还没挂线路"}
+          </span>
+        </div>
+        {boundCodes.length > 1 ? (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {boundCodes.map((code) => {
+              const row = shuttleLines.find((line) => line.code === code);
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  className={"pick-btn" + (code === activeCode ? " is-primary" : "")}
+                  onClick={() => setPickedCode(code)}
+                >
+                  {code}
+                  {row?.name ? " " + row.name : ""}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+        {shuttleLine ? (
+          <>
+            <div style={{ fontSize: 11.5, color: "var(--text-dim)" }}>
+              {shuttleLine.code} {shuttleLine.name}
+              {shuttleLine.arrive ? " · " + shuttleLine.arrive + " 到公司" : ""}
+              {shuttleLine.stops[0]?.depart ? " · 首站 " + shuttleLine.stops[0].depart + " 发车" : ""}
+            </div>
+            <AmapRouteMap
+              key={shuttleLine.code}
+              stops={shuttleLine.stops.map((stop) => ({
+                name: stop.name,
+                depart: stop.depart,
+                lng: stop.lng,
+                lat: stop.lat,
+              }))}
+              terminal={{ name: office.name, lng: office.lng, lat: office.lat }}
+              title={shuttleLine.code + " " + shuttleLine.name}
+              height={300}
+            />
+          </>
+        ) : (
+          <div style={{ fontSize: 11.5, color: "var(--text-dim)", lineHeight: 1.6 }}>
+            {!boundCodes.length
+              ? "去「通勤档案 · 班车线路」把这处公司挂上一条线，这里就能画出班车从首站到公司的走法。"
+              : shuttlePhase === "loading"
+                ? "正在读线路站点…"
+                : shuttlePhase === "error"
+                  ? "线路没读出来：检查服务器连接后重新进这个页面。"
+                  : "线路库里找不到 " + boundCodes.join(" / ") + "：可能已被删掉，去「班车线路」重挂一条。"}
+          </div>
+        )}
+      </div>
+    ) : null;
 
   return (
     <div className="pick-page">
@@ -295,8 +374,12 @@ export function PickRoutePage({
           </div>
         )}
 
+        {shuttleCard}
+
         <div className="pick-route-offices" style={{ marginTop: 4 }}>
-          <span className="pick-sec-count">走法</span>
+          <span className="pick-sec-count">
+            {habit?.vehicle === "shuttle" ? "对照 · 其它走法" : "走法"}
+          </span>
           {COMMUTE_ROUTE_MODE_ORDER.map((row) => (
             <button
               key={row}
@@ -344,6 +427,10 @@ export function PickRoutePage({
           height={360}
         />
 
+        {habit?.vehicle === "shuttle" ? (
+          <div className="pick-route-note">上面这条按路网算，用来和班车对照里程与耗时；你的默认走法看上面的班车线路图。</div>
+        ) : null}
+
         {failed ? (
           <div className="pick-route-note is-warn">高德路线没算出来：{failed.slice(0, 120)}</div>
         ) : path === null ? (
@@ -359,42 +446,6 @@ export function PickRoutePage({
             数字来自高德「{COMMUTE_ROUTE_MODE_LABEL[mode]}」规划（不含停车、找车位的零碎时间）；「出门」按公司到岗时刻倒推。楼盘这头是抓取到的坐标，口径是门口附近。
           </div>
         )}
-
-        {habit?.vehicle === "shuttle" ? (
-          <div className="card-inset" style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
-              <b style={{ fontSize: 13.5 }}>班车走法 {shuttleCode ? "· " + shuttleCode : ""}</b>
-              <span style={{ fontSize: 11.5, color: "var(--text-dim)" }}>
-                {shuttleCode ? "站点顺序来自线路库" : "这处公司还没挂线路"}
-              </span>
-            </div>
-            {shuttleLine && shuttlePhase === "ready" ? (
-              <AmapRouteMap
-                stops={shuttleLine.stops.map((stop) => ({
-                  name: stop.name,
-                  depart: stop.depart,
-                  lng: stop.lng,
-                  lat: stop.lat,
-                }))}
-                terminal={{ name: office.name, lng: office.lng, lat: office.lat }}
-                title={shuttleLine.code + " " + shuttleLine.name}
-                height={300}
-              />
-            ) : (
-              <div style={{ fontSize: 11.5, color: "var(--text-dim)", lineHeight: 1.6 }}>
-                {!shuttleCode
-                  ? "去「通勤档案 · 班车线路」把这处公司挂上一条线，这里就能画出班车从首站到公司的走法。"
-                  : shuttlePhase === "loading"
-                    ? "正在读线路站点…"
-                    : shuttlePhase === "missing"
-                      ? "线路库里找不到 " + shuttleCode + "：可能已被删掉，去「班车线路」重挂一条。"
-                      : shuttlePhase === "error"
-                        ? "线路没读出来：检查服务器连接后重新进这个页面。"
-                        : ""}
-              </div>
-            )}
-          </div>
-        ) : null}
 
         {located.length > 1 ? (
           <div className="pick-route-offices">
