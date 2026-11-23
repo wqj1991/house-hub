@@ -4,6 +4,7 @@ import { CommuteDetailPage, CommuteSummaryRow, useCommuteEditor } from "@/views/
 import { IncomeMemberPage } from "@/views/shared/IncomeMemberPage";
 import { IncomeDetailPage, IncomeSummaryRow, useIncomeEditor } from "@/views/shared/IncomeSection";
 import { AccountEntry, AccountIdentity } from "@/views/shared/AccountPanel";
+import { FlowSettingsCard } from "@/views/shared/FlowSettingsCard";
 import { ToneBackdropSetting } from "@/views/shared/ToneBackdropSetting";
 
 const THEMES = [
@@ -67,6 +68,7 @@ export function MeScreen() {
         <AccountIdentity />
         <AccountEntry />
       </div>
+      <FlowSettingsCard mobile />
       <div className="me-group-card" style={{ padding: '14px 18px' }}>
         <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 12 }}>视觉主题底膜 (点击即时生效)</div>
         <div className="theme-selector-grid">

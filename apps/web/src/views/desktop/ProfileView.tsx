@@ -3,6 +3,7 @@ import { CommuteDetailPage, CommuteSummaryRow, useCommuteEditor } from "@/views/
 import { IncomeMemberPage } from "@/views/shared/IncomeMemberPage";
 import { IncomeDetailPage, IncomeSummaryRow, useIncomeEditor } from "@/views/shared/IncomeSection";
 import { AccountEntry, AccountIdentity } from "@/views/shared/AccountPanel";
+import { FlowSettingsCard } from "@/views/shared/FlowSettingsCard";
 import { ToneBackdropSetting } from "@/views/shared/ToneBackdropSetting";
 
 const THEMES = [
@@ -70,6 +71,8 @@ export function ProfileView() {
         <AccountIdentity variant="desktop" />
         <AccountEntry variant="desktop" />
       </div>
+
+      <FlowSettingsCard mobile={false} />
 
       <div className="glass" style={{ padding: '18px 22px', borderRadius: 18 }}>
         <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 12 }}>视觉主题底膜 (点击即时生效)</div>

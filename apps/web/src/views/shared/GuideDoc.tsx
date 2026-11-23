@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { guideDoc, type GuideMode } from "@/lib/guideContent";
 
 /** 把文案里的 **加粗** 转成 <strong>，其余内容按文本渲染。 */
-function Rich({ text }: { text: string }): ReactNode {
+export function Rich({ text }: { text: string }): ReactNode {
   const parts = text.split(/(\*\*[^*]+\*\*)/g).filter((part) => part.length > 0);
   return (
     <>

@@ -1583,6 +1583,316 @@ body[data-tone="dawn"] .skeleton-line{
   .mobile-shell [class*="shimmer"]{animation:none}
 }
 
+/* =====================================================================
+   购房流程 · 8 步操作手册（桌面 / 移动共用一套类名，断点只调间距与字号）
+   ===================================================================== */
+/* 卡片节奏统一由容器 gap 控制：卡片自身不再带 margin，避免某些端出现 0 / 负间距 */
+.flow-doc{display:flex;flex-direction:column;gap:14px}
+.flow-doc > .guide-card,.flow-doc > .m-card{margin-bottom:0}
+.flow-hero{position:relative;overflow:hidden}
+.flow-hero-title{font-size:20px;font-weight:800;color:var(--text-main);margin-bottom:8px;line-height:1.3}
+
+/* 进度条：底色吃玻璃描边，填充吃 accent */
+.flow-progress{margin:14px 0 12px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid var(--glass-border-subtle)}
+.flow-progress-top{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--text-sub);margin-bottom:8px}
+.flow-progress-top b{color:var(--text-main);font-size:15px;font-weight:800;margin:0 2px}
+.flow-bar{height:6px;border-radius:999px;background:rgba(255,255,255,0.10);overflow:hidden}
+.flow-bar > span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent-cyan),#108A7C);transition:width .28s cubic-bezier(.2,.9,.25,1)}
+.flow-progress-actions{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+
+/* 夫妻模式开关：药丸 + 左侧指示灯，不用原生 checkbox，避免双端样式不一致 */
+.flow-toggle{
+  display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 13px;
+  border-radius:999px;border:1px solid var(--glass-border-subtle);
+  background:rgba(255,255,255,0.05);color:var(--text-sub);
+  font-size:12px;font-weight:600;cursor:pointer;
+  transition:color .18s ease,background .18s ease,border-color .18s ease;
+}
+.flow-toggle > i{width:8px;height:8px;border-radius:50%;background:var(--text-dim);transition:background .18s ease,box-shadow .18s ease}
+.flow-toggle.is-on{color:var(--accent-cyan);border-color:color-mix(in srgb,var(--accent-cyan) 40%,transparent);background:color-mix(in srgb,var(--accent-cyan) 12%,transparent)}
+.flow-toggle.is-on > i{background:var(--accent-cyan);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent-cyan) 18%,transparent)}
+.flow-reset{
+  height:30px;padding:0 12px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--glass-border-subtle);background:none;color:var(--text-dim);
+  font-size:12px;font-weight:600;transition:color .18s ease,border-color .18s ease;
+}
+.flow-reset:not(:disabled):hover{color:var(--accent-coral);border-color:color-mix(in srgb,var(--accent-coral) 40%,transparent)}
+.flow-reset:disabled{opacity:.4;cursor:default}
+
+.flow-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid var(--glass-border-subtle)}
+
+.flow-step{margin-bottom:0}
+.flow-step-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
+.flow-step-no{
+  flex:0 0 auto;display:grid;place-items:center;width:30px;height:30px;border-radius:10px;
+  background:color-mix(in srgb,var(--accent-cyan) 16%,transparent);
+  color:var(--accent-cyan);font-family:var(--num);font-size:14px;font-weight:800;
+}
+.flow-step-title{font-size:16px;font-weight:700;color:var(--text-main);line-height:1.35}
+.flow-step-sub{font-size:11.5px;color:var(--text-dim);margin-top:3px;line-height:1.5}
+
+.flow-meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,0.035);border:1px solid var(--glass-border-subtle)}
+
+.flow-block-title{font-size:12.5px;font-weight:700;color:var(--text-main);margin:14px 0 7px;display:flex;align-items:center;gap:7px}
+.flow-block-title::before{content:"";width:3px;height:12px;border-radius:2px;background:var(--accent-cyan)}
+.flow-block-title.coral::before{background:var(--accent-coral)}
+
+.flow-list,.flow-risks{margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.flow-list > li,.flow-risks > li{position:relative;padding-left:14px;font-size:12.5px;line-height:1.72;color:var(--text-sub)}
+.flow-list > li::before{content:"";position:absolute;left:0;top:9px;width:5px;height:5px;border-radius:50%;background:var(--accent-cyan);opacity:.8}
+.flow-risks > li{color:color-mix(in srgb,var(--accent-coral) 72%,var(--text-sub))}
+.flow-risks > li::before{content:"";position:absolute;left:0;top:9px;width:5px;height:5px;border-radius:1px;background:var(--accent-coral);opacity:.85}
+.flow-list strong,.flow-risks strong{color:var(--text-main);font-weight:700}
+
+.flow-chips{display:flex;flex-wrap:wrap;gap:6px}
+.flow-chip{
+  padding:4px 9px;border-radius:999px;font-size:11.5px;line-height:1.4;
+  background:rgba(255,255,255,0.055);border:1px solid var(--glass-border-subtle);color:var(--text-sub);
+}
+
+.flow-checks{display:flex;flex-direction:column;gap:2px}
+.flow-check{
+  display:flex;align-items:flex-start;gap:8px;
+  padding:6px 8px;margin-left:-8px;border-radius:10px;
+  font-size:12.5px;line-height:1.62;color:var(--text-sub);
+  transition:background .16s ease,color .16s ease;
+}
+.flow-check:hover{background:rgba(255,255,255,0.05)}
+.flow-check.is-done{color:var(--text-dim)}
+
+.flow-couple{border-left:3px solid var(--accent-amber)}
+.flow-decision-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.flow-decision{padding:11px 13px;border-radius:14px;background:rgba(217,119,6,0.07);border:1px solid rgba(217,119,6,0.22)}
+.flow-decision b{font-size:12.5px;color:var(--accent-amber);display:block;margin-bottom:5px}
+.flow-decision p{margin:0;font-size:12px;line-height:1.7;color:var(--text-sub)}
+
+.flow-mat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.flow-mat-group{padding:11px 13px;border-radius:14px;background:rgba(255,255,255,0.035);border:1px solid var(--glass-border-subtle)}
+.flow-mat-group b{font-size:12.5px;color:var(--text-main)}
+.flow-mat-hint{display:block;font-size:10.5px;color:var(--text-dim);margin:2px 0 6px}
+.flow-mat-group ul{margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px}
+.flow-mat-group li{font-size:11.5px;line-height:1.6;color:var(--text-sub)}
+
+.flow-timeline{display:flex;flex-direction:column;gap:0}
+.flow-timeline-row{display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-top:1px dashed var(--glass-border-subtle)}
+.flow-timeline-row:first-child{border-top:0}
+.flow-timeline-when{flex:0 0 74px;font-size:11.5px;font-weight:700;color:var(--accent-cyan);font-family:var(--num)}
+.flow-timeline-what{font-size:12px;line-height:1.6;color:var(--text-sub)}
+
+/* 网办口径：徽标 + 入口 + 要点 */
+.flow-online{margin:10px 0 2px;padding:10px 12px;border-radius:14px;background:rgba(14,165,233,0.07);border:1px solid rgba(14,165,233,0.24)}
+.flow-online.is-hybrid{background:rgba(217,119,6,0.07);border-color:rgba(217,119,6,0.26)}
+.flow-online.is-offline{background:rgba(220,38,38,0.06);border-color:rgba(220,38,38,0.22)}
+.flow-online-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.flow-online-badge{
+  font-size:10.5px;font-weight:800;letter-spacing:.04em;padding:2px 8px;border-radius:999px;
+  background:rgba(14,165,233,0.18);color:#0e7490;white-space:nowrap;
+}
+.flow-online.is-hybrid .flow-online-badge{background:rgba(217,119,6,0.18);color:var(--accent-amber)}
+.flow-online.is-offline .flow-online-badge{background:rgba(220,38,38,0.16);color:#f87171}
+.flow-online-title{font-size:12.5px;font-weight:700;color:var(--text-main);line-height:1.5}
+.flow-online-sub{font-size:10.5px;color:var(--text-dim);margin:7px 0 4px;letter-spacing:.04em}
+.flow-online-entry{display:flex;flex-wrap:wrap;gap:6px}
+.flow-online-chip{
+  font-size:11px;line-height:1.5;padding:3px 8px;border-radius:9px;
+  background:rgba(255,255,255,0.05);border:1px solid var(--glass-border-subtle);color:var(--text-sub);
+}
+.flow-online-notes{margin:8px 0 0;padding-left:16px;display:flex;flex-direction:column;gap:4px}
+.flow-online-notes > li{font-size:11.5px;line-height:1.62;color:var(--text-sub)}
+
+.flow-online-board .guide-p{margin:0 0 10px}
+.flow-online-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.flow-online-bucket{padding:10px 12px;border-radius:14px;background:rgba(255,255,255,0.035);border:1px solid var(--glass-border-subtle)}
+.flow-online-bucket.is-full{border-color:rgba(14,165,233,0.3)}
+.flow-online-bucket.is-hybrid{border-color:rgba(217,119,6,0.3)}
+.flow-online-bucket.is-offline{border-color:rgba(220,38,38,0.26)}
+.flow-online-bucket-head{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.flow-online-bucket ol{margin:7px 0 0;padding-left:16px;display:flex;flex-direction:column;gap:4px}
+.flow-online-bucket li{font-size:11.5px;line-height:1.6;color:var(--text-sub)}
+
+/* 「怎么办」说明按钮与弹层 */
+.flow-check-main{display:flex;align-items:flex-start;gap:9px;cursor:pointer;flex:1 1 auto;min-width:0}
+.flow-check > .flow-check-main > input{
+  flex:0 0 auto;appearance:none;-webkit-appearance:none;
+  width:16px;height:16px;margin:2px 0 0;border-radius:5px;
+  border:1.5px solid color-mix(in srgb,var(--text-dim) 62%,transparent);
+  background:transparent;cursor:pointer;position:relative;
+  transition:border-color .16s ease,background .16s ease;
+}
+.flow-check > .flow-check-main > input:checked{border-color:var(--accent-cyan);background:var(--accent-cyan)}
+.flow-check > .flow-check-main > input:checked::after{
+  content:"";position:absolute;left:4.5px;top:1.5px;width:5px;height:9px;
+  border:solid #04211d;border-width:0 2px 2px 0;transform:rotate(45deg);
+}
+.flow-check.is-done > .flow-check-main > span{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--text-dim) 60%,transparent)}
+.flow-guide-btn{
+  flex:0 0 auto;align-self:flex-start;margin-top:1px;padding:2px 7px;border-radius:999px;
+  font-size:10.5px;font-weight:700;line-height:1.5;letter-spacing:.02em;cursor:pointer;
+  color:var(--accent-cyan);background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.32);
+  transition:background .16s ease,color .16s ease;
+}
+.flow-guide-btn:hover{background:rgba(14,165,233,0.2);color:var(--text-main)}
+
+.flow-dialog-mask{
+  position:fixed;inset:0;z-index:1200;display:flex;align-items:center;justify-content:center;
+  padding:20px;background:rgba(10,20,35,0.42);backdrop-filter:blur(8px) saturate(120%);
+  -webkit-backdrop-filter:blur(8px) saturate(120%);
+}
+/* 弹层跟主题走：用 glass 令牌，不再写死深色，浅色主题下不会出现一块黑框 */
+.flow-dialog{
+  width:min(560px,100%);max-height:82vh;overflow:auto;overscroll-behavior:contain;
+  padding:18px 18px 14px;border-radius:20px;
+  background:var(--glass-bg);
+  backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);
+  border:1px solid var(--glass-border);
+  box-shadow:var(--glass-highlight), 0 24px 60px rgba(10,20,40,0.26);
+}
+.flow-dialog-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.flow-dialog-kicker{font-size:10px;font-weight:800;letter-spacing:.1em;color:var(--accent-cyan);margin-bottom:4px}
+.flow-dialog-title{margin:0;font-size:16px;line-height:1.45;color:var(--text-main);font-weight:800}
+.flow-dialog-close{
+  flex:0 0 auto;width:26px;height:26px;border-radius:8px;cursor:pointer;
+  background:rgba(14,165,233,0.10);border:1px solid var(--glass-border-subtle);color:var(--text-sub);
+  font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center;
+}
+.flow-dialog-close:hover{background:rgba(14,165,233,0.22);color:var(--text-main)}
+.flow-dialog-where{
+  margin:10px 0 12px;padding:7px 10px;border-radius:10px;font-size:12px;line-height:1.6;
+  color:var(--text-main);background:rgba(14,165,233,0.09);border:1px solid rgba(14,165,233,0.24);
+}
+.flow-dialog-steps{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:7px}
+.flow-dialog-steps > li{font-size:12.5px;line-height:1.72;color:var(--text-sub)}
+.flow-dialog-steps strong{color:var(--text-main)}
+.flow-dialog-note{
+  margin-top:11px;padding:8px 11px;border-radius:10px;font-size:11.5px;line-height:1.65;
+  color:var(--accent-amber);background:rgba(217,119,6,0.1);border:1px solid rgba(217,119,6,0.26);
+}
+.flow-dialog-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.flow-dialog-link{
+  padding:5px 11px;border-radius:999px;font-size:11.5px;font-weight:700;text-decoration:none;
+  color:#04211d;background:var(--accent-cyan);border:1px solid transparent;
+}
+.flow-dialog-link:hover{filter:brightness(1.08)}
+.flow-dialog-foot{margin-top:12px;font-size:10.5px;line-height:1.6;color:var(--text-dim)}
+
+/* 开头决策卡：8 项必答，选中后直接给出后果 */
+.flow-decisions-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.flow-decisions-count{flex:0 0 auto;font-size:12px;color:var(--text-dim);white-space:nowrap;padding-top:4px}
+.flow-decisions-count .n{font-size:16px;color:var(--accent-cyan)}
+.flow-decision-row{border:1px solid var(--glass-border-subtle);border-radius:14px;padding:12px 14px;margin-top:10px;background:var(--card-inset-bg);transition:border-color .18s ease,background .18s ease}
+.flow-decision-row.is-picked{border-color:color-mix(in srgb,var(--accent-cyan) 55%,transparent);background:color-mix(in srgb,var(--accent-cyan) 8%,var(--card-inset-bg))}
+.flow-decision-top{display:flex;align-items:center;gap:8px}
+.flow-decision-no{flex:0 0 auto;width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent-cyan);background:color-mix(in srgb,var(--accent-cyan) 16%,transparent)}
+.flow-decision-title{font-size:14px;font-weight:700;color:var(--text-main)}
+.flow-decision-flag{font-size:11px;font-weight:700;color:var(--accent-cyan);padding:1px 7px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent-cyan) 45%,transparent)}
+.flow-decision-why{font-size:12px;line-height:1.6;color:var(--text-sub);margin:6px 0 9px}
+.flow-decision-opts{display:flex;flex-wrap:wrap;gap:7px}
+.flow-opt{position:relative;font:inherit;font-size:12px;line-height:1.35;cursor:pointer;padding:6px 12px;border-radius:999px;border:1px solid var(--glass-border-subtle);background:transparent;color:var(--text-sub);transition:all .16s ease}
+.flow-opt:hover{border-color:color-mix(in srgb,var(--accent-cyan) 45%,transparent);color:var(--text-main)}
+.flow-opt.is-on{border-color:var(--accent-cyan);background:color-mix(in srgb,var(--accent-cyan) 18%,transparent);color:var(--text-main);font-weight:700}
+.flow-opt.is-rec{border-style:dashed}
+.flow-opt.is-rec.is-on{border-style:solid}
+.flow-opt-rec{position:absolute;top:2px;right:2px;width:5px;height:5px;border-radius:50%;background:var(--accent-amber)}
+.flow-decision-effect{margin-top:9px;padding:8px 10px;border-radius:10px;font-size:12px;line-height:1.65;color:var(--text-sub);background:color-mix(in srgb,var(--accent-cyan) 9%,transparent);border-left:2px solid color-mix(in srgb,var(--accent-cyan) 60%,transparent)}
+.flow-decision-effect-k{font-weight:700;color:var(--accent-cyan);margin-right:4px}
+.flow-verdict-list{margin:8px 0 0;padding-left:18px;display:grid;gap:7px}
+.flow-verdict-list li{font-size:12.5px;line-height:1.68;color:var(--text-sub)}
+.flow-verdict-list li strong{color:var(--text-main)}
+.flow-verdict-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.flow-verdict-tag{font-size:11.5px;line-height:1.4;color:var(--text-sub);border:1px solid var(--glass-border-subtle);border-radius:999px;padding:4px 10px;background:var(--card-inset-bg)}
+.flow-verdict-tag b{color:var(--accent-cyan);margin-right:2px}
+@media (max-width:1023px){
+  .flow-decisions-head{flex-direction:column;gap:4px}
+  .flow-decisions-count{padding-top:0}
+  .flow-decision-row{padding:11px 12px}
+  .flow-decision-opts{gap:6px}
+  .flow-opt{font-size:11.5px;padding:6px 10px}
+}
+
+/* ===== 「我的」→ 开局 8 项配置卡：复用 flow-decision-* 的行样式，只补外层间距 ===== */
+.flow-settings{margin-bottom:14px}
+.flow-settings .flow-decisions-head{align-items:flex-start;gap:12px}
+.flow-settings .flow-settings-head-main{min-width:0}
+.flow-settings .flow-settings-head-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:0 0 auto}
+.flow-settings .flow-block-title{font-size:14px}
+.flow-settings .flow-decisions-count{white-space:nowrap}
+.flow-settings-toggle{
+  cursor:pointer;white-space:nowrap;font-size:12px;font-weight:700;line-height:1;
+  padding:7px 11px;border-radius:999px;color:var(--text-main);
+  background:rgba(14,165,233,0.12);border:1px solid rgba(14,165,233,0.32);
+  transition:background .18s ease,border-color .18s ease;
+}
+.flow-settings-toggle:hover{background:rgba(14,165,233,0.22);border-color:rgba(14,165,233,0.5)}
+.flow-settings.is-open .flow-settings-toggle{background:transparent;border-color:var(--glass-border-subtle);color:var(--text-sub)}
+.flow-settings-tags{margin-top:10px}
+.flow-settings #flow-settings-body{margin-top:12px}
+.flow-settings .flow-decision-row:last-of-type{margin-bottom:2px}
+.flow-settings .flow-settings-actions{justify-content:flex-start;flex-wrap:wrap;gap:8px;margin-top:12px}
+.flow-settings .guide-p{font-size:12px}
+
+/* 打印：只留手册本体，A4 可读，卡片不跨页断 */
+@media print{
+  .desktop-sidebar,.desktop-rail,.m-tabbar-wrap,.m-nav-header,.flow-progress-actions,.data-status,.tone-backdrop,.toast-stack{
+    display:none !important;
+  }
+  .desktop-shell{display:block !important;grid-template-columns:none !important}
+  .desktop-main{display:block !important;width:auto !important;max-width:none !important;border:0 !important;box-shadow:none !important;background:#fff !important;overflow:visible !important;height:auto !important;backdrop-filter:none !important}
+  .desktop-content{display:block !important;height:auto !important;max-height:none !important;overflow:visible !important;padding:0 !important}
+  html,body{background:#fff !important;color:#111 !important}
+  .mobile-shell{display:none !important}
+  .desktop-shell,.desktop-content,.flow-doc{display:block !important;position:static !important;height:auto !important;overflow:visible !important;padding:0 !important;background:#fff !important}
+  .flow-doc{display:block !important;gap:0 !important}
+  .flow-doc > .guide-card,.flow-doc > .m-card{margin-bottom:10px !important}
+  .flow-doc .glass,.flow-doc .guide-card,.flow-doc .m-card{
+    background:#fff !important;border:1px solid #d8d8d8 !important;box-shadow:none !important;
+    backdrop-filter:none !important;break-inside:avoid;page-break-inside:avoid;
+  }
+  .flow-doc .flow-hero{border-left:3px solid #111 !important}
+  .flow-step{break-inside:avoid;page-break-inside:avoid}
+  .flow-check-main > input{border:1.5px solid #444 !important;background:#fff !important;print-color-adjust:exact}
+  .flow-check-main > input:checked{border-color:#111 !important;background:#111 !important}
+  .flow-check-main > input:checked::after{border-color:#fff !important}
+  .flow-check-main > span{text-decoration:none !important}
+  .flow-guide-btn,.flow-dialog-mask{display:none !important}
+  .flow-bar > span{background:#111 !important;print-color-adjust:exact}
+  .flow-hero-title,.guide-title,.flow-step-title{color:#111 !important}
+  .flow-list > li,.flow-risks > li,.flow-check,.flow-meta dd,.guide-p{color:#222 !important}
+}
+
+@media (max-width: 1023px){
+  .flow-hero-title{font-size:17px}
+  .flow-facts{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .flow-meta{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .flow-step-title{font-size:15px}
+  .flow-list > li,.flow-risks > li,.flow-check{font-size:12px}
+  .flow-online-grid{grid-template-columns:1fr}
+  .flow-online-notes > li,.flow-online-bucket li{font-size:12px}
+  .flow-timeline-when{flex-basis:62px}
+  .flow-doc{gap:10px}
+  .flow-decision-effect{font-size:11.5px;padding:8px 9px}
+  .flow-verdict-list li{font-size:12px}
+
+  /* 移动端弹层改成底部抽屉：满宽、上方圆角、safe-area 让位、链接整行可点 */
+  .flow-dialog-mask{align-items:flex-end;justify-content:center;padding:0}
+  .flow-dialog{
+    width:100%;max-width:none;max-height:86vh;border-radius:22px 22px 0 0;
+    border-bottom:0;padding:18px 18px calc(16px + var(--safe-bottom, env(safe-area-inset-bottom, 0px)));
+    animation:flow-sheet-in .22s cubic-bezier(.16,1,.3,1);
+  }
+  .flow-dialog-head{padding-top:2px}
+  .flow-dialog-title{font-size:15.5px;line-height:1.4;padding-right:6px}
+  .flow-dialog-close{width:34px;height:34px;font-size:14px;border-radius:11px;background:rgba(14,165,233,0.12)}
+  .flow-dialog-where{margin:8px 0 12px;font-size:12px}
+  .flow-dialog-steps{padding-left:16px;gap:8px}
+  .flow-dialog-steps > li{font-size:12px;line-height:1.7}
+  .flow-dialog-note{font-size:11.5px;margin-top:12px}
+  .flow-dialog-links{margin-top:14px;gap:8px}
+  .flow-dialog-link{flex:1 1 100%;text-align:center;padding:10px 12px;font-size:12px;border-radius:12px}
+  .flow-dialog-foot{font-size:10.5px;margin-top:12px;line-height:1.65}
+}
+@keyframes flow-sheet-in{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+
 
 
 

@@ -6,6 +6,7 @@ import {
   Building2,
   Calculator,
   LayoutDashboard,
+  ListChecks,
   UserRound,
   type LucideIcon,
 } from "lucide-react";
@@ -26,6 +27,7 @@ interface Props {
 const TAB_ICONS: Record<string, LucideIcon> = {
   pk: Building2,
   gd: BookOpenText,
+  fl: ListChecks,
   ov: LayoutDashboard,
   my: Calculator,
   cp: Blocks,
