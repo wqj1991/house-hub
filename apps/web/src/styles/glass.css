@@ -1700,7 +1700,15 @@ body[data-tone="dawn"] .skeleton-line{
 .flow-online-notes{margin:8px 0 0;padding-left:16px;display:flex;flex-direction:column;gap:4px}
 .flow-online-notes > li{font-size:11.5px;line-height:1.62;color:var(--text-sub)}
 
-.flow-online-board .guide-p{margin:0 0 10px}
+.flow-online-board--in-hero{margin-top:16px;padding-top:14px;border-top:1px solid var(--glass-border-subtle)}
+.flow-online-board--in-hero .flow-block-title{margin-top:0;flex:1 1 auto;min-width:0}
+.flow-online-board--in-hero .flow-online-grid{margin-top:12px}
+.flow-online-board-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.flow-online-board-head .flow-block-title{margin:0}
+.flow-online-toggle{flex:0 0 auto;font-size:11.5px;font-weight:700;line-height:1;padding:7px 12px;border-radius:999px;color:var(--text-main);background:rgba(14,165,233,0.12);border:1px solid rgba(14,165,233,0.32);cursor:pointer;transition:background .18s ease,border-color .18s ease}
+.flow-online-toggle:hover,.flow-online-toggle:focus-visible{background:rgba(14,165,233,0.2);border-color:rgba(14,165,233,0.5)}
+.flow-online-board.is-open .flow-online-toggle{background:transparent;border-color:var(--glass-border-subtle);color:var(--text-sub)}
+.flow-online-grid[hidden]{display:none}
 .flow-online-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .flow-online-bucket{padding:10px 12px;border-radius:14px;background:rgba(255,255,255,0.035);border:1px solid var(--glass-border-subtle)}
 .flow-online-bucket.is-full{border-color:rgba(14,165,233,0.3)}
@@ -1830,6 +1838,41 @@ body[data-tone="dawn"] .skeleton-line{
 .flow-settings .flow-settings-actions{justify-content:flex-start;flex-wrap:wrap;gap:8px;margin-top:12px}
 .flow-settings .guide-p{font-size:12px}
 
+/* 移动端顶部按钮区：口径 / 政策两个药丸，点开弹层 */
+.flow-head-btn {
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 7px 11px;
+  border-radius: 999px;
+  color: var(--text-main);
+  background: rgba(14, 165, 233, 0.12);
+  border: 1px solid rgba(14, 165, 233, 0.34);
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+.flow-head-btn:hover,
+.flow-head-btn:focus-visible {
+  background: rgba(14, 165, 233, 0.2);
+  border-color: rgba(14, 165, 233, 0.5);
+}
+.flow-head-btn.is-on {
+  color: #fff;
+  background: rgba(14, 165, 233, 0.72);
+  border-color: rgba(14, 165, 233, 0.9);
+}
+.flow-dialog--info .flow-list,
+.flow-dialog--info .flow-verdict-list {
+  margin: 14px 0 0;
+  padding-left: 18px;
+}
+.flow-dialog--info .flow-verdict-tags {
+  margin-top: 12px;
+}
+.flow-dialog--info .flow-progress-actions {
+  margin-top: 14px;
+}
+
 /* 打印：只留手册本体，A4 可读，卡片不跨页断 */
 @media print{
   .desktop-sidebar,.desktop-rail,.m-tabbar-wrap,.m-nav-header,.flow-progress-actions,.data-status,.tone-backdrop,.toast-stack{
@@ -1853,7 +1896,7 @@ body[data-tone="dawn"] .skeleton-line{
   .flow-check-main > input:checked{border-color:#111 !important;background:#111 !important}
   .flow-check-main > input:checked::after{border-color:#fff !important}
   .flow-check-main > span{text-decoration:none !important}
-  .flow-guide-btn,.flow-dialog-mask{display:none !important}
+  .flow-guide-btn,.flow-head-btn,.flow-dialog-mask{display:none !important}
   .flow-bar > span{background:#111 !important;print-color-adjust:exact}
   .flow-hero-title,.guide-title,.flow-step-title{color:#111 !important}
   .flow-list > li,.flow-risks > li,.flow-check,.flow-meta dd,.guide-p{color:#222 !important}

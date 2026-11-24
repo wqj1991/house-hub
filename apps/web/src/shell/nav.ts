@@ -16,8 +16,8 @@ export const DESKTOP_NAV: DesktopNavItem[] = [
   // 选房是入口：先挑盘（新房 / 二手房），挑中了再进待选池算通勤
   { key: "picks", view: "picks", icon: "🏘️", label: "选房", badge: "新房" },
   { key: "guide", view: "guide", icon: "📖", label: "买房指南" },
-  // 流程是「怎么做」：8 步操作手册 + 可打钩清单，与「指南」的「怎么判断」互补
-  { key: "flow", view: "flow", icon: "🧭", label: "购房流程", badge: "8步" },
+  // 流程是「怎么做」：9 步操作手册 + 可打钩清单，与「指南」的「怎么判断」互补
+  { key: "flow", view: "flow", icon: "🧭", label: "购房流程", badge: "9步" },
   { key: "shortlist", view: "commute", icon: "⭐", label: "待选池", badge: "3" },
   { key: "money", view: "commute", icon: "🧮", label: "算钱计算器" },
   { key: "quality", view: "commute", icon: "⚖️", label: "品质打分", badge: "25项" },
@@ -29,7 +29,7 @@ export const DESKTOP_NAV: DesktopNavItem[] = [
 export const VIEW_TITLE: Record<DesktopView, string> = {
   picks: "选房 · 新房（大兴 / 通州）/ 二手房",
   guide: "买房避坑知识库 · 体系化精读指南",
-  flow: "购房流程 · 北京新房 8 步操作手册（含夫妻共同署名）",
+  flow: "购房流程 · 北京新房 9 步操作手册（含夫妻共同署名）",
   commute: "通勤选房工作台",
   components: "交互组件库规范 · 液态玻璃全景",
   profile: "我的 · 主题 / 账号 / 收入与公积金",

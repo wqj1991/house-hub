@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { resetChecks, setCoupleMode, toggleCheck, useFlowProgress } from "@/lib/flowProgress";
+import { setFlowInfo, toggleFlowInfo, useFlowInfo } from "@/lib/flowInfo";
 import {
   ALL_CHECKS,
   CHECK_GUIDES,
@@ -11,7 +12,6 @@ import {
   FLOW_TIMELINE,
   MATERIAL_GROUPS,
   ONLINE_OVERVIEW,
-  ONLINE_PRINCIPLE,
   POLICY_NOTES,
   decisionImpacts,
   decisionVerdicts,
@@ -48,10 +48,10 @@ function CheckRow({ id, text, done, onGuide }: { id: string; text: string; done:
   );
 }
 
-/** 「怎么办」弹层：外部门办的事给出入口与步骤，链接直接跳官方站点。 */
-function GuideDialog({ guideId, onClose }: { guideId: string | null; onClose: () => void }) {
+/** 弹层通用行为：Esc 关闭 + 锁住背景滚动。 */
+function useDialogLock(open: boolean, onClose: () => void) {
   useEffect(() => {
-    if (!guideId) return;
+    if (!open) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
@@ -62,7 +62,56 @@ function GuideDialog({ guideId, onClose }: { guideId: string | null; onClose: ()
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [guideId, onClose]);
+  }, [open, onClose]);
+}
+
+/** 通用内容弹层：移动端把长内容收进卡片右上角「查看」按钮后面。 */
+function InfoDialog({
+  open,
+  kicker,
+  title,
+  onClose,
+  children,
+}: {
+  open: boolean;
+  kicker: string;
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  useDialogLock(open, onClose);
+  if (!open) return null;
+  return createPortal(
+    <div className="flow-dialog-mask" role="presentation" onClick={onClose}>
+      <div
+        className="flow-dialog flow-dialog--info"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="flow-info-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flow-dialog-head">
+          <div>
+            <div className="flow-dialog-kicker">{kicker}</div>
+            <h3 className="flow-dialog-title" id="flow-info-title">
+              {title}
+            </h3>
+          </div>
+          <button type="button" className="flow-dialog-close" onClick={onClose} aria-label="关闭">
+            ✕
+          </button>
+        </div>
+        {children}
+        <div className="flow-dialog-foot">口径以当期官方页面为准。</div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+/** 「怎么办」弹层：外部门办的事给出入口与步骤，链接直接跳官方站点。 */
+function GuideDialog({ guideId, onClose }: { guideId: string | null; onClose: () => void }) {
+  useDialogLock(Boolean(guideId), onClose);
 
   if (!guideId) return null;
   const guide: CheckGuide | undefined = CHECK_GUIDES[guideId];
@@ -117,12 +166,12 @@ function GuideDialog({ guideId, onClose }: { guideId: string | null; onClose: ()
   );
 }
 
-/** 决策结论卡：把 8 项选择压成「你这一单怎么办」的几条硬结论。 */
-function VerdictsCard({ decisions, mobile }: { decisions: Record<string, string>; mobile: boolean }) {
+/** 决策结论卡（桌面端）：把 8 项选择压成「你这一单怎么办」的几条硬结论。移动端不渲染这张卡，内容走顶部「口径」按钮的弹层。 */
+function VerdictsCard({ decisions }: { decisions: Record<string, string> }) {
   const impacts = decisionImpacts(decisions);
   const verdicts = decisionVerdicts(decisions);
   return (
-    <div className={cardClass(mobile) + " flow-verdicts"}>
+    <div className="guide-card flow-card flow-verdicts">
       <div className="flow-block-title" style={{ marginTop: 0 }}>
         你这一单的口径（来自「我的」→ 开局先定这 8 件事）
       </div>
@@ -136,7 +185,7 @@ function VerdictsCard({ decisions, mobile }: { decisions: Record<string, string>
               type="button"
               className="flow-reset"
               onClick={() => {
-                window.location.hash = mobile ? "/me" : "/profile";
+                window.location.hash = "/profile";
               }}
             >
               去「我的」配这 8 项 →
@@ -165,6 +214,70 @@ function VerdictsCard({ decisions, mobile }: { decisions: Record<string, string>
         </>
       )}
     </div>
+  );
+}
+
+/** 移动端弹层：口径 + 政策，入口在页面顶部右上角按钮区（FlScreen 的 .m-nav-actions）。 */
+function FlowInfoDialogs({ decisions }: { decisions: Record<string, string> }) {
+  const panel = useFlowInfo();
+  const impacts = decisionImpacts(decisions);
+  const verdicts = decisionVerdicts(decisions);
+  return (
+    <>
+      <InfoDialog
+        open={panel === "verdict"}
+        kicker="来自「我的」→ 开局先定这 8 件事"
+        title="你这一单的口径"
+        onClose={() => setFlowInfo(null)}
+      >
+        {impacts.length === 0 ? (
+          <p className="guide-p">8 项开局决策还没配。去「我的」→ 开局先定这 8 件事，配好后这里会自动生成结论。</p>
+        ) : (
+          <>
+            <ul className="flow-verdict-list">
+              {verdicts.map((line) => (
+                <li key={line}>
+                  <Rich text={line} />
+                </li>
+              ))}
+            </ul>
+            <div className="flow-verdict-tags">
+              {impacts.map((item) => (
+                <span className="flow-verdict-tag" key={item.decision.id}>
+                  <b>{item.decision.no}</b> {item.option.label}
+                </span>
+              ))}
+            </div>
+          </>
+        )}
+        <div className="flow-progress-actions">
+          <button
+            type="button"
+            className="flow-reset"
+            onClick={() => {
+              setFlowInfo(null);
+              window.location.hash = "/me";
+            }}
+          >
+            去「我的」改这 8 项 →
+          </button>
+        </div>
+      </InfoDialog>
+      <InfoDialog
+        open={panel === "policy"}
+        kicker="适用：大兴 / 五环外新房"
+        title="政策口径（2025-08-08 后 · 五环外）"
+        onClose={() => setFlowInfo(null)}
+      >
+        <ul className="flow-list">
+          {POLICY_NOTES.map((line) => (
+            <li key={line}>
+              <Rich text={line} />
+            </li>
+          ))}
+        </ul>
+      </InfoDialog>
+    </>
   );
 }
 
@@ -278,9 +391,29 @@ function StepCard({
   );
 }
 
+/** 政策口径卡（桌面端）：移动端不渲染，内容走顶部「政策」按钮的弹层。 */
+function PolicyCard() {
+  return (
+    <div className="guide-card flow-card">
+      <div className="flow-block-title" style={{ marginTop: 0 }}>
+        政策口径（2025-08-08 后 · 五环外）
+      </div>
+      <ul className="flow-list">
+        {POLICY_NOTES.map((line) => (
+          <li key={line}>
+            <Rich text={line} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function FlowBoard({ mobile }: { mobile: boolean }) {
   const progress = useFlowProgress();
   const [guideId, setGuideId] = useState<string | null>(null);
+  // 网办分界默认收起：只留一行标题 + 「展开」，点开才铺三列桶
+  const [onlineOpen, setOnlineOpen] = useState(false);
   const visible = ALL_CHECKS.filter((item) => !item.coupleOnly || progress.couple);
   const doneCount = visible.filter((item) => progress.checks[item.id]).length;
   const total = visible.length;
@@ -292,7 +425,7 @@ function FlowBoard({ mobile }: { mobile: boolean }) {
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", color: "var(--accent-cyan)", marginBottom: 6 }}>
           北京新房 · 大兴 / 五环外口径 · 夫妻共同署名
         </div>
-        <div className="flow-hero-title">从核资格到拿红本，8 步走完</div>
+        <div className="flow-hero-title">从核资格到拿红本，9 步走完</div>
         <p className="guide-p">
           每一步只回答四件事：<strong>什么时候做、要多久、花多少钱、拿到什么</strong>。清单可以直接打钩，
           进度存在本机，桌面端和手机端同步。
@@ -335,49 +468,48 @@ function FlowBoard({ mobile }: { mobile: boolean }) {
             </div>
           ))}
         </div>
-      </div>
 
-
-      <VerdictsCard decisions={progress.decisions} mobile={mobile} />
-
-      <div className={cardClass(mobile)}>
-        <div className="flow-block-title" style={{ marginTop: 0 }}>
-          政策口径（2025-08-08 后 · 五环外）
-        </div>
-        <ul className="flow-list">
-          {POLICY_NOTES.map((line) => (
-            <li key={line}>
-              <Rich text={line} />
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className={cardClass(mobile) + " flow-online-board"}>
-        <div className="flow-block-title" style={{ marginTop: 0 }}>
-          能网办的都网办（8 步的线上/线下分界）
-        </div>
-        <p className="guide-p">
-          <Rich text={ONLINE_PRINCIPLE} />
-        </p>
-        <div className="flow-online-grid">
-          {ONLINE_OVERVIEW.map((bucket) => (
-            <div className={"flow-online-bucket is-" + bucket.mode} key={bucket.mode}>
-              <div className="flow-online-bucket-head">
-                <span className="flow-online-badge">{bucket.label}</span>
-                <span className="n">{bucket.steps.length} 步</span>
+        <div className={"flow-online-board flow-online-board--in-hero" + (onlineOpen ? " is-open" : "")}>
+          <div className="flow-online-board-head">
+            <div className="flow-block-title">能网办的都网办（9 步的线上/线下分界）</div>
+            <button
+              type="button"
+              className="flow-online-toggle"
+              aria-expanded={onlineOpen}
+              aria-controls="flow-online-body"
+              onClick={() => setOnlineOpen((open) => !open)}
+            >
+              {onlineOpen ? "收起" : "展开"}
+            </button>
+          </div>
+          <div id="flow-online-body" className="flow-online-grid" hidden={!onlineOpen}>
+            {ONLINE_OVERVIEW.map((bucket) => (
+              <div className={"flow-online-bucket is-" + bucket.mode} key={bucket.mode}>
+                <div className="flow-online-bucket-head">
+                  <span className="flow-online-badge">{bucket.label}</span>
+                  <span className="n">{bucket.steps.length} 步</span>
+                </div>
+                <div className="flow-online-sub">{bucket.hint}</div>
+                <ol>
+                  {bucket.steps.map((id) => {
+                    const step = FLOW_STEPS.find((item) => item.id === id);
+                    return step ? <li key={id}>{step.no + ". " + step.title}</li> : null;
+                  })}
+                </ol>
               </div>
-              <div className="flow-online-sub">{bucket.hint}</div>
-              <ol>
-                {bucket.steps.map((id) => {
-                  const step = FLOW_STEPS.find((item) => item.id === id);
-                  return step ? <li key={id}>{step.no + ". " + step.title}</li> : null;
-                })}
-              </ol>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
+
+
+      {mobile ? (
+        <FlowInfoDialogs decisions={progress.decisions} />
+      ) : (
+        <VerdictsCard decisions={progress.decisions} />
+      )}
+
+      {mobile ? null : <PolicyCard />}
 
       {FLOW_STEPS.map((step) => (
         <StepCard key={step.id} step={step} mobile={mobile} checks={progress.checks} onGuide={setGuideId} />
@@ -426,6 +558,31 @@ function FlowBoard({ mobile }: { mobile: boolean }) {
 
       <GuideDialog guideId={guideId} onClose={() => setGuideId(null)} />
     </div>
+  );
+}
+
+/** 移动端顶部右上角按钮区：「口径」「政策」两个药丸，点开对应弹层。 */
+export function FlowInfoButtons(): ReactNode {
+  const panel = useFlowInfo();
+  return (
+    <>
+      <button
+        type="button"
+        className={"flow-head-btn" + (panel === "verdict" ? " is-on" : "")}
+        onClick={() => toggleFlowInfo("verdict")}
+        aria-haspopup="dialog"
+      >
+        口径
+      </button>
+      <button
+        type="button"
+        className={"flow-head-btn" + (panel === "policy" ? " is-on" : "")}
+        onClick={() => toggleFlowInfo("policy")}
+        aria-haspopup="dialog"
+      >
+        政策
+      </button>
+    </>
   );
 }
 
