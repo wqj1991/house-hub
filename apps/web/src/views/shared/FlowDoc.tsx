@@ -6,7 +6,6 @@ import {
   ALL_CHECKS,
   CHECK_GUIDES,
   DECISIONS,
-  COUPLE_TRAPS,
   FLOW_FACTS,
   FLOW_STEPS,
   FLOW_TIMELINE,
@@ -379,21 +378,6 @@ function FlowBoard({ mobile }: { mobile: boolean }) {
           ))}
         </div>
       </div>
-
-      {progress.couple ? (
-        <div className={cardClass(mobile) + " flow-couple"}>
-          <div className="flow-block-title" style={{ marginTop: 0 }}>
-            六个坑（按踩坑概率排序）
-          </div>
-          <ul className="flow-risks">
-            {COUPLE_TRAPS.map((line) => (
-              <li key={line}>
-                <Rich text={line} />
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
 
       {FLOW_STEPS.map((step) => (
         <StepCard key={step.id} step={step} mobile={mobile} checks={progress.checks} onGuide={setGuideId} />
